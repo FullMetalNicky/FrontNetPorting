@@ -123,8 +123,8 @@ class ModelTrainer:
             self.model_manager.Write(self.optimizer, self.model, epoch, checkpoint_filename)
 
 
-        #self.visualizer.PlotLoss(train_losses, valid_losses)
-        #self.visualizer.PlotMSE(MSEs)
+        self.visualizer.PlotLoss(train_losses, valid_losses)
+        self.visualizer.PlotMSE(MSEs)
         self.visualizer.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
         self.visualizer.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
         self.visualizer.DisplayPlots()

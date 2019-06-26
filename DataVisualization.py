@@ -20,8 +20,7 @@ class DataVisualization:
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
         plt.xticks(epochs)
-        #plt.pause(0.05)
-        #plt.show()
+
 
     def PlotMSE(self, MSE):
         self.figure_counter += 1
@@ -46,8 +45,7 @@ class DataVisualization:
         plt.xlabel('Epoch')
         plt.ylabel('MSE')
         plt.xticks(epochs)
-        # plt.pause(0.05)
-        #plt.show()
+
 
     def PlotGTandEstimationVsTime(self, gt_labels, predictions):
         self.figure_counter += 1
@@ -62,10 +60,9 @@ class DataVisualization:
         samples = len(gt_labels[:, 0])
         samples = range(1, samples+1)
 
-
         gs = gridspec.GridSpec(2, 2)
         ax = plt.subplot(gs[0, 0])
-        ax.set_ylabel('x')
+        ax.set_title('x')
         x_gt = gt_labels[:, 0]
         x_pred = predictions[:, 0]
         plt.plot(samples, x_gt, color='green', label='GT')
@@ -73,7 +70,7 @@ class DataVisualization:
         plt.legend()
 
         ax = plt.subplot(gs[0, 1])
-        ax.set_ylabel('y')
+        ax.set_title('y')
         y_gt = gt_labels[:, 1]
         y_pred = predictions[:, 1]
         plt.plot(samples, y_gt, color='blue', label='GT')
@@ -81,7 +78,7 @@ class DataVisualization:
         plt.legend()
 
         ax = plt.subplot(gs[1, 0])
-        ax.set_ylabel('z')
+        ax.set_title('z')
         z_gt = gt_labels[:, 2]
         z_pred = predictions[:, 2]
         plt.plot(samples, z_gt, color='r', label='GT')
@@ -89,17 +86,15 @@ class DataVisualization:
         plt.legend()
 
         ax = plt.subplot(gs[1, 1])
-        ax.set_ylabel('phi')
+        ax.set_title('phi')
         phi_gt = gt_labels[:, 3]
         phi_pred = predictions[:, 3]
         plt.plot(samples, phi_gt, color='m', label='GT')
         plt.plot(samples, phi_pred, color='black', label='Prediction')
         plt.legend()
 
+        plt.subplots_adjust(hspace=0.3)
         plt.suptitle('Ground Truth and Predictions vs time')
-        #plt.title('Ground Truth and Predictions vs time')
-        plt.xlabel('Samples')
-        #plt.xticks(samples)
 
     def DisplayPlots(self):
         plt.show()
@@ -117,33 +112,32 @@ class DataVisualization:
 
         gs = gridspec.GridSpec(2, 2)
         ax = plt.subplot(gs[0, 0])
-        ax.set_ylabel('x')
+        ax.set_title('x')
         x_gt = gt_labels[:, 0]
         x_pred = predictions[:, 0]
         plt.scatter(x_gt, x_pred, color='green', marker='o')
         plt.legend()
 
         ax = plt.subplot(gs[0, 1])
-        ax.set_ylabel('y')
+        ax.set_title('y')
         y_gt = gt_labels[:, 1]
         y_pred = predictions[:, 1]
         plt.scatter(y_gt, y_pred, color='blue', marker='o')
         plt.legend()
 
         ax = plt.subplot(gs[1, 0])
-        ax.set_ylabel('z')
+        ax.set_title('z')
         z_gt = gt_labels[:, 2]
         z_pred = predictions[:, 2]
         plt.scatter(z_gt, z_pred, color='r', marker='o')
         plt.legend()
 
         ax = plt.subplot(gs[1, 1])
-        ax.set_ylabel('phi')
+        ax.set_title('phi')
         phi_gt = gt_labels[:, 3]
         phi_pred = predictions[:, 3]
         plt.scatter(phi_gt, phi_pred, color='m', marker='o')
         plt.legend()
 
+        plt.subplots_adjust(hspace=0.3)
         plt.suptitle('Ground Truth vs Predictions')
-        #plt.xlabel('Samples')
-        # plt.xticks(samples)
