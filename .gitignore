@@ -124,3 +124,5 @@ dmypy.json
 .pyre/
 *.pkl
 /__pycache__
+/v1
+*.ckpt
