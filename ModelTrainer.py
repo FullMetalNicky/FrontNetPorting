@@ -116,9 +116,7 @@ class ModelTrainer:
         batch_samples, batch_targets = iterator.next()
         index = np.random.choice(np.arange(0, batch_samples.shape[0]), 1)
         x_test = batch_samples[index]
-        x_test = x_test.view(1, x_test.size())
         y_test = batch_targets[index]
-        y_test = y_test.view(1, y_test.size())
         self.model.eval()
 
         print('GT Values: {}'.format(y_test.cpu().numpy()))

@@ -32,7 +32,6 @@ test_generator = data.DataLoader(test_set, **params)
 
 
 trainer = ModelTrainer(model, 2)
-#trainer.Train(training_generator, validation_generator)
+trainer.Train(training_generator, validation_generator)
 trainer.PerdictSingleSample(test_generator)
-
-#trainer.Predict(x_test, y_test)
+trainer.Predict(test_generator)
