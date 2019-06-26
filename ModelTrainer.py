@@ -39,27 +39,8 @@ class ModelTrainer:
             target[3] = -target[3]  # Relative YAW
         return frame, target
 
-    def generateMiniBatches(self, samples, targets):
-        while True:
-            indexes = np.random.choice(np.arange(0, samples.shape[0]), self.batch_size)
-            batch_samples = samples[indexes]
-            batch_targets = targets[indexes]
-            for i in range(0, batch_samples.shape[0]):
-                batch_samples[i], batch_targets[i] = self.augmentor(batch_samples[i], batch_targets[i])
-            return batch_samples, batch_targets
 
-
-    def Train(self, idx, xs_train, xs_validation, xs_test, ys_train, ys_validation):
-        x_train = torch.from_numpy(xs_train)
-        y_train = torch.from_numpy(ys_train)
-
-        x_validation = torch.from_numpy(xs_validation)
-        y_validation = torch.from_numpy(ys_validation)
-
-        batch_per_epoch = math.ceil(x_train.shape[0] / self.batch_size)
-        batch_per_epoch_valid = math.ceil(x_validation.shape[0] / self.batch_size)
-        batch_per_epoch = 1
-        batch_per_epoch_valid = 1
+    def Train(self, training_generator, validation_generator):
         train_losses = []
         valid_losses = []
         MSEs = []
@@ -71,9 +52,9 @@ class ModelTrainer:
 
             self.model.train()
             train_loss = MovingAverage()
+            i = 0
 
-            for i in range(batch_per_epoch):
-                [batch_samples, batch_targets] = self.generateMiniBatches(x_train, y_train)
+            for batch_samples, batch_targets in training_generator:
 
                 batch_targets = batch_targets.to(self.device)
                 batch_samples = batch_samples.to(self.device)
@@ -87,9 +68,10 @@ class ModelTrainer:
                 train_loss.update(loss)
 
                 if (i + 1) % 100 == 0:
-                    print("Epoch [{}/{}], Step [{}/{}] Loss: {:.4f}"
-                          .format(epoch + 1, self.num_epochs, i + 1, batch_per_epoch, loss.item()))
+                    print("Epoch [{}/{}], Step [{}] Loss: {:.4f}"
+                          .format(epoch + 1, self.num_epochs, i + 1, loss.item()))
 
+                i += 1
             train_losses.append(train_loss.value)
 
             self.model.eval()
@@ -97,8 +79,7 @@ class ModelTrainer:
             y_pred = []
             gt_labels = []
             with torch.no_grad():
-                for i in range(batch_per_epoch_valid):
-                    [batch_samples, batch_targets] = self.generateMiniBatches(x_validation, y_validation)
+                for batch_samples, batch_targets in validation_generator:
                     gt_labels.extend(batch_targets.cpu().numpy())
                     batch_targets = batch_targets.to(self.device)
                     batch_samples = batch_samples.to(self.device)
@@ -122,7 +103,6 @@ class ModelTrainer:
             checkpoint_filename = 'FrontNet-{:03d}.pkl'.format(epoch)
             self.model_manager.Write(self.optimizer, self.model, epoch, checkpoint_filename)
 
-
         self.visualizer.PlotLoss(train_losses, valid_losses)
         self.visualizer.PlotMSE(MSEs)
         self.visualizer.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
@@ -130,33 +110,34 @@ class ModelTrainer:
         self.visualizer.DisplayPlots()
         return train_losses, valid_losses
 
-    def PerdictSingleSample(self, xs_test, ys_test):
-        x_test = torch.from_numpy(xs_test)
-        y_test = torch.from_numpy(ys_test)
+    def PerdictSingleSample(self, test_generator):
 
+        iterator = iter(test_generator)
+        batch_samples, batch_targets = iterator.next()
+        index = np.random.choice(np.arange(0, batch_samples.shape[0]), 1)
+        x_test = batch_samples[index]
+        x_test = x_test.view(1, x_test.size())
+        y_test = batch_targets[index]
+        y_test = y_test.view(1, y_test.size())
         self.model.eval()
 
         print('GT Values: {}'.format(y_test.cpu().numpy()))
         with torch.no_grad():
             x_test = x_test.to(self.device)
-            #y_test = y_test.to(self.device)
             outputs = self.model(x_test)
         print('Prediction Values: {}'.format(outputs.cpu().numpy()))
 
 
-    def Predict(self, xs_test, ys_test):
-        x_test = torch.from_numpy(xs_test)
-        y_test = torch.from_numpy(ys_test)
+    def Predict(self, test_generator):
 
-        batch_per_epoch = math.ceil(x_test.shape[0] / self.batch_size)
         valid_loss = RunningAverage()
         y_pred = []
         gt_labels = []
         self.model.eval()
 
         with torch.no_grad():
-            for i in range(batch_per_epoch):
-                [batch_samples, batch_targets] = self.generateMiniBatches(x_test, y_test)
+            for batch_samples, batch_targets in test_generator:
+
                 print('GT Values: {}'.format(batch_targets.cpu().numpy()))
                 gt_labels.extend(batch_targets.cpu().numpy())
                 batch_targets = batch_targets.to(self.device)

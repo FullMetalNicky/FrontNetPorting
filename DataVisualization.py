@@ -13,8 +13,8 @@ class DataVisualization:
         plt.figure(self.figure_counter, figsize=(10, 6))
 
         epochs = range(1, len(train_losses) + 1)
-        plt.plot(epochs, train_losses, '-o', label='Training loss')
-        plt.plot(epochs, valid_losses, '-o', label='Validation loss')
+        plt.plot(epochs, train_losses, color='green',  label='Training loss')
+        plt.plot(epochs, valid_losses, color='blue', label='Validation loss')
         plt.legend()
         plt.title('Learning curves')
         plt.xlabel('Epoch')
@@ -30,10 +30,10 @@ class DataVisualization:
         MSE = torch.stack(MSE, 0)
         x = MSE[:, 0]
         x = x.cpu().numpy()
-        plt.plot(epochs, x, color='green', marker='o', label='x')
+        plt.plot(epochs, x, color='green', label='x')
         y = MSE[:, 1]
         y = y.cpu().numpy()
-        plt.plot(epochs, y, color='blue', marker='o', label='y')
+        plt.plot(epochs, y, color='blue', label='y')
         z = MSE[:, 2]
         z = z.cpu().numpy()
         plt.plot(epochs, z, color='r', marker='o', label='z')
