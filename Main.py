@@ -8,7 +8,6 @@ from torch.utils import data
 
 
 model = FrontNet(ResidualBlock, [1, 1, 1])
-print(model)
 
 DATA_PATH = "/Users/usi/Downloads/"
 loader = DataProcessor()
@@ -32,6 +31,6 @@ test_generator = data.DataLoader(test_set, **params)
 
 
 trainer = ModelTrainer(model, 2)
-trainer.Train(training_generator, validation_generator)
-trainer.PerdictSingleSample(test_generator)
+#trainer.Train(training_generator, validation_generator)
+#trainer.PerdictSingleSample(test_generator)
 trainer.Predict(test_generator)

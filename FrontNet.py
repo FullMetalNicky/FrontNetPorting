@@ -81,8 +81,8 @@ class FrontNet(nn.Module):
         y = self.fc_y(out)
         z = self.fc_z(out)
         phi = self.fc_phi(out)
-        res = (x, y, z, phi)
-        res = torch.stack(res, 0)
-        res = torch.squeeze(res)
-        res = torch.t(res)
-        return res
+        #res = torch.t((x, y, z, phi))
+       # res = torch.stack(res, 0)
+        #res = torch.squeeze(res)
+        #res = torch.t(res)
+        return [x, y, z, phi]

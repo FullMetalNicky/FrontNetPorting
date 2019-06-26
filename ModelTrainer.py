@@ -59,7 +59,14 @@ class ModelTrainer:
                 batch_targets = batch_targets.to(self.device)
                 batch_samples = batch_samples.to(self.device)
                 outputs = self.model(batch_samples)
-                loss = self.criterion(outputs, batch_targets)
+
+                loss_x = self.criterion(outputs[0], (batch_targets[:, 0]).view(-1, 1))
+                loss_y = self.criterion(outputs[1], (batch_targets[:, 1]).view(-1, 1))
+                loss_z = self.criterion(outputs[2], (batch_targets[:, 2]).view(-1, 1))
+                loss_phi = self.criterion(outputs[3], (batch_targets[:, 3]).view(-1, 1))
+                loss = loss_x + loss_y + loss_z + loss_phi
+
+                #loss = self.criterion(outputs, batch_targets)
 
                 # Backward and optimize
                 self.optimizer.zero_grad()
@@ -84,8 +91,18 @@ class ModelTrainer:
                     batch_targets = batch_targets.to(self.device)
                     batch_samples = batch_samples.to(self.device)
                     outputs = self.model(batch_samples)
-                    loss = self.criterion(outputs, batch_targets)
+                    #loss = self.criterion(outputs, batch_targets)
+
+                    loss_x = self.criterion(outputs[0], (batch_targets[:, 0]).view(-1, 1))
+                    loss_y = self.criterion(outputs[1], (batch_targets[:, 1]).view(-1, 1))
+                    loss_z = self.criterion(outputs[2], (batch_targets[:, 2]).view(-1, 1))
+                    loss_phi = self.criterion(outputs[3], (batch_targets[:, 3]).view(-1, 1))
+                    loss = loss_x + loss_y + loss_z + loss_phi
+
                     valid_loss.update(loss)
+                    outputs = torch.stack(outputs, 0)
+                    outputs = torch.squeeze(outputs)
+                    outputs = torch.t(outputs)
                     y_pred.extend(outputs.cpu().numpy())
 
                 print("Average loss {}".format(valid_loss))
@@ -123,7 +140,7 @@ class ModelTrainer:
         with torch.no_grad():
             x_test = x_test.to(self.device)
             outputs = self.model(x_test)
-        print('Prediction Values: {}'.format(outputs.cpu().numpy()))
+        print('Prediction Values: {}'.format(outputs))
 
 
     def Predict(self, test_generator):
@@ -141,8 +158,19 @@ class ModelTrainer:
                 batch_targets = batch_targets.to(self.device)
                 batch_samples = batch_samples.to(self.device)
                 outputs = self.model(batch_samples)
-                loss = self.criterion(outputs, batch_targets)
+                #loss = self.criterion(outputs, batch_targets)
+
+
+                loss_x = self.criterion(outputs[0], (batch_targets[:, 0]).view(-1, 1))
+                loss_y = self.criterion(outputs[1], (batch_targets[:, 1]).view(-1, 1))
+                loss_z = self.criterion(outputs[2], (batch_targets[:, 2]).view(-1, 1))
+                loss_phi = self.criterion(outputs[3], (batch_targets[:, 3]).view(-1, 1))
+                loss = loss_x + loss_y + loss_z + loss_phi
+
                 valid_loss.update(loss)
+                outputs = torch.stack(outputs, 0)
+                outputs = torch.squeeze(outputs)
+                outputs = torch.t(outputs)
                 y_pred.extend(outputs.cpu().numpy())
                 print('Prediction Values: {}'.format(outputs.cpu().numpy()))
 
