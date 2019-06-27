@@ -140,6 +140,8 @@ class ModelTrainer:
         y_test = batch_targets[index]
         self.model.eval()
 
+        #self.visualizer.DisplayVideoFrame(x_test)
+
         print('GT Values: {}'.format(y_test.cpu().numpy()))
         with torch.no_grad():
             x_test = x_test.to(self.device)

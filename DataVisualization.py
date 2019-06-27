@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import torch
 import matplotlib.gridspec as gridspec
 import numpy as np
+import cv2
 
 class DataVisualization:
     def __init__(self):
@@ -141,3 +142,11 @@ class DataVisualization:
 
         plt.subplots_adjust(hspace=0.3)
         plt.suptitle('Ground Truth vs Predictions')
+
+
+    def DisplayVideoFrame(self, frame):
+
+        frame = frame[0].numpy().transpose(1, 2, 0)
+        frame = frame.astype(np.uint8)
+        cv2.imshow('frame', frame)
+        cv2.waitKey(0)

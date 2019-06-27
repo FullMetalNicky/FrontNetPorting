@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import random
+import cv2
 
 class DataProcessor:
 
@@ -19,10 +20,14 @@ class DataProcessor:
         # split between train and test sets:
         x_train = 255 - train_set[:, 0]  # otherwise is inverted
         x_train = np.vstack(x_train[:]).astype(np.float32)
-       # x_train = np.reshape(x_train, (-1, image_height, image_width, 3))
+        x_train = np.reshape(x_train, (-1, image_height, image_width, 3))
+        x_train= np.swapaxes(x_train, 1, 3)
+        x_train = np.swapaxes(x_train, 2, 3)
+
        #(63726, 60, 108, 3)
-        x_train = np.reshape(x_train, (-1, 3, image_height, image_width))
+        #x_train = np.reshape(x_train, (-1, 3, image_height, image_width))
         #(63726, 3, 60, 108)
+
         y_train = train_set[:, 1]
         y_train = np.vstack(y_train[:]).astype(np.float32)
 
@@ -34,8 +39,10 @@ class DataProcessor:
 
         x_test = 255 - test_set[:, 0]
         x_test = np.vstack(x_test[:]).astype(np.float32)
-        #x_test = np.reshape(x_test, (-1, image_height, image_width, 3))
-        x_test = np.reshape(x_test, (-1, 3, image_height, image_width))
+        x_test = np.reshape(x_test, (-1, image_height, image_width, 3))
+        x_test = np.swapaxes(x_test, 1, 3)
+        x_test = np.swapaxes(x_test, 2, 3)
+        #x_test = np.reshape(x_test, (-1, 3, image_height, image_width))
         y_test = test_set[:, 1]
         y_test = np.vstack(y_test[:]).astype(np.float32)
         visual_odom = test_set[:, 2]
