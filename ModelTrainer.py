@@ -146,7 +146,7 @@ class ModelTrainer:
         with torch.no_grad():
             x_test = x_test.to(self.device)
             outputs = self.model(x_test)
-        print('Prediction Values: {}'.format(outputs))
+        print('Prediction Values: {}'.format(outputs.cpu().numpy()))
 
 
     def Predict(self, test_generator):

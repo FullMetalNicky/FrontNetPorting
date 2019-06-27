@@ -1,5 +1,5 @@
 from __future__ import print_function
-from FrontNet import ResidualBlock
+from FrontNet import BasicBlock
 from FrontNet import FrontNet
 from DataProcessor import DataProcessor
 from ModelTrainer import ModelTrainer
@@ -7,11 +7,11 @@ from Dataset import Dataset
 from torch.utils import data
 
 
-model = FrontNet(ResidualBlock, [1, 1, 1])
+model = FrontNet(BasicBlock, [1, 1, 1])
 
 DATA_PATH = "/Users/usi/Downloads/"
 loader = DataProcessor()
-[sel_idx, x_train, x_validation, x_test, y_train, y_validation, y_test] = loader.ProcessData(DATA_PATH + "train.pickle", DATA_PATH + "test.pickle")
+[train_mean, train_std, x_train, x_validation, x_test, y_train, y_validation, y_test] = loader.ProcessData(DATA_PATH + "train.pickle", DATA_PATH + "test.pickle")
 training_set = Dataset(x_train, y_train, True)
 validation_set = Dataset(x_validation, y_validation)
 test_set = Dataset(x_test, y_test)

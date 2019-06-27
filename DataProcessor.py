@@ -36,6 +36,9 @@ class DataProcessor:
         x_train = x_train[ix_tr, :]
         y_validation = y_train[ix_val, :]
         y_train = y_train[ix_tr, :]
+        train_mean  = np.mean(y_train, 0)
+        train_std = np.std(y_train, 0)
+       # y_train = (y_train - train_mean)/train_std
 
         x_test = 255 - test_set[:, 0]
         x_test = np.vstack(x_test[:]).astype(np.float32)
@@ -45,6 +48,9 @@ class DataProcessor:
         #x_test = np.reshape(x_test, (-1, 3, image_height, image_width))
         y_test = test_set[:, 1]
         y_test = np.vstack(y_test[:]).astype(np.float32)
+
+      #  y_test = (y_test - train_mean) / train_std
+
         visual_odom = test_set[:, 2]
         visual_odom = np.vstack(visual_odom[:]).astype(np.float32)
 
@@ -54,4 +60,4 @@ class DataProcessor:
         x_train = x_train[sel_idx, :]
         y_train = y_train[sel_idx, :]
 
-        return [sel_idx, x_train, x_validation, x_test, y_train, y_validation, y_test]
+        return [train_mean, train_std, x_train, x_validation, x_test, y_train, y_validation, y_test]
