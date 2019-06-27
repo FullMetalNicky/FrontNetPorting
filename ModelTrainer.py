@@ -1,12 +1,11 @@
 import torch.nn as nn
 import torch
-import math
 import numpy as np
 from ValidationUtils import RunningAverage
 from ValidationUtils import MovingAverage
 from ModelManager import ModelManager
 from DataVisualization import DataVisualization
-
+from EarlyStopping import EarlyStopping
 
 class ModelTrainer:
     def __init__(self, model, num_epochs=80):
@@ -26,6 +25,7 @@ class ModelTrainer:
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=np.sqrt(0.1), patience=5, verbose=False,
                                                    threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0.1e-6,
                                                    eps=1e-08)
+        self.early_stopping = EarlyStopping(patience=10, verbose=True)
 
     def update_lr(self, optimizer, lr):
         for param_group in optimizer.param_groups:
@@ -119,6 +119,10 @@ class ModelTrainer:
             valid_losses.append(valid_loss.value)
             checkpoint_filename = 'FrontNet-{:03d}.pkl'.format(epoch)
             self.model_manager.Write(self.optimizer, self.model, epoch, checkpoint_filename)
+            self.early_stopping(valid_loss.value, self.model, file_name=checkpoint_filename)
+            if self.early_stopping.early_stop:
+                print("Early stopping")
+                break
 
         self.visualizer.PlotLoss(train_losses, valid_losses)
         self.visualizer.PlotMSE(MSEs)
@@ -153,7 +157,7 @@ class ModelTrainer:
         with torch.no_grad():
             for batch_samples, batch_targets in test_generator:
 
-                print('GT Values: {}'.format(batch_targets.cpu().numpy()))
+                #print('GT Values: {}'.format(batch_targets.cpu().numpy()))
                 gt_labels.extend(batch_targets.cpu().numpy())
                 batch_targets = batch_targets.to(self.device)
                 batch_samples = batch_samples.to(self.device)
@@ -172,11 +176,11 @@ class ModelTrainer:
                 outputs = torch.squeeze(outputs)
                 outputs = torch.t(outputs)
                 y_pred.extend(outputs.cpu().numpy())
-                print('Prediction Values: {}'.format(outputs.cpu().numpy()))
+                #print('Prediction Values: {}'.format(outputs.cpu().numpy()))
 
             print("Average loss {}".format(valid_loss))
 
         gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
         y_pred = torch.tensor(y_pred, dtype=torch.float32)
         MSE = torch.sqrt(torch.mean((y_pred - gt_labels).pow(2), 0))
-        print('Validation MSE: {}'.format(MSE))
+        print('Test MSE: {}'.format(MSE))

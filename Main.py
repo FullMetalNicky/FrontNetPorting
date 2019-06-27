@@ -12,7 +12,7 @@ model = FrontNet(ResidualBlock, [1, 1, 1])
 DATA_PATH = "/Users/usi/Downloads/"
 loader = DataProcessor()
 [sel_idx, x_train, x_validation, x_test, y_train, y_validation, y_test] = loader.ProcessData(DATA_PATH + "train.pickle", DATA_PATH + "test.pickle")
-training_set = Dataset(x_train, y_train)
+training_set = Dataset(x_train, y_train, True)
 validation_set = Dataset(x_validation, y_validation)
 test_set = Dataset(x_test, y_test)
 
@@ -31,6 +31,6 @@ test_generator = data.DataLoader(test_set, **params)
 
 
 trainer = ModelTrainer(model, 2)
-#trainer.Train(training_generator, validation_generator)
-#trainer.PerdictSingleSample(test_generator)
+trainer.Train(training_generator, validation_generator)
+trainer.PerdictSingleSample(test_generator)
 trainer.Predict(test_generator)
