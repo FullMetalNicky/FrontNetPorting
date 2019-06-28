@@ -50,7 +50,8 @@ class DataVisualization:
 
     def PlotGTandEstimationVsTime(self, gt_labels, predictions):
         self.figure_counter += 1
-        plt.figure(self.figure_counter, figsize=(10, 6))
+        plt.figure(self.figure_counter, figsize=(20, 12))
+        plt.margins(0.1)
 
         gt_labels = torch.stack(gt_labels, 0)
         predictions = torch.stack(predictions, 0)
@@ -102,7 +103,7 @@ class DataVisualization:
 
     def PlotGTVsEstimation(self, gt_labels, predictions):
         self.figure_counter += 1
-        plt.figure(self.figure_counter, figsize=(10, 6))
+        plt.figure(self.figure_counter, figsize=(20, 12))
 
         gt_labels = torch.stack(gt_labels, 0)
         predictions = torch.stack(predictions, 0)
@@ -114,30 +115,40 @@ class DataVisualization:
         gs = gridspec.GridSpec(2, 2)
         ax = plt.subplot(gs[0, 0])
         ax.set_title('x')
+        ax.set_xmargin(0.2)
         x_gt = gt_labels[:, 0]
         x_pred = predictions[:, 0]
         plt.scatter(x_gt, x_pred, color='green', marker='o')
+        plt.plot(x_gt, x_gt, color='black', linestyle='--')
+
         plt.legend()
 
         ax = plt.subplot(gs[0, 1])
         ax.set_title('y')
+        ax.set_xmargin(0.2)
         y_gt = gt_labels[:, 1]
         y_pred = predictions[:, 1]
         plt.scatter(y_gt, y_pred, color='blue', marker='o')
+        plt.plot(y_gt, y_gt, color='black', linestyle='--')
         plt.legend()
 
         ax = plt.subplot(gs[1, 0])
         ax.set_title('z')
+        ax.set_xmargin(0.2)
         z_gt = gt_labels[:, 2]
         z_pred = predictions[:, 2]
         plt.scatter(z_gt, z_pred, color='r', marker='o')
+        plt.plot(z_gt, z_gt, color='black', linestyle='--')
+
         plt.legend()
 
         ax = plt.subplot(gs[1, 1])
         ax.set_title('phi')
+        ax.set_xmargin(0.2)
         phi_gt = gt_labels[:, 3]
         phi_pred = predictions[:, 3]
         plt.scatter(phi_gt, phi_pred, color='m', marker='o')
+        plt.plot(phi_gt, phi_gt, color='black', linestyle='--')
         plt.legend()
 
         plt.subplots_adjust(hspace=0.3)
