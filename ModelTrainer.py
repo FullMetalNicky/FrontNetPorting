@@ -5,6 +5,8 @@ from ValidationUtils import RunningAverage
 from ValidationUtils import MovingAverage
 from DataVisualization import DataVisualization
 from EarlyStopping import EarlyStopping
+from ValidationUtils import Metrics
+
 
 class ModelTrainer:
     def __init__(self, model, num_epochs=80):
@@ -24,14 +26,15 @@ class ModelTrainer:
                                                    threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0.1e-6,
                                                    eps=1e-08)
         self.early_stopping = EarlyStopping(patience=10, verbose=True)
+        self.metrics = Metrics()
 
 
     def Train(self, training_generator, validation_generator):
         train_losses = []
         valid_losses = []
-        MSEs = []
         y_pred_viz = []
         gt_labels_viz = []
+        self.metrics.Reset()
 
         for epoch in range(self.num_epochs):
             print("Starting Epoch {}".format(epoch + 1))
@@ -63,6 +66,8 @@ class ModelTrainer:
                           .format(epoch + 1, self.num_epochs, i + 1, loss.item()))
 
                 i += 1
+
+
             train_losses.append(train_loss.value)
 
             self.model.eval()
@@ -94,11 +99,15 @@ class ModelTrainer:
 
             gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
             y_pred = torch.tensor(y_pred, dtype=torch.float32)
-            MSE = torch.sqrt(torch.mean((y_pred - gt_labels).pow(2), 0))
-            MSEs.append(MSE)
+            MSE, MAE, r_score = self.metrics.Update(y_pred, gt_labels)
+
             y_pred_viz.append(y_pred)
             gt_labels_viz.append(gt_labels)
             print('Validation MSE: {}'.format(MSE))
+            print('Validation MAE: {}'.format(MAE))
+            print('Test r_score: {}'.format(r_score))
+
+
             valid_losses.append(valid_loss.value)
             checkpoint_filename = 'FrontNet-{:03d}.pkl'.format(epoch)
             self.early_stopping(valid_loss.value, self.model, epoch, checkpoint_filename, self.optimizer)
@@ -106,8 +115,17 @@ class ModelTrainer:
                 print("Early stopping")
                 break
 
+        MSEs = self.metrics.GetMSE()
+        MAEs = self.metrics.GetMAE()
+        r_score = self.metrics.Getr2_score()
+        #score = self.metrics.Getr2_score(gt_labels_viz, y_pred_viz)
+        #print('Validation r^2 score: {}'.format(score))
+
         self.visualizer.PlotLoss(train_losses, valid_losses)
         self.visualizer.PlotMSE(MSEs)
+        self.visualizer.PlotMAE(MAEs)
+        self.visualizer.PlotR2Score(r_score)
+
         self.visualizer.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
         self.visualizer.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
         self.visualizer.DisplayPlots()
@@ -122,7 +140,7 @@ class ModelTrainer:
         y_test = batch_targets[index]
         self.model.eval()
 
-        #self.visualizer.DisplayVideoFrame(x_test)
+        #self.visualizer.DisplayVideoFrame(x_test[0].cpu().numpy())
 
         print('GT Values: {}'.format(y_test.cpu().numpy()))
         with torch.no_grad():
@@ -143,6 +161,7 @@ class ModelTrainer:
         y_pred_viz = []
         gt_labels_viz = []
         self.model.eval()
+        self.metrics.Reset()
 
         with torch.no_grad():
             for batch_samples, batch_targets in test_generator:
@@ -168,7 +187,7 @@ class ModelTrainer:
 
         gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
         y_pred = torch.tensor(y_pred, dtype=torch.float32)
-        MSE = torch.sqrt(torch.mean((y_pred - gt_labels).pow(2), 0))
+        MSE, MAE, r_score = self.metrics.Update(y_pred, gt_labels)
 
         y_pred_viz.append(y_pred)
         gt_labels_viz.append(gt_labels)
@@ -176,3 +195,6 @@ class ModelTrainer:
         self.visualizer.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
         self.visualizer.DisplayPlots()
         print('Test MSE: {}'.format(MSE))
+        print('Test MAE: {}'.format(MAE))
+        print('Test r_score: {}'.format(r_score))
+

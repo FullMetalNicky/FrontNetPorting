@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import random
-import cv2
+#from DataVisualization import DataVisualization
 
 class DataProcessor:
 
@@ -12,17 +12,22 @@ class DataProcessor:
         print('test shape: ' + str(test_set.shape))
 
         n_val = 13000
-        np.random.seed(100)
+        np.random.seed()
 
         image_height = 60
         image_width = 108
 
         # split between train and test sets:
-        x_train = 255 - train_set[:, 0]  # otherwise is inverted
+        #x_train = 255 - train_set[:, 0]  # otherwise is inverted
+        x_train = train_set[:, 0]
         x_train = np.vstack(x_train[:]).astype(np.float32)
         x_train = np.reshape(x_train, (-1, image_height, image_width, 3))
+
         x_train= np.swapaxes(x_train, 1, 3)
         x_train = np.swapaxes(x_train, 2, 3)
+
+        #viz = DataVisualization()
+        #viz.DisplayDatasetVideo(x_train)
 
        #(63726, 60, 108, 3)
         #x_train = np.reshape(x_train, (-1, 3, image_height, image_width))
@@ -40,7 +45,8 @@ class DataProcessor:
         train_std = np.std(y_train, 0)
        # y_train = (y_train - train_mean)/train_std
 
-        x_test = 255 - test_set[:, 0]
+        #x_test = 255 - test_set[:, 0]
+        x_test = test_set[:, 0]
         x_test = np.vstack(x_test[:]).astype(np.float32)
         x_test = np.reshape(x_test, (-1, image_height, image_width, 3))
         x_test = np.swapaxes(x_test, 1, 3)

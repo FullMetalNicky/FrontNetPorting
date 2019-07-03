@@ -48,6 +48,55 @@ class DataVisualization:
         plt.xticks(epochs)
 
 
+    def PlotMAE(self, MAE):
+        self.figure_counter += 1
+        plt.figure(self.figure_counter, figsize=(10, 6))
+
+        epochs = range(1, len(MAE) + 1)
+        MAE = torch.stack(MAE, 0)
+        x = MAE[:, 0]
+        x = x.cpu().numpy()
+        plt.plot(epochs, x, color='green', label='x')
+        y = MAE[:, 1]
+        y = y.cpu().numpy()
+        plt.plot(epochs, y, color='blue', label='y')
+        z = MAE[:, 2]
+        z = z.cpu().numpy()
+        plt.plot(epochs, z, color='r', marker='o', label='z')
+        phi = MAE[:, 3]
+        phi = phi.cpu().numpy()
+        plt.plot(epochs, phi, color='m', marker='o', label='phi')
+        plt.legend()
+        plt.title('Pose Variables MAE')
+        plt.xlabel('Epoch')
+        plt.ylabel('MAE')
+        plt.xticks(epochs)
+
+    def PlotR2Score(self, r2_score):
+        self.figure_counter += 1
+        plt.figure(self.figure_counter, figsize=(10, 6))
+
+        epochs = range(1, len(r2_score) + 1)
+        r2_score = torch.stack(r2_score, 0)
+        x = r2_score[:, 0]
+        x = x.cpu().numpy()
+        plt.plot(epochs, x, color='green', label='x')
+        y = r2_score[:, 1]
+        y = y.cpu().numpy()
+        plt.plot(epochs, y, color='blue', label='y')
+        z = r2_score[:, 2]
+        z = z.cpu().numpy()
+        plt.plot(epochs, z, color='r', marker='o', label='z')
+        phi = r2_score[:, 3]
+        phi = phi.cpu().numpy()
+        plt.plot(epochs, phi, color='m', marker='o', label='phi')
+        plt.legend()
+        plt.title('Pose Variables r2_score')
+        plt.xlabel('Epoch')
+        plt.ylabel('r2_score')
+        plt.xticks(epochs)
+
+
     def PlotGTandEstimationVsTime(self, gt_labels, predictions):
         self.figure_counter += 1
         plt.figure(self.figure_counter, figsize=(20, 12))
@@ -157,7 +206,15 @@ class DataVisualization:
 
     def DisplayVideoFrame(self, frame):
 
-        frame = frame[0].numpy().transpose(1, 2, 0)
+        frame = frame.transpose(1, 2, 0)
         frame = frame.astype(np.uint8)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         cv2.imshow('frame', frame)
-        cv2.waitKey(0)
+        cv2.waitKey(10)
+
+
+    def DisplayDatasetVideo(self, data):
+
+        length = len(data)
+        for i in range(0, length):
+            self.DisplayVideoFrame(data[i])
