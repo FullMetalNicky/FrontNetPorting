@@ -60,8 +60,8 @@ class Metrics:
         self.r_score = []
 
     def Update(self, y_pred, gt_labels):
-        MSE = torch.sqrt(torch.mean((y_pred - gt_labels).pow(2), 0))
-        MAE = torch.sqrt(torch.mean(torch.abs(y_pred - gt_labels), 0))
+        MSE = torch.mean((y_pred - gt_labels).pow(2), 0)
+        MAE = torch.mean(torch.abs(y_pred - gt_labels), 0)
 
         x = y_pred[:, 0]
         x = x.cpu().numpy()
