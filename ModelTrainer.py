@@ -12,7 +12,6 @@ class ModelTrainer:
     def __init__(self, model, num_epochs=80):
         self.num_epochs = num_epochs
         self.learning_rate = 0.001
-        self.batch_size = 64
         self.model = model
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         print(self.device)
@@ -107,7 +106,7 @@ class ModelTrainer:
             gt_labels_viz.append(gt_labels)
             print('Validation MSE: {}'.format(MSE))
             print('Validation MAE: {}'.format(MAE))
-            print('Test r_score: {}'.format(r_score))
+            print('Validation r_score: {}'.format(r_score))
 
 
             valid_losses.append(valid_loss.value)
@@ -120,8 +119,6 @@ class ModelTrainer:
         MSEs = self.metrics.GetMSE()
         MAEs = self.metrics.GetMAE()
         r_score = self.metrics.Getr2_score()
-        #score = self.metrics.Getr2_score(gt_labels_viz, y_pred_viz)
-        #print('Validation r^2 score: {}'.format(score))
 
         self.visualizer.PlotLoss(train_losses, valid_losses)
         self.visualizer.PlotMSE(MSEs)
