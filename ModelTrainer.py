@@ -29,8 +29,14 @@ class ModelTrainer:
 
 
     def Train(self, training_generator, validation_generator):
-        train_losses = []
-        valid_losses = []
+        train_losses_x = []
+        train_losses_y = []
+        train_losses_z = []
+        train_losses_phi = []
+        valid_losses_x = []
+        valid_losses_y = []
+        valid_losses_z = []
+        valid_losses_phi = []
         y_pred_viz = []
         gt_labels_viz = []
         self.metrics.Reset()
@@ -39,7 +45,10 @@ class ModelTrainer:
             print("Starting Epoch {}".format(epoch + 1))
 
             self.model.train()
-            train_loss = MovingAverage()
+            train_loss_x = MovingAverage()
+            train_loss_y = MovingAverage()
+            train_loss_z = MovingAverage()
+            train_loss_phi = MovingAverage()
             i = 0
 
             for batch_samples, batch_targets in training_generator:
@@ -58,7 +67,11 @@ class ModelTrainer:
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
-                train_loss.update(loss)
+                #train_loss.update(loss)
+                train_loss_x.update(loss_x)
+                train_loss_y.update(loss_y)
+                train_loss_z.update(loss_z)
+                train_loss_phi.update(loss_phi)
 
                 if (i + 1) % 100 == 0:
                     print("Epoch [{}/{}], Step [{}] Loss: {:.4f}"
@@ -66,11 +79,19 @@ class ModelTrainer:
 
                 i += 1
 
+            train_losses_x.append(train_loss_x.value)
+            train_losses_y.append(train_loss_y.value)
+            train_losses_z.append(train_loss_z.value)
+            train_losses_phi.append(train_loss_phi.value)
 
-            train_losses.append(train_loss.value)
 
             self.model.eval()
             valid_loss = RunningAverage()
+            valid_loss_x = RunningAverage()
+            valid_loss_y = RunningAverage()
+            valid_loss_z = RunningAverage()
+            valid_loss_phi = RunningAverage()
+
             y_pred = []
             gt_labels = []
             with torch.no_grad():
@@ -88,15 +109,20 @@ class ModelTrainer:
                     loss = loss_x + loss_y + loss_z + loss_phi
 
                     valid_loss.update(loss)
+                    valid_loss_x.update(loss_x)
+                    valid_loss_y.update(loss_y)
+                    valid_loss_z.update(loss_z)
+                    valid_loss_phi.update(loss_phi)
+
                     outputs = torch.stack(outputs, 0)
                     outputs = torch.squeeze(outputs)
                     outputs = torch.t(outputs)
                     y_pred.extend(outputs.cpu().numpy())
-                    #y_pred.extend(outputs.cpu())
+                    #y_pred.extend(outputs.cpu())s
 
-                print("Average loss {}".format(valid_loss))
+                print("Average loss {}, {}, {}, {}".format(valid_loss_x.value, valid_loss_y.value, valid_loss_z.value, valid_loss_phi.value))
 
-            self.scheduler.step(valid_loss)
+            self.scheduler.step(valid_loss.value)
 
             gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
             y_pred = torch.tensor(y_pred, dtype=torch.float32)
@@ -108,8 +134,12 @@ class ModelTrainer:
             print('Validation MAE: {}'.format(MAE))
             print('Validation r_score: {}'.format(r_score))
 
+            valid_losses_x.append(valid_loss_x.value)
+            valid_losses_y.append(valid_loss_y.value)
+            valid_losses_z.append(valid_loss_z.value)
+            valid_losses_phi.append(valid_loss_phi.value)
 
-            valid_losses.append(valid_loss.value)
+            #valid_losses.append(valid_loss.value)
             checkpoint_filename = 'FrontNet-{:03d}.pkl'.format(epoch)
             self.early_stopping(valid_loss.value, self.model, epoch, checkpoint_filename, self.optimizer)
             if self.early_stopping.early_stop:
@@ -120,7 +150,7 @@ class ModelTrainer:
         MAEs = self.metrics.GetMAE()
         r_score = self.metrics.Getr2_score()
 
-        self.visualizer.PlotLoss(train_losses, valid_losses)
+        self.visualizer.PlotLoss(train_losses_x, train_losses_y, train_losses_z, train_losses_phi , valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi)
         self.visualizer.PlotMSE(MSEs)
         self.visualizer.PlotMAE(MAEs)
         self.visualizer.PlotR2Score(r_score)
@@ -128,7 +158,7 @@ class ModelTrainer:
         self.visualizer.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
         self.visualizer.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
         self.visualizer.DisplayPlots()
-        return train_losses, valid_losses
+       # return train_losses, valid_losses
 
     def PerdictSingleSample(self, test_generator):
 
@@ -155,6 +185,10 @@ class ModelTrainer:
     def Predict(self, test_generator):
 
         valid_loss = RunningAverage()
+        valid_loss_x = RunningAverage()
+        valid_loss_y = RunningAverage()
+        valid_loss_z = RunningAverage()
+        valid_loss_phi = RunningAverage()
         y_pred = []
         gt_labels = []
         y_pred_viz = []
@@ -177,12 +211,19 @@ class ModelTrainer:
                 loss = loss_x + loss_y + loss_z + loss_phi
 
                 valid_loss.update(loss)
+                valid_loss_x.update(loss_x)
+                valid_loss_y.update(loss_y)
+                valid_loss_z.update(loss_z)
+                valid_loss_phi.update(loss_phi)
+
                 outputs = torch.stack(outputs, 0)
                 outputs = torch.squeeze(outputs)
                 outputs = torch.t(outputs)
                 y_pred.extend(outputs.cpu().numpy())
 
-            print("Average loss {}".format(valid_loss))
+            #print("Average loss {}".format(valid_loss))
+            print("Average loss {}, {}, {}, {}".format(valid_loss_x.value, valid_loss_y.value, valid_loss_z.value,
+                                                       valid_loss_phi.value))
 
         gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
         y_pred = torch.tensor(y_pred, dtype=torch.float32)

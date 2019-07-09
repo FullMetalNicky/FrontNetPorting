@@ -9,18 +9,53 @@ class DataVisualization:
     def __init__(self):
         self.figure_counter = 0
 
-    def PlotLoss(self, train_losses, valid_losses):
-        self.figure_counter += 1
-        plt.figure(self.figure_counter, figsize=(10, 6))
+    def PlotLoss(self, train_losses_x, train_losses_y, train_losses_z, train_losses_phi , valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi):
+        #self.figure_counter += 1
+        #plt.figure(self.figure_counter, figsize=(10, 6))
 
-        epochs = range(1, len(train_losses) + 1)
-        plt.plot(epochs, train_losses, color='green',  label='Training loss')
-        plt.plot(epochs, valid_losses, color='blue', label='Validation loss')
+        epochs = range(1, len(train_losses_x) + 1)
+       # plt.plot(epochs, train_losses, color='green',  label='Training loss')
+        #plt.plot(epochs, valid_losses, color='blue', label='Validation loss')
+
+        self.figure_counter += 1
+        plt.figure(self.figure_counter, figsize=(20, 12))
+        plt.margins(0.1)
+
+        gs = gridspec.GridSpec(2, 2)
+        ax = plt.subplot(gs[0, 0])
+        ax.set_title('x')
+
+
+        plt.plot(epochs, train_losses_x, color='green', label='Training loss')
+        plt.plot(epochs, valid_losses_x, color='black', label='Validation loss')
         plt.legend()
-        plt.title('Learning curves')
+
+        ax = plt.subplot(gs[0, 1])
+        ax.set_title('y')
+
+        plt.plot(epochs, train_losses_y, color='blue', label='Training loss')
+        plt.plot(epochs, valid_losses_y, color='black', label='Validation loss')
+        plt.legend()
+
+        ax = plt.subplot(gs[1, 0])
+        ax.set_title('z')
+
+        plt.plot(epochs, train_losses_z, color='r', label='Training loss')
+        plt.plot(epochs, valid_losses_z, color='black', label='Validation loss')
+        plt.legend()
+
+        ax = plt.subplot(gs[1, 1])
+        ax.set_title('phi')
+
+        plt.plot(epochs, train_losses_phi, color='m', label='Training loss')
+        plt.plot(epochs, valid_losses_phi, color='black', label='Validation loss')
+        plt.legend()
+
+        plt.subplots_adjust(hspace=0.3)
+        plt.suptitle('Learning curves')
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
-        plt.xticks(epochs)
+
 
 
     def PlotMSE(self, MSE):
