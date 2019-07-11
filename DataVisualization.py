@@ -6,19 +6,18 @@ import numpy as np
 import cv2
 
 class DataVisualization:
-    def __init__(self):
-        self.figure_counter = 0
+   # def __init__(self):
+    #    self.figure_counter = 0
 
-    def PlotLoss(self, train_losses_x, train_losses_y, train_losses_z, train_losses_phi , valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi):
-        #self.figure_counter += 1
-        #plt.figure(self.figure_counter, figsize=(10, 6))
+    figure_counter = 0
+
+    @staticmethod
+    def PlotLoss(train_losses_x, train_losses_y, train_losses_z, train_losses_phi , valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi):
 
         epochs = range(1, len(train_losses_x) + 1)
-       # plt.plot(epochs, train_losses, color='green',  label='Training loss')
-        #plt.plot(epochs, valid_losses, color='blue', label='Validation loss')
 
-        self.figure_counter += 1
-        plt.figure(self.figure_counter, figsize=(20, 12))
+        DataVisualization.figure_counter += 1
+        plt.figure(DataVisualization.figure_counter, figsize=(20, 12))
         plt.margins(0.1)
 
         gs = gridspec.GridSpec(2, 2)
@@ -57,10 +56,10 @@ class DataVisualization:
         plt.ylabel('Loss')
 
 
-
-    def PlotMSE(self, MSE):
-        self.figure_counter += 1
-        plt.figure(self.figure_counter, figsize=(10, 6))
+    @staticmethod
+    def PlotMSE(MSE):
+        DataVisualization.figure_counter += 1
+        plt.figure(DataVisualization.figure_counter, figsize=(10, 6))
 
         epochs = range(1, len(MSE) + 1)
         MSE = torch.stack(MSE, 0)
@@ -83,9 +82,10 @@ class DataVisualization:
         plt.xticks(epochs)
 
 
-    def PlotMAE(self, MAE):
-        self.figure_counter += 1
-        plt.figure(self.figure_counter, figsize=(10, 6))
+    @staticmethod
+    def PlotMAE(MAE):
+        DataVisualization.figure_counter += 1
+        plt.figure(DataVisualization.figure_counter, figsize=(10, 6))
 
         epochs = range(1, len(MAE) + 1)
         MAE = torch.stack(MAE, 0)
@@ -107,9 +107,11 @@ class DataVisualization:
         plt.ylabel('MAE')
         plt.xticks(epochs)
 
-    def PlotR2Score(self, r2_score):
-        self.figure_counter += 1
-        plt.figure(self.figure_counter, figsize=(10, 6))
+
+    @staticmethod
+    def PlotR2Score(r2_score):
+        DataVisualization.figure_counter += 1
+        plt.figure(DataVisualization.figure_counter, figsize=(10, 6))
 
         epochs = range(1, len(r2_score) + 1)
         r2_score = torch.stack(r2_score, 0)
@@ -132,9 +134,10 @@ class DataVisualization:
         plt.xticks(epochs)
 
 
-    def PlotGTandEstimationVsTime(self, gt_labels, predictions):
-        self.figure_counter += 1
-        plt.figure(self.figure_counter, figsize=(20, 12))
+    @staticmethod
+    def PlotGTandEstimationVsTime(gt_labels, predictions):
+        DataVisualization.figure_counter += 1
+        plt.figure(DataVisualization.figure_counter, figsize=(20, 12))
         plt.margins(0.1)
 
         gt_labels = torch.stack(gt_labels, 0)
@@ -182,12 +185,16 @@ class DataVisualization:
         plt.subplots_adjust(hspace=0.3)
         plt.suptitle('Ground Truth and Predictions vs time')
 
-    def DisplayPlots(self):
+
+    @staticmethod
+    def DisplayPlots():
         plt.show()
 
-    def PlotGTVsEstimation(self, gt_labels, predictions):
-        self.figure_counter += 1
-        plt.figure(self.figure_counter, figsize=(20, 12))
+
+    @staticmethod
+    def PlotGTVsEstimation(gt_labels, predictions):
+        DataVisualization.figure_counter += 1
+        plt.figure(DataVisualization.figure_counter, figsize=(20, 12))
 
         gt_labels = torch.stack(gt_labels, 0)
         predictions = torch.stack(predictions, 0)
@@ -239,7 +246,8 @@ class DataVisualization:
         plt.suptitle('Ground Truth vs Predictions')
 
 
-    def DisplayVideoFrame(self, frame):
+    @staticmethod
+    def DisplayVideoFrame(frame):
 
         frame = frame.transpose(1, 2, 0)
         frame = frame.astype(np.uint8)
@@ -248,8 +256,9 @@ class DataVisualization:
         cv2.waitKey(10)
 
 
-    def DisplayDatasetVideo(self, data):
+    @staticmethod
+    def DisplayDatasetVideo(data):
 
         length = len(data)
         for i in range(0, length):
-            self.DisplayVideoFrame(data[i])
+            DataVisualization.DisplayVideoFrame(data[i])

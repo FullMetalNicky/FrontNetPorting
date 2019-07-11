@@ -11,21 +11,16 @@ from ValidationUtils import Metrics
 class ModelTrainer:
     def __init__(self, model, num_epochs=80):
         self.num_epochs = num_epochs
-        self.learning_rate = 0.001
         self.model = model
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        print(self.device)
         self.model.to(self.device)
-        self.visualizer = DataVisualization()
 
         # Loss and optimizer
         self.criterion = nn.L1Loss()
-        self.optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
-        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=np.sqrt(0.1), patience=5, verbose=False,
-                                                   threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0.1e-6,
-                                                   eps=1e-08)
-        self.early_stopping = EarlyStopping(patience=10, verbose=True)
-        self.metrics = Metrics()
+        self.optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+    def GetModel(self):
+        return self.model
 
     def TrainSingleEpoch(self, training_generator):
 
@@ -35,6 +30,7 @@ class ModelTrainer:
         train_loss_z = MovingAverage()
         train_loss_phi = MovingAverage()
 
+        i = 0
         for batch_samples, batch_targets in training_generator:
 
             batch_targets = batch_targets.to(self.device)
@@ -51,12 +47,15 @@ class ModelTrainer:
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-            # train_loss.update(loss)
             train_loss_x.update(loss_x)
             train_loss_y.update(loss_y)
             train_loss_z.update(loss_z)
             train_loss_phi.update(loss_phi)
 
+            if (i + 1) % 100 == 0:
+                print("Step [{}]: Average train loss {}, {}, {}, {}".format(i+1, train_loss_x.value, train_loss_y.value, train_loss_z.value,
+                                                           train_loss_phi.value))
+            i += 1
 
         return train_loss_x.value, train_loss_y.value, train_loss_z.value, train_loss_phi.value
 
@@ -97,11 +96,10 @@ class ModelTrainer:
                 outputs = torch.t(outputs)
                 y_pred.extend(outputs.cpu().numpy())
 
-           # print("Average loss {}, {}, {}, {}".format(valid_loss_x.value, valid_loss_y.value, valid_loss_z.value,
-            #                                           valid_loss_phi.value))
+            print("Average validation loss {}, {}, {}, {}".format(valid_loss_x.value, valid_loss_y.value, valid_loss_z.value,
+                                                       valid_loss_phi.value))
 
-        self.scheduler.step(valid_loss.value)
-        return valid_loss_x.value, valid_loss_y.value, valid_loss_z.value, valid_loss_phi.value
+        return valid_loss_x.value, valid_loss_y.value, valid_loss_z.value, valid_loss_phi.value, y_pred, gt_labels
 
     def Train(self, training_generator, validation_generator):
         train_losses_x = []
@@ -114,94 +112,37 @@ class ModelTrainer:
         valid_losses_phi = []
         y_pred_viz = []
         gt_labels_viz = []
-        self.metrics.Reset()
+        metrics = Metrics()
+        early_stopping = EarlyStopping(patience=10, verbose=True)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=np.sqrt(0.1),
+                                                                    patience=5, verbose=False,
+                                                                    threshold=0.0001, threshold_mode='rel', cooldown=0,
+                                                                    min_lr=0.1e-6, eps=1e-08)
 
-        for epoch in range(self.num_epochs):
-            print("Starting Epoch {}".format(epoch + 1))
+        for epoch in range(1, self.num_epochs + 1):
+            print("Starting Epoch {}".format(epoch))
 
-            self.model.train()
-            train_loss_x = MovingAverage()
-            train_loss_y = MovingAverage()
-            train_loss_z = MovingAverage()
-            train_loss_phi = MovingAverage()
-            i = 0
+            train_loss_x, train_loss_y, train_loss_z, train_loss_phi = self.TrainSingleEpoch(training_generator)
 
-            for batch_samples, batch_targets in training_generator:
+            train_losses_x.append(train_loss_x)
+            train_losses_y.append(train_loss_y)
+            train_losses_z.append(train_loss_z)
+            train_losses_phi.append(train_loss_phi)
 
-                batch_targets = batch_targets.to(self.device)
-                batch_samples = batch_samples.to(self.device)
-                outputs = self.model(batch_samples)
+            valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+                validation_generator)
 
-                loss_x = self.criterion(outputs[0], (batch_targets[:, 0]).view(-1, 1))
-                loss_y = self.criterion(outputs[1], (batch_targets[:, 1]).view(-1, 1))
-                loss_z = self.criterion(outputs[2], (batch_targets[:, 2]).view(-1, 1))
-                loss_phi = self.criterion(outputs[3], (batch_targets[:, 3]).view(-1, 1))
-                loss = loss_x + loss_y + loss_z + loss_phi
+            valid_losses_x.append(valid_loss_x)
+            valid_losses_y.append(valid_loss_y)
+            valid_losses_z.append(valid_loss_z)
+            valid_losses_phi.append(valid_loss_phi)
 
-                # Backward and optimize
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-                #train_loss.update(loss)
-                train_loss_x.update(loss_x)
-                train_loss_y.update(loss_y)
-                train_loss_z.update(loss_z)
-                train_loss_phi.update(loss_phi)
-
-                if (i + 1) % 100 == 0:
-                    print("Epoch [{}/{}], Step [{}] Loss: {:.4f}"
-                          .format(epoch + 1, self.num_epochs, i + 1, loss.item()))
-
-                i += 1
-
-            train_losses_x.append(train_loss_x.value)
-            train_losses_y.append(train_loss_y.value)
-            train_losses_z.append(train_loss_z.value)
-            train_losses_phi.append(train_loss_phi.value)
-
-
-            self.model.eval()
-            valid_loss = RunningAverage()
-            valid_loss_x = RunningAverage()
-            valid_loss_y = RunningAverage()
-            valid_loss_z = RunningAverage()
-            valid_loss_phi = RunningAverage()
-
-            y_pred = []
-            gt_labels = []
-            with torch.no_grad():
-                for batch_samples, batch_targets in validation_generator:
-                    gt_labels.extend(batch_targets.cpu().numpy())
-                    #gt_labels.extend(batch_targets)
-                    batch_targets = batch_targets.to(self.device)
-                    batch_samples = batch_samples.to(self.device)
-                    outputs = self.model(batch_samples)
-
-                    loss_x = self.criterion(outputs[0], (batch_targets[:, 0]).view(-1, 1))
-                    loss_y = self.criterion(outputs[1], (batch_targets[:, 1]).view(-1, 1))
-                    loss_z = self.criterion(outputs[2], (batch_targets[:, 2]).view(-1, 1))
-                    loss_phi = self.criterion(outputs[3], (batch_targets[:, 3]).view(-1, 1))
-                    loss = loss_x + loss_y + loss_z + loss_phi
-
-                    valid_loss.update(loss)
-                    valid_loss_x.update(loss_x)
-                    valid_loss_y.update(loss_y)
-                    valid_loss_z.update(loss_z)
-                    valid_loss_phi.update(loss_phi)
-
-                    outputs = torch.stack(outputs, 0)
-                    outputs = torch.squeeze(outputs)
-                    outputs = torch.t(outputs)
-                    y_pred.extend(outputs.cpu().numpy())
-                    #y_pred.extend(outputs.cpu())s
-
-                print("Average loss {}, {}, {}, {}".format(valid_loss_x.value, valid_loss_y.value, valid_loss_z.value, valid_loss_phi.value))
-
-            self.scheduler.step(valid_loss.value)
+            valid_loss = valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi
+            scheduler.step(valid_loss)
 
             gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
             y_pred = torch.tensor(y_pred, dtype=torch.float32)
-            MSE, MAE, r_score = self.metrics.Update(y_pred, gt_labels)
+            MSE, MAE, r_score = metrics.Update(y_pred, gt_labels)
 
             y_pred_viz.append(y_pred)
             gt_labels_viz.append(gt_labels)
@@ -209,30 +150,24 @@ class ModelTrainer:
             print('Validation MAE: {}'.format(MAE))
             print('Validation r_score: {}'.format(r_score))
 
-            valid_losses_x.append(valid_loss_x.value)
-            valid_losses_y.append(valid_loss_y.value)
-            valid_losses_z.append(valid_loss_z.value)
-            valid_losses_phi.append(valid_loss_phi.value)
-
-            #valid_losses.append(valid_loss.value)
             checkpoint_filename = 'FrontNet-{:03d}.pkl'.format(epoch)
-            self.early_stopping(valid_loss.value, self.model, epoch, checkpoint_filename)
-            if self.early_stopping.early_stop:
+            early_stopping(valid_loss, self.model, epoch, checkpoint_filename)
+            if early_stopping.early_stop:
                 print("Early stopping")
                 break
 
-        MSEs = self.metrics.GetMSE()
-        MAEs = self.metrics.GetMAE()
-        r_score = self.metrics.Getr2_score()
+        MSEs = metrics.GetMSE()
+        MAEs = metrics.GetMAE()
+        r_score = metrics.Getr2_score()
 
-        self.visualizer.PlotLoss(train_losses_x, train_losses_y, train_losses_z, train_losses_phi , valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi)
-        self.visualizer.PlotMSE(MSEs)
-        self.visualizer.PlotMAE(MAEs)
-        self.visualizer.PlotR2Score(r_score)
+        DataVisualization.PlotLoss(train_losses_x, train_losses_y, train_losses_z, train_losses_phi , valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi)
+        DataVisualization.PlotMSE(MSEs)
+        DataVisualization.PlotMAE(MAEs)
+        DataVisualization.PlotR2Score(r_score)
 
-        self.visualizer.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
-        self.visualizer.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
-        self.visualizer.DisplayPlots()
+        DataVisualization.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
+        DataVisualization.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
+        DataVisualization.DisplayPlots()
        # return train_losses, valid_losses
 
     def PerdictSingleSample(self, test_generator):
@@ -259,56 +194,23 @@ class ModelTrainer:
 
     def Predict(self, test_generator):
 
-        valid_loss = RunningAverage()
-        valid_loss_x = RunningAverage()
-        valid_loss_y = RunningAverage()
-        valid_loss_z = RunningAverage()
-        valid_loss_phi = RunningAverage()
-        y_pred = []
-        gt_labels = []
         y_pred_viz = []
         gt_labels_viz = []
-        self.model.eval()
-        self.metrics.Reset()
 
-        with torch.no_grad():
-            for batch_samples, batch_targets in test_generator:
+        metrics = Metrics()
 
-                gt_labels.extend(batch_targets.cpu().numpy())
-                batch_targets = batch_targets.to(self.device)
-                batch_samples = batch_samples.to(self.device)
-                outputs = self.model(batch_samples)
-
-                loss_x = self.criterion(outputs[0], (batch_targets[:, 0]).view(-1, 1))
-                loss_y = self.criterion(outputs[1], (batch_targets[:, 1]).view(-1, 1))
-                loss_z = self.criterion(outputs[2], (batch_targets[:, 2]).view(-1, 1))
-                loss_phi = self.criterion(outputs[3], (batch_targets[:, 3]).view(-1, 1))
-                loss = loss_x + loss_y + loss_z + loss_phi
-
-                valid_loss.update(loss)
-                valid_loss_x.update(loss_x)
-                valid_loss_y.update(loss_y)
-                valid_loss_z.update(loss_z)
-                valid_loss_phi.update(loss_phi)
-
-                outputs = torch.stack(outputs, 0)
-                outputs = torch.squeeze(outputs)
-                outputs = torch.t(outputs)
-                y_pred.extend(outputs.cpu().numpy())
-
-            #print("Average loss {}".format(valid_loss))
-            print("Average loss {}, {}, {}, {}".format(valid_loss_x.value, valid_loss_y.value, valid_loss_z.value,
-                                                       valid_loss_phi.value))
+        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+            test_generator)
 
         gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
         y_pred = torch.tensor(y_pred, dtype=torch.float32)
-        MSE, MAE, r_score = self.metrics.Update(y_pred, gt_labels)
+        MSE, MAE, r_score = metrics.Update(y_pred, gt_labels)
 
         y_pred_viz.append(y_pred)
         gt_labels_viz.append(gt_labels)
-        self.visualizer.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
-        self.visualizer.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
-        self.visualizer.DisplayPlots()
+        DataVisualization.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
+        DataVisualization.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
+        DataVisualization.DisplayPlots()
         print('Test MSE: {}'.format(MSE))
         print('Test MAE: {}'.format(MAE))
         print('Test r_score: {}'.format(r_score))
