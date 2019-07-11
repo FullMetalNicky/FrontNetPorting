@@ -126,3 +126,5 @@ dmypy.json
 /__pycache__
 /v1
 *.ckpt
+
+nemo/
