@@ -2,21 +2,21 @@ import torch
 
 
 class ModelManager:
-    def Read(self, filename, model):
-
-        checkpoint_dict = torch.load(filename)
-        epoch = checkpoint_dict['epoch']
+    @staticmethod
+    def Read(filename, model):
 
         if torch.cuda.is_available():
-            model.load_state_dict(checkpoint_dict['model'])
-
+            state_dict = torch.load(filename)
         else:
             state_dict = torch.load(filename, map_location='cpu')
-            model.load_state_dict(state_dict, strict=True)
+
+        model.load_state_dict(state_dict['model'])
+        epoch = state_dict['epoch']
 
         return epoch
 
-    def Write(self, model, epoch, filename):
+    @staticmethod
+    def Write(model, epoch, filename):
         checkpoint_dict = {
             'model': model.state_dict(),
             'epoch': epoch

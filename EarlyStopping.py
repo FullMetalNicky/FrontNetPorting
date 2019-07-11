@@ -21,7 +21,6 @@ class EarlyStopping:
         self.best_score = None
         self.early_stop = False
         self.val_loss_min = np.Inf
-        self.manager = ModelManager()
 
     def __call__(self, val_loss, model, epoch, file_name='checkpoint.pt'):
 
@@ -44,5 +43,5 @@ class EarlyStopping:
         '''Saves model when validation loss decrease.'''
         if self.verbose:
             print(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model as ',file_name)
-        self.manager.Write(model, epoch, file_name)
+        ModelManager.Write(model, epoch, file_name)
         self.val_loss_min = val_loss
