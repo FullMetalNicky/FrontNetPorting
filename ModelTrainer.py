@@ -27,6 +27,81 @@ class ModelTrainer:
         self.early_stopping = EarlyStopping(patience=10, verbose=True)
         self.metrics = Metrics()
 
+    def TrainSingleEpoch(self, training_generator):
+
+        self.model.train()
+        train_loss_x = MovingAverage()
+        train_loss_y = MovingAverage()
+        train_loss_z = MovingAverage()
+        train_loss_phi = MovingAverage()
+
+        for batch_samples, batch_targets in training_generator:
+
+            batch_targets = batch_targets.to(self.device)
+            batch_samples = batch_samples.to(self.device)
+            outputs = self.model(batch_samples)
+
+            loss_x = self.criterion(outputs[0], (batch_targets[:, 0]).view(-1, 1))
+            loss_y = self.criterion(outputs[1], (batch_targets[:, 1]).view(-1, 1))
+            loss_z = self.criterion(outputs[2], (batch_targets[:, 2]).view(-1, 1))
+            loss_phi = self.criterion(outputs[3], (batch_targets[:, 3]).view(-1, 1))
+            loss = loss_x + loss_y + loss_z + loss_phi
+
+            # Backward and optimize
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+            # train_loss.update(loss)
+            train_loss_x.update(loss_x)
+            train_loss_y.update(loss_y)
+            train_loss_z.update(loss_z)
+            train_loss_phi.update(loss_phi)
+
+
+        return train_loss_x.value, train_loss_y.value, train_loss_z.value, train_loss_phi.value
+
+
+    def ValidateSingleEpoch(self, validation_generator):
+
+        self.model.eval()
+        valid_loss = RunningAverage()
+        valid_loss_x = RunningAverage()
+        valid_loss_y = RunningAverage()
+        valid_loss_z = RunningAverage()
+        valid_loss_phi = RunningAverage()
+
+        y_pred = []
+        gt_labels = []
+        with torch.no_grad():
+            for batch_samples, batch_targets in validation_generator:
+                gt_labels.extend(batch_targets.cpu().numpy())
+                # gt_labels.extend(batch_targets)
+                batch_targets = batch_targets.to(self.device)
+                batch_samples = batch_samples.to(self.device)
+                outputs = self.model(batch_samples)
+
+                loss_x = self.criterion(outputs[0], (batch_targets[:, 0]).view(-1, 1))
+                loss_y = self.criterion(outputs[1], (batch_targets[:, 1]).view(-1, 1))
+                loss_z = self.criterion(outputs[2], (batch_targets[:, 2]).view(-1, 1))
+                loss_phi = self.criterion(outputs[3], (batch_targets[:, 3]).view(-1, 1))
+                loss = loss_x + loss_y + loss_z + loss_phi
+
+                valid_loss.update(loss)
+                valid_loss_x.update(loss_x)
+                valid_loss_y.update(loss_y)
+                valid_loss_z.update(loss_z)
+                valid_loss_phi.update(loss_phi)
+
+                outputs = torch.stack(outputs, 0)
+                outputs = torch.squeeze(outputs)
+                outputs = torch.t(outputs)
+                y_pred.extend(outputs.cpu().numpy())
+
+           # print("Average loss {}, {}, {}, {}".format(valid_loss_x.value, valid_loss_y.value, valid_loss_z.value,
+            #                                           valid_loss_phi.value))
+
+        self.scheduler.step(valid_loss.value)
+        return valid_loss_x.value, valid_loss_y.value, valid_loss_z.value, valid_loss_phi.value
 
     def Train(self, training_generator, validation_generator):
         train_losses_x = []
@@ -141,7 +216,7 @@ class ModelTrainer:
 
             #valid_losses.append(valid_loss.value)
             checkpoint_filename = 'FrontNet-{:03d}.pkl'.format(epoch)
-            self.early_stopping(valid_loss.value, self.model, epoch, checkpoint_filename, self.optimizer)
+            self.early_stopping(valid_loss.value, self.model, epoch, checkpoint_filename)
             if self.early_stopping.early_stop:
                 print("Early stopping")
                 break
