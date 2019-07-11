@@ -102,16 +102,7 @@ class ModelTrainer:
         return valid_loss_x.value, valid_loss_y.value, valid_loss_z.value, valid_loss_phi.value, y_pred, gt_labels
 
     def Train(self, training_generator, validation_generator):
-        train_losses_x = []
-        train_losses_y = []
-        train_losses_z = []
-        train_losses_phi = []
-        valid_losses_x = []
-        valid_losses_y = []
-        valid_losses_z = []
-        valid_losses_phi = []
-        y_pred_viz = []
-        gt_labels_viz = []
+
         metrics = Metrics()
         early_stopping = EarlyStopping(patience=10, verbose=True)
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=np.sqrt(0.1),
@@ -124,28 +115,18 @@ class ModelTrainer:
 
             train_loss_x, train_loss_y, train_loss_z, train_loss_phi = self.TrainSingleEpoch(training_generator)
 
-            train_losses_x.append(train_loss_x)
-            train_losses_y.append(train_loss_y)
-            train_losses_z.append(train_loss_z)
-            train_losses_phi.append(train_loss_phi)
-
             valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
                 validation_generator)
-
-            valid_losses_x.append(valid_loss_x)
-            valid_losses_y.append(valid_loss_y)
-            valid_losses_z.append(valid_loss_z)
-            valid_losses_phi.append(valid_loss_phi)
 
             valid_loss = valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi
             scheduler.step(valid_loss)
 
             gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
             y_pred = torch.tensor(y_pred, dtype=torch.float32)
-            MSE, MAE, r_score = metrics.Update(y_pred, gt_labels)
+            MSE, MAE, r_score = metrics.Update(y_pred, gt_labels,
+                                               [train_loss_x, train_loss_y, train_loss_z, train_loss_phi],
+                                               [valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi])
 
-            y_pred_viz.append(y_pred)
-            gt_labels_viz.append(gt_labels)
             print('Validation MSE: {}'.format(MSE))
             print('Validation MAE: {}'.format(MAE))
             print('Validation r_score: {}'.format(r_score))
@@ -159,6 +140,9 @@ class ModelTrainer:
         MSEs = metrics.GetMSE()
         MAEs = metrics.GetMAE()
         r_score = metrics.Getr2_score()
+        y_pred_viz = metrics.GetPred()
+        gt_labels_viz = metrics.GetLabels()
+        train_losses_x, train_losses_y, train_losses_z, train_losses_phi, valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi = metrics.GetLosses()
 
         DataVisualization.PlotLoss(train_losses_x, train_losses_y, train_losses_z, train_losses_phi , valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi)
         DataVisualization.PlotMSE(MSEs)
@@ -194,9 +178,6 @@ class ModelTrainer:
 
     def Predict(self, test_generator):
 
-        y_pred_viz = []
-        gt_labels_viz = []
-
         metrics = Metrics()
 
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
@@ -204,10 +185,12 @@ class ModelTrainer:
 
         gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
         y_pred = torch.tensor(y_pred, dtype=torch.float32)
-        MSE, MAE, r_score = metrics.Update(y_pred, gt_labels)
+        MSE, MAE, r_score = metrics.Update(y_pred, gt_labels,
+                                           [0, 0, 0, 0]
+                                           [valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi])
 
-        y_pred_viz.append(y_pred)
-        gt_labels_viz.append(gt_labels)
+        y_pred_viz = metrics.GetPred()
+        gt_labels_viz = metrics.GetLabels()
         DataVisualization.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
         DataVisualization.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
         DataVisualization.DisplayPlots()

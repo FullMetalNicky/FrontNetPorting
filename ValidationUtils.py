@@ -59,7 +59,32 @@ class Metrics:
         self.MAE = []
         self.r_score = []
 
-    def Update(self, y_pred, gt_labels):
+        self.train_losses_x = []
+        self.train_losses_y = []
+        self.train_losses_z = []
+        self.train_losses_phi = []
+        self.valid_losses_x = []
+        self.valid_losses_y = []
+        self.valid_losses_z = []
+        self.valid_losses_phi = []
+        self.gt_labels = []
+        self.y_pred = []
+
+    def Update(self, y_pred, gt_labels, train_loss, valid_loss):
+
+        self.train_losses_x.append(train_loss[0])
+        self.train_losses_y.append(train_loss[1])
+        self.train_losses_z.append(train_loss[2])
+        self.train_losses_phi.append(train_loss[3])
+
+        self.valid_losses_x.append(valid_loss[0])
+        self.valid_losses_y.append(valid_loss[1])
+        self.valid_losses_z.append(valid_loss[2])
+        self.valid_losses_phi.append(valid_loss[3])
+
+        self.y_pred.append(y_pred)
+        self.gt_labels.append(gt_labels)
+
         MSE = torch.mean((y_pred - gt_labels).pow(2), 0)
         MAE = torch.mean(torch.abs(y_pred - gt_labels), 0)
 
@@ -99,6 +124,16 @@ class Metrics:
         self.MSE.clear()
         self.MAE.clear()
         self.r_score.clear()
+
+    def GetPred(self):
+        return self.y_pred
+
+    def GetLabels(self):
+        return self.gt_labels
+
+    def GetLosses(self):
+        return self.train_losses_x, self.train_losses_y, self.train_losses_z, self.train_losses_phi , \
+               self.valid_losses_x, self.valid_losses_y, self.valid_losses_z, self.valid_losses_phi
 
     def GetMSE(self):
         return self.MSE
