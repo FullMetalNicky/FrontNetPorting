@@ -13,7 +13,7 @@ class ModelTrainer:
         self.num_epochs = num_epochs
         self.model = model
         if torch.cuda.is_available():
-            device = input("Select GPU, e.g cuda:0")
+            device = input("Select GPU:  ")
         else:
             device = "cpu"
         print(device)

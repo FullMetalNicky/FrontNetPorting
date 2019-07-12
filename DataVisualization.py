@@ -52,6 +52,7 @@ class DataVisualization:
         plt.suptitle('Learning curves')
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
+        plt.savefig('LearningCurves.png')
 
 
     @staticmethod
@@ -78,6 +79,8 @@ class DataVisualization:
         plt.xlabel('Epoch')
         plt.ylabel('MSE')
         plt.xticks(epochs)
+        plt.savefig('MSE.png')
+
 
 
     @staticmethod
@@ -104,6 +107,7 @@ class DataVisualization:
         plt.xlabel('Epoch')
         plt.ylabel('MAE')
         plt.xticks(epochs)
+        plt.savefig('MAE.png')
 
 
     @staticmethod
@@ -130,6 +134,7 @@ class DataVisualization:
         plt.xlabel('Epoch')
         plt.ylabel('r2_score')
         plt.xticks(epochs)
+        plt.savefig('Rsq.png')
 
 
     @staticmethod
@@ -182,6 +187,7 @@ class DataVisualization:
 
         plt.subplots_adjust(hspace=0.3)
         plt.suptitle('Ground Truth and Predictions vs time')
+        plt.savefig('GTandPredVsTime.png')
 
 
     @staticmethod
@@ -242,6 +248,8 @@ class DataVisualization:
 
         plt.subplots_adjust(hspace=0.3)
         plt.suptitle('Ground Truth vs Predictions')
+        plt.savefig('GTvsPred.png')
+
 
 
     @staticmethod
