@@ -9,8 +9,9 @@ from ValidationUtils import Metrics
 
 
 class ModelTrainer:
-    def __init__(self, model, num_epochs=80):
+    def __init__(self, model, num_epochs=100):
         self.num_epochs = num_epochs
+
         self.model = model
         if torch.cuda.is_available():
             device = input("Select GPU:  ")
@@ -24,8 +25,12 @@ class ModelTrainer:
         self.criterion = nn.L1Loss()
         self.optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
+        self.folderPath = "Models/"
+        #self.folderPath = ""
+
     def GetModel(self):
         return self.model
+
 
     def TrainSingleEpoch(self, training_generator):
 
@@ -114,6 +119,7 @@ class ModelTrainer:
                                                                     patience=5, verbose=False,
                                                                     threshold=0.0001, threshold_mode='rel', cooldown=0,
                                                                     min_lr=0.1e-6, eps=1e-08)
+        loss_epoch_m1 = 1e3
 
         for epoch in range(1, self.num_epochs + 1):
             print("Starting Epoch {}".format(epoch))
@@ -136,7 +142,7 @@ class ModelTrainer:
             print('Validation MAE: {}'.format(MAE))
             print('Validation r_score: {}'.format(r_score))
 
-            checkpoint_filename = 'FrontNet-{:03d}.pkl'.format(epoch)
+            checkpoint_filename = self.folderPath + 'FrontNet-{:03d}.pkl'.format(epoch)
             early_stopping(valid_loss, self.model, epoch, checkpoint_filename)
             if early_stopping.early_stop:
                 print("Early stopping")
@@ -149,6 +155,7 @@ class ModelTrainer:
         gt_labels_viz = metrics.GetLabels()
         train_losses_x, train_losses_y, train_losses_z, train_losses_phi, valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi = metrics.GetLosses()
 
+        DataVisualization.desc = "Train_"
         DataVisualization.PlotLoss(train_losses_x, train_losses_y, train_losses_z, train_losses_phi , valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi)
         DataVisualization.PlotMSE(MSEs)
         DataVisualization.PlotMAE(MAEs)
@@ -191,11 +198,13 @@ class ModelTrainer:
         gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
         y_pred = torch.tensor(y_pred, dtype=torch.float32)
         MSE, MAE, r_score = metrics.Update(y_pred, gt_labels,
-                                           [0, 0, 0, 0]
+                                           [0, 0, 0, 0],
                                            [valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi])
 
         y_pred_viz = metrics.GetPred()
         gt_labels_viz = metrics.GetLabels()
+
+        DataVisualization.desc = "Test_"
         DataVisualization.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
         DataVisualization.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
         DataVisualization.DisplayPlots()

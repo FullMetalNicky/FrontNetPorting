@@ -8,6 +8,8 @@ import cv2
 class DataVisualization:
 
     figure_counter = 0
+    folderPath = "Results/"
+    desc = ""
 
     @staticmethod
     def PlotLoss(train_losses_x, train_losses_y, train_losses_z, train_losses_phi , valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi):
@@ -52,7 +54,8 @@ class DataVisualization:
         plt.suptitle('Learning curves')
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
-        plt.savefig('LearningCurves.png')
+
+        plt.savefig(DataVisualization.folderPath + DataVisualization.desc +'LearningCurves.png')
 
 
     @staticmethod
@@ -79,7 +82,7 @@ class DataVisualization:
         plt.xlabel('Epoch')
         plt.ylabel('MSE')
         plt.xticks(epochs)
-        plt.savefig('MSE.png')
+        plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'MSE.png')
 
 
 
@@ -107,7 +110,7 @@ class DataVisualization:
         plt.xlabel('Epoch')
         plt.ylabel('MAE')
         plt.xticks(epochs)
-        plt.savefig('MAE.png')
+        plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'MAE.png')
 
 
     @staticmethod
@@ -134,7 +137,7 @@ class DataVisualization:
         plt.xlabel('Epoch')
         plt.ylabel('r2_score')
         plt.xticks(epochs)
-        plt.savefig('Rsq.png')
+        plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'Rsq.png')
 
 
     @staticmethod
@@ -187,7 +190,7 @@ class DataVisualization:
 
         plt.subplots_adjust(hspace=0.3)
         plt.suptitle('Ground Truth and Predictions vs time')
-        plt.savefig('GTandPredVsTime.png')
+        plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'GTandPredVsTime.png')
 
 
     @staticmethod
@@ -248,7 +251,7 @@ class DataVisualization:
 
         plt.subplots_adjust(hspace=0.3)
         plt.suptitle('Ground Truth vs Predictions')
-        plt.savefig('GTvsPred.png')
+        plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'GTvsPred.png')
 
 
 
