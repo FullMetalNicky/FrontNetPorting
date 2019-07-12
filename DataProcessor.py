@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import random
-#from DataVisualization import DataVisualization
 
 class DataProcessor:
 
@@ -18,20 +17,12 @@ class DataProcessor:
         image_width = 108
 
         # split between train and test sets:
-        #x_train = 255 - train_set[:, 0]  # otherwise is inverted
         x_train = train_set[:, 0]
         x_train = np.vstack(x_train[:]).astype(np.float32)
         x_train = np.reshape(x_train, (-1, image_height, image_width, 3))
 
         x_train= np.swapaxes(x_train, 1, 3)
         x_train = np.swapaxes(x_train, 2, 3)
-
-        #viz = DataVisualization()
-        #viz.DisplayDatasetVideo(x_train)
-
-       #(63726, 60, 108, 3)
-        #x_train = np.reshape(x_train, (-1, 3, image_height, image_width))
-        #(63726, 3, 60, 108)
 
         y_train = train_set[:, 1]
         y_train = np.vstack(y_train[:]).astype(np.float32)
@@ -43,19 +34,14 @@ class DataProcessor:
         y_train = y_train[ix_tr, :]
         train_mean  = np.mean(y_train, 0)
         train_std = np.std(y_train, 0)
-       # y_train = (y_train - train_mean)/train_std
 
-        #x_test = 255 - test_set[:, 0]
         x_test = test_set[:, 0]
         x_test = np.vstack(x_test[:]).astype(np.float32)
         x_test = np.reshape(x_test, (-1, image_height, image_width, 3))
         x_test = np.swapaxes(x_test, 1, 3)
         x_test = np.swapaxes(x_test, 2, 3)
-        #x_test = np.reshape(x_test, (-1, 3, image_height, image_width))
         y_test = test_set[:, 1]
         y_test = np.vstack(y_test[:]).astype(np.float32)
-
-      #  y_test = (y_test - train_mean) / train_std
 
         visual_odom = test_set[:, 2]
         visual_odom = np.vstack(visual_odom[:]).astype(np.float32)

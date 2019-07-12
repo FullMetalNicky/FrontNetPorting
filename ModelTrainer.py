@@ -12,7 +12,12 @@ class ModelTrainer:
     def __init__(self, model, num_epochs=80):
         self.num_epochs = num_epochs
         self.model = model
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        if torch.cuda.is_available():
+            device = input("Select GPU, e.g cuda:0")
+        else:
+            device = "cpu"
+        print(device)
+        self.device = torch.device(device)
         self.model.to(self.device)
 
         # Loss and optimizer

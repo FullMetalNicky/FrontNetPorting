@@ -6,8 +6,6 @@ import numpy as np
 import cv2
 
 class DataVisualization:
-   # def __init__(self):
-    #    self.figure_counter = 0
 
     figure_counter = 0
 
