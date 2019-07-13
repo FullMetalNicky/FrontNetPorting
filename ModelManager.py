@@ -5,10 +5,7 @@ class ModelManager:
     @staticmethod
     def Read(filename, model):
 
-        if torch.cuda.is_available():
-            state_dict = torch.load(filename)
-        else:
-            state_dict = torch.load(filename, map_location='cpu')
+        state_dict = torch.load(filename, map_location='cpu')
 
         model.load_state_dict(state_dict['model'])
         epoch = state_dict['epoch']

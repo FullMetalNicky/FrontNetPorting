@@ -14,7 +14,7 @@ class ModelTrainer:
 
         self.model = model
         if torch.cuda.is_available():
-            device = input("Select GPU:  ")
+            device = "cuda"
         else:
             device = "cpu"
         print(device)
