@@ -6,7 +6,6 @@ class ModelManager:
     def Read(filename, model):
 
         state_dict = torch.load(filename, map_location='cpu')
-
         model.load_state_dict(state_dict['model'])
         epoch = state_dict['epoch']
 
