@@ -7,9 +7,9 @@
     "lr_decay": 0.98,
     "relaxation": {
         "0": {
-            "W_bits": 12.0,
+            "W_bits": 8.0,
             "W_scale": 1.0,
-            "x_bits": 12.0,
+            "x_bits": 8.0,
             "x_scale": 2.0
         },
         "for_epochs": 3,

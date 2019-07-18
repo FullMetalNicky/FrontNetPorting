@@ -1,6 +1,7 @@
 # from https://github.com/Bjarten/early-stopping-pytorch/blob/master/pytorchtools.py
 import numpy as np
 from ModelManager import ModelManager
+import logging
 
 #Dario's code!!!
 #But I edited it and added my own stuff :)
@@ -31,7 +32,7 @@ class EarlyStopping:
             self.save_checkpoint(val_loss, model, epoch, file_name)
         elif score < self.best_score:
             self.counter += 1
-            print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+            logging.info("[EarlyStopping] counter: {} out of {}".format(self.count, self.patience))
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
@@ -42,6 +43,6 @@ class EarlyStopping:
     def save_checkpoint(self, val_loss, model, epoch, file_name):
         '''Saves model when validation loss decrease.'''
         if self.verbose:
-            print(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model as ',file_name)
+            logging.info("[EarlyStopping]  Validation loss decreased {} --> {}. Saving model as {}".format(self.val_loss_min, val_loss, file_name))
         ModelManager.Write(model, epoch, file_name)
         self.val_loss_min = val_loss

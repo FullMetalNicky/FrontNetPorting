@@ -86,9 +86,6 @@ def main():
 
     torch.manual_seed(args.seed)
 
-    #DATA_PATH = "/Users/usi/Downloads/"
-    train_loader, validation_loader, test_loader = LoadData(args)
-
     # [NeMO] Setup of console logging.
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s - %(levelname)s - %(message)s",
@@ -102,6 +99,9 @@ def main():
     formatter = logging.Formatter('%(message)s')
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
+
+    # DATA_PATH = "/Users/usi/Downloads/"
+    train_loader, validation_loader, test_loader = LoadData(args)
 
     # [NeMO] Loading of the JSON regime file.
     regime = {}
@@ -124,13 +124,15 @@ def main():
     if args.load_model is not None:
         ModelManager.Read(args.load_model, model)
 
-    trainer = ModelTrainer(model, args)
+    trainer = ModelTrainer(model, args, regime)
     if args.quantize:
-        trainer.Quantize(validation_loader, regime)
+        trainer.Quantize(validation_loader)
 
     trainer.Train(train_loader, validation_loader)
     trainer.Predict(test_loader)
 
+    if args.save_model is not None:
+        torch.save(trainer.model.state_dict(), args.save_model)
 
 if __name__ == '__main__':
     main()

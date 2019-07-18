@@ -10,50 +10,54 @@ import nemo
 import logging
 
 class ModelTrainer:
-    def __init__(self, model, args):
+    def __init__(self, model, args, regime):
         self.num_epochs = args.epochs
         self.args = args
         self.model = model
+        self.regime = regime
         if torch.cuda.is_available():
             device = "cuda"
         else:
             device = "cpu"
-        print(device)
+        logging.info("[ModelTrainer] " + device)
         self.device = torch.device(device)
         self.model.to(self.device)
 
         # Loss and optimizer
         self.criterion = nn.L1Loss()
-        self.optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+        if self.args.quantize:
+            self.optimizer = torch.optim.Adam(model.parameters(), lr=float(regime['lr']), weight_decay=float(regime['weight_decay']))
+        else:
+            self.optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
         self.relax = None
         self.folderPath = "Models/"
 
     def GetModel(self):
         return self.model
 
-    def Quantize(self, validation_loader, regime):
+    def Quantize(self, validation_loader):
         # [NeMO] This call "transforms" the model into a quantization-aware one, which is printed immediately afterwards.
         self.model = nemo.transform.quantize_pact(self.model)
-        logging.info("[FrontNet] Model: %s", self.model)
+        logging.info("[ModelTrainer] Model: %s", self.model)
         # [NeMO] NeMO re-training usually converges better using an Adam optimizer, and a smaller learning rate
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=float(regime['lr']),
-                                     weight_decay=float(regime['weight_decay']))
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=float(self.regime['lr']),
+                                     weight_decay=float(self.regime['weight_decay']))
 
         # [NeMO] DNNs that do not employ batch normalization layers nor have clipped activations (e.g. ReLU6) require
         # an initial calibration to transfer to a quantization-aware version. This is used to calibrate the scaling
         # parameters of quantization-aware activation layers to the point defined by the maximum activation value
         # seen during a validation run. DNNs that employ BN or ReLU6 (or both) do not require this operation, as their
         # activations are already statistically bounded in terms of dynamic range.
-        logging.info("[FrontNet] Gather statistics for non batch-normed activations")
+        logging.info("[ModelTrainer] Gather statistics for non batch-normed activations")
         self.model.set_statistics_act()
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
         self.model.unset_statistics_act()
         self.model.reset_alpha_act()
-        logging.info("[FrontNet] %.2f" % acc)
+        logging.info("[ModelTrainer] %.2f" % acc)
 
-        precision_rule = regime['relaxation']
+        precision_rule = self.regime['relaxation']
 
         # [NeMO] The evaluation engine performs a simple grid search to decide, among the possible quantization configurations,
         # which one is the most promising step for the relaxation procedure. It uses an internal heuristic binning validation
@@ -67,12 +71,14 @@ class ModelTrainer:
                 validation_loader)
             acc = torch.tensor(float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi))
             evale.report(acc)
-            logging.info("[FrontNet] %.1f-bit W, %.1f-bit x: %.2f" % (
+            logging.info("[ModelTrainer] %.1f-bit W, %.1f-bit x: %.2f" % (
                 evale.wgrid[evale.idx], evale.xgrid[evale.idx], acc))
-        Wbits, xbits = evale.get_next_config(upper_threshold=0.97)
+        #Wbits, xbits = evale.get_next_config(upper_threshold=0.97)
+        Wbits = 8
+        xbits = 8
         precision_rule['0']['W_bits'] = min(Wbits, precision_rule['0']['W_bits'])
         precision_rule['0']['x_bits'] = min(xbits, precision_rule['0']['x_bits'])
-        logging.info("[FrontNet] Choosing %.1f-bit W, %.1f-bit x for first step" % (
+        logging.info("[ModelTrainer] Choosing %.1f-bit W, %.1f-bit x for first step" % (
             precision_rule['0']['W_bits'], precision_rule['0']['x_bits']))
 
         # [NeMO] The relaxation engine can be stepped to automatically change the DNN precisions and end training if the final
@@ -114,7 +120,7 @@ class ModelTrainer:
             train_loss_phi.update(loss_phi)
 
             if (i + 1) % 100 == 0:
-                print("Step [{}]: Average train loss {}, {}, {}, {}".format(i+1, train_loss_x.value, train_loss_y.value, train_loss_z.value,
+                logging.info("[ModelTrainer] Step [{}]: Average train loss {}, {}, {}, {}".format(i+1, train_loss_x.value, train_loss_y.value, train_loss_z.value,
                                                            train_loss_phi.value))
             i += 1
 
@@ -156,8 +162,10 @@ class ModelTrainer:
                 outputs = torch.t(outputs)
                 y_pred.extend(outputs.cpu().numpy())
 
-            print("Average validation loss {}, {}, {}, {}".format(valid_loss_x.value, valid_loss_y.value, valid_loss_z.value,
-                                                       valid_loss_phi.value))
+            logging.info("[ModelTrainer] Average validation loss {}, {}, {}, {}".format(valid_loss_x.value, valid_loss_y.value,
+                                                                  valid_loss_z.value,
+                                                                  valid_loss_phi.value))
+
 
         return valid_loss_x.value, valid_loss_y.value, valid_loss_z.value, valid_loss_phi.value, y_pred, gt_labels
 
@@ -172,7 +180,7 @@ class ModelTrainer:
         loss_epoch_m1 = 1e3
 
         for epoch in range(1, self.args.epochs + 1):
-            print("Starting Epoch {}".format(epoch))
+            logging.info("[ModelTrainer] Starting Epoch {}".format(epoch))
 
             change_prec = False
             ended = False
@@ -195,14 +203,14 @@ class ModelTrainer:
                                                [train_loss_x, train_loss_y, train_loss_z, train_loss_phi],
                                                [valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi])
 
-            print('Validation MSE: {}'.format(MSE))
-            print('Validation MAE: {}'.format(MAE))
-            print('Validation r_score: {}'.format(r_score))
+            logging.info('[ModelTrainer] Validation MSE: {}'.format(MSE))
+            logging.info('[ModelTrainer] Validation MAE: {}'.format(MAE))
+            logging.info('[ModelTrainer] Validation r_score: {}'.format(r_score))
 
-            checkpoint_filename = self.folderPath + 'FrontNet-{:03d}.pkl'.format(epoch)
+            checkpoint_filename = self.folderPath + 'FrontNet-{:03d}.pt'.format(epoch)
             early_stopping(valid_loss, self.model, epoch, checkpoint_filename)
             if early_stopping.early_stop:
-                print("Early stopping")
+                logging.info("[ModelTrainer] Early stopping")
                 break
 
         MSEs = metrics.GetMSE()
@@ -231,7 +239,7 @@ class ModelTrainer:
         y_test = batch_targets[index]
         self.model.eval()
 
-        print('GT Values: {}'.format(y_test.cpu().numpy()))
+        logging.info('[ModelTrainer] GT Values: {}'.format(y_test.cpu().numpy()))
         with torch.no_grad():
             x_test = x_test.to(self.device)
             outputs = self.model(x_test)
@@ -239,7 +247,7 @@ class ModelTrainer:
         outputs = torch.stack(outputs, 0)
         outputs = torch.squeeze(outputs)
         outputs = torch.t(outputs)
-        print('Prediction Values: {}'.format(outputs.cpu().numpy()))
+        logging.info('[ModelTrainer] Prediction Values: {}'.format(outputs.cpu().numpy()))
 
 
     def Predict(self, test_generator):
@@ -262,7 +270,7 @@ class ModelTrainer:
         DataVisualization.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
         DataVisualization.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
         DataVisualization.DisplayPlots()
-        print('Test MSE: {}'.format(MSE))
-        print('Test MAE: {}'.format(MAE))
-        print('Test r_score: {}'.format(r_score))
+        logging.info('[ModelTrainer] Test MSE: {}'.format(MSE))
+        logging.info('[ModelTrainer] Test MAE: {}'.format(MAE))
+        logging.info('[ModelTrainer] Test r_score: {}'.format(r_score))
 

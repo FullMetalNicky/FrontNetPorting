@@ -1,14 +1,15 @@
 import pandas as pd
 import numpy as np
 import random
+import logging
 
 class DataProcessor:
 
     def ProcessData(self, trainPath, testPath):
         train_set = pd.read_pickle(trainPath).values
-        print('train shape: ' + str(train_set.shape))
+        logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
         test_set = pd.read_pickle(testPath).values
-        print('test shape: ' + str(test_set.shape))
+        logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
 
         n_val = 13000
         np.random.seed()
