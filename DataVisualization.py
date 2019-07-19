@@ -265,13 +265,14 @@ class DataVisualization:
         bar_length = 5
         ax1 = plt.subplot2grid((h, w), (0, 3), colspan=bar_length)
         ax1.set_title('x')
+        ax1.xaxis.tick_top()
         x_gt = gt_labels[0]
         x_pred = predictions[0]
         ax1.set_xlim([0, 4])
         ax1.set_ylim([-0.5, 0.5])
         ax1.set_yticklabels([])
-        plt.scatter(x_gt, 0,  color='green', label='GT')
-        plt.scatter(x_pred, 0, color='black', label='Prediction')
+        plt.scatter(x_gt, 0,  color='green', label='GT', s=100)
+        plt.scatter(x_pred, 0, color='black', label='Prediction', s=100)
         plt.legend()
 
         ax2 = plt.subplot2grid((h, w), (1, 0), rowspan=bar_length)
@@ -281,12 +282,12 @@ class DataVisualization:
         ax2.set_ylim([-1, 1])
         ax2.set_xlim([-0.5, 0.5])
         ax2.set_xticklabels([])
-        plt.scatter(0, y_gt, color='blue', label='GT')
-        plt.scatter(0, y_pred, color='black', label='Prediction')
+        plt.scatter(0, y_gt, color='blue', label='GT', s=100)
+        plt.scatter(0, y_pred, color='black', label='Prediction', s=100)
         plt.legend()
 
         ax3 = plt.subplot2grid((h, w), (1, 1), rowspan=bar_length, colspan=9)
-        ax3.set_title('image')
+        #ax3.set_title('image')
         ax3.set_yticklabels([])
         ax3.set_xticklabels([])
         frame = frame.transpose(1, 2, 0)
@@ -303,8 +304,8 @@ class DataVisualization:
         ax4.set_ylim([-1, 1])
         ax4.set_xlim([-0.5, 0.5])
         ax4.set_xticklabels([])
-        plt.scatter(0, z_gt, color='r', label='GT')
-        plt.scatter(0, z_pred, color='black', label='Prediction')
+        plt.scatter(0, z_gt, color='r', label='GT', s=100)
+        plt.scatter(0, z_pred, color='black', label='Prediction', s=100)
         plt.legend()
 
         ax5 = plt.subplot2grid((h, w), (6, 3), colspan=bar_length)
@@ -314,12 +315,12 @@ class DataVisualization:
         ax5.set_xlim([-2, 2])
         ax5.set_ylim([-0.5, 0.5])
         ax5.set_yticklabels([])
-        plt.scatter(phi_gt, 0, color='m', label='GT')
-        plt.scatter(phi_pred, 0,  color='black', label='Prediction')
+        plt.scatter(phi_gt, 0, color='m', label='GT', s=100)
+        plt.scatter(phi_pred, 0,  color='black', label='Prediction', s=100)
         plt.legend()
 
         plt.subplots_adjust(hspace=0.3, wspace = 0.3)
-        plt.suptitle('Ground Truth and Predictions')
+       # plt.suptitle('Ground Truth and Predictions')
         plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'GTandPredandPose.png')
 
 
