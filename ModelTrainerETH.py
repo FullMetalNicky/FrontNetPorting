@@ -247,7 +247,9 @@ class ModelTrainer:
         outputs = torch.stack(outputs, 0)
         outputs = torch.squeeze(outputs)
         outputs = torch.t(outputs)
-        logging.info('[ModelTrainer] Prediction Values: {}'.format(outputs.cpu().numpy()))
+        outputs = outputs.cpu().numpy()
+        logging.info('[ModelTrainer] Prediction Values: {}'.format(outputs))
+        return x_test[0].cpu().numpy(), y_test[0], outputs
 
 
     def Predict(self, test_generator):

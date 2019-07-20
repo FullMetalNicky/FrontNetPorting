@@ -6,7 +6,7 @@ from ValidationUtils import MovingAverage
 from DataVisualization import DataVisualization
 from EarlyStopping import EarlyStopping
 from ValidationUtils import Metrics
-
+import logging
 
 class ModelTrainer:
     def __init__(self, model, num_epochs=100):
@@ -17,7 +17,7 @@ class ModelTrainer:
             device = "cuda"
         else:
             device = "cpu"
-        print(device)
+        logging.info(device)
         self.device = torch.device(device)
         self.model.to(self.device)
 
@@ -63,7 +63,7 @@ class ModelTrainer:
             train_loss_phi.update(loss_phi)
 
             if (i + 1) % 100 == 0:
-                print("Step [{}]: Average train loss {}, {}, {}, {}".format(i+1, train_loss_x.value, train_loss_y.value, train_loss_z.value,
+                logging.info("Step [{}]: Average train loss {}, {}, {}, {}".format(i+1, train_loss_x.value, train_loss_y.value, train_loss_z.value,
                                                            train_loss_phi.value))
             i += 1
 
@@ -106,7 +106,7 @@ class ModelTrainer:
                 outputs = torch.t(outputs)
                 y_pred.extend(outputs.cpu().numpy())
 
-            print("Average validation loss {}, {}, {}, {}".format(valid_loss_x.value, valid_loss_y.value, valid_loss_z.value,
+            logging.info("Average validation loss {}, {}, {}, {}".format(valid_loss_x.value, valid_loss_y.value, valid_loss_z.value,
                                                        valid_loss_phi.value))
 
         return valid_loss_x.value, valid_loss_y.value, valid_loss_z.value, valid_loss_phi.value, y_pred, gt_labels
@@ -122,7 +122,7 @@ class ModelTrainer:
         loss_epoch_m1 = 1e3
 
         for epoch in range(1, self.num_epochs + 1):
-            print("Starting Epoch {}".format(epoch))
+            logging.info("Starting Epoch {}".format(epoch))
 
             train_loss_x, train_loss_y, train_loss_z, train_loss_phi = self.TrainSingleEpoch(training_generator)
 
@@ -138,14 +138,14 @@ class ModelTrainer:
                                                [train_loss_x, train_loss_y, train_loss_z, train_loss_phi],
                                                [valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi])
 
-            print('Validation MSE: {}'.format(MSE))
-            print('Validation MAE: {}'.format(MAE))
-            print('Validation r_score: {}'.format(r_score))
+            logging.info('Validation MSE: {}'.format(MSE))
+            logging.info('Validation MAE: {}'.format(MAE))
+            logging.info('Validation r_score: {}'.format(r_score))
 
             checkpoint_filename = self.folderPath + 'FrontNet-{:03d}.pkl'.format(epoch)
             early_stopping(valid_loss, self.model, epoch, checkpoint_filename)
             if early_stopping.early_stop:
-                print("Early stopping")
+                logging.info("Early stopping")
                 break
 
         MSEs = metrics.GetMSE()
@@ -177,7 +177,7 @@ class ModelTrainer:
 
         #self.visualizer.DisplayVideoFrame(x_test[0].cpu().numpy())
 
-        print('GT Values: {}'.format(y_test.cpu().numpy()))
+        logging.info('GT Values: {}'.format(y_test.cpu().numpy()))
         with torch.no_grad():
             x_test = x_test.to(self.device)
             outputs = self.model(x_test)
@@ -185,7 +185,9 @@ class ModelTrainer:
         outputs = torch.stack(outputs, 0)
         outputs = torch.squeeze(outputs)
         outputs = torch.t(outputs)
-        print('Prediction Values: {}'.format(outputs.cpu().numpy()))
+        outputs = outputs.cpu().numpy()
+        logging.info('Prediction Values: {}'.format(outputs))
+        return x_test[0].cpu().numpy(), y_test[0], outputs
 
 
     def Predict(self, test_generator):
@@ -208,7 +210,7 @@ class ModelTrainer:
         DataVisualization.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
         DataVisualization.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
         DataVisualization.DisplayPlots()
-        print('Test MSE: {}'.format(MSE))
-        print('Test MAE: {}'.format(MAE))
-        print('Test r_score: {}'.format(r_score))
+        logging.info('Test MSE: {}'.format(MSE))
+        logging.info('Test MAE: {}'.format(MAE))
+        logging.info('Test r_score: {}'.format(r_score))
 

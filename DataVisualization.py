@@ -314,7 +314,7 @@ class DataVisualization:
         plt.scatter(phi_gt, 0, color='green', label='GT', s=100)
         plt.scatter(phi_pred, 0,  color='blue', label='Prediction', s=100)
 
-        plt.subplots_adjust(hspace=0.3, wspace = 0.3)
+        plt.subplots_adjust(hspace=1.5)
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'GTandPredandPose.png')
 
