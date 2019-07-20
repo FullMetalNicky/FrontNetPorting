@@ -2,20 +2,17 @@ import pandas as pd
 import numpy as np
 import random
 import logging
+from DataVisualization import DataVisualization
 
 class DataProcessor:
 
-    def ProcessData(self, trainPath, testPath):
+    @staticmethod
+    def ProcessTrainData(trainPath, image_height, image_width):
         train_set = pd.read_pickle(trainPath).values
         logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
-        test_set = pd.read_pickle(testPath).values
-        logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
 
         n_val = 13000
         np.random.seed()
-
-        image_height = 60
-        image_width = 108
 
         # split between train and test sets:
         x_train = train_set[:, 0]
@@ -36,6 +33,18 @@ class DataProcessor:
         train_mean  = np.mean(y_train, 0)
         train_std = np.std(y_train, 0)
 
+        shape_ = x_train.shape[0]
+        sel_idx = random.sample(range(0, shape_), k=50000)
+        x_train = x_train[sel_idx, :]
+        y_train = y_train[sel_idx, :]
+
+        return [train_mean, train_std, x_train, x_validation, y_train, y_validation]
+
+    @staticmethod
+    def ProcessTestData(testPath, image_height, image_width):
+        test_set = pd.read_pickle(testPath).values
+        logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
+
         x_test = test_set[:, 0]
         x_test = np.vstack(x_test[:]).astype(np.float32)
         x_test = np.reshape(x_test, (-1, image_height, image_width, 3))
@@ -44,13 +53,4 @@ class DataProcessor:
         y_test = test_set[:, 1]
         y_test = np.vstack(y_test[:]).astype(np.float32)
 
-        visual_odom = test_set[:, 2]
-        visual_odom = np.vstack(visual_odom[:]).astype(np.float32)
-
-        model_name = "Model_v1"
-        shape_ = x_train.shape[0]
-        sel_idx = random.sample(range(0, shape_), k=50000)
-        x_train = x_train[sel_idx, :]
-        y_train = y_train[sel_idx, :]
-
-        return [train_mean, train_std, x_train, x_validation, x_test, y_train, y_validation, y_test]
+        return [x_test, y_test]

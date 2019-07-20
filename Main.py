@@ -10,15 +10,18 @@ import torch
 
 
 model = FrontNet(PreActBlock, [1, 1, 1])
-manager = ModelManager()
-manager.Read('/Users/usi/Documents/Results/FrontNet-097.pkl', model)
-for param in model.parameters():
-    print(param.data)
+#manager = ModelManager()
+#manager.Read('Models/FrontNet-003.pt', model)
+#for param in model.parameters():
+#    print(param.data)
 
 
-# DATA_PATH = "/Users/usi/PycharmProjects/data/"
-# loader = DataProcessor()
-# [train_mean, train_std, x_train, x_validation, x_test, y_train, y_validation, y_test] = loader.ProcessData(DATA_PATH + "train.pickle", DATA_PATH + "test.pickle")
+DATA_PATH = "/Users/usi/PycharmProjects/data/"
+#loader = DataProcessor()
+#[train_mean, train_std, x_train, x_validation, x_test, y_train, y_validation, y_test] = loader.ProcessData(DATA_PATH + "train.pickle", DATA_PATH + "test.pickle")
+[train_mean, train_std, x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(DATA_PATH + "train.pickle", 60, 108)
+[x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "test.pickle", 60, 108)
+
 # training_set = Dataset(x_train, y_train, True)
 # validation_set = Dataset(x_validation, y_validation)
 # test_set = Dataset(x_test, y_test)
