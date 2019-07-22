@@ -8,6 +8,7 @@ from EarlyStopping import EarlyStopping
 from ValidationUtils import Metrics
 import logging
 
+
 class ModelTrainer:
     def __init__(self, model, num_epochs=100):
         self.num_epochs = num_epochs
@@ -26,7 +27,6 @@ class ModelTrainer:
         self.optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
         self.folderPath = "Models/"
-        #self.folderPath = ""
 
     def GetModel(self):
         return self.model
@@ -164,30 +164,22 @@ class ModelTrainer:
         DataVisualization.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
         DataVisualization.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
         DataVisualization.DisplayPlots()
-       # return train_losses, valid_losses
 
-    def PerdictSingleSample(self, test_generator):
+    def PerdictSingleSample(self, frame, label):
 
-        iterator = iter(test_generator)
-        batch_samples, batch_targets = iterator.next()
-        index = np.random.choice(np.arange(0, batch_samples.shape[0]), 1)
-        x_test = batch_samples[index]
-        y_test = batch_targets[index]
         self.model.eval()
 
-        #self.visualizer.DisplayVideoFrame(x_test[0].cpu().numpy())
-
-        logging.info('GT Values: {}'.format(y_test.cpu().numpy()))
+        logging.info('GT Values: {}'.format(label.cpu().numpy()))
         with torch.no_grad():
-            x_test = x_test.to(self.device)
-            outputs = self.model(x_test)
+            frame = frame.to(self.device)
+            outputs = self.model(frame)
 
         outputs = torch.stack(outputs, 0)
         outputs = torch.squeeze(outputs)
         outputs = torch.t(outputs)
         outputs = outputs.cpu().numpy()
         logging.info('Prediction Values: {}'.format(outputs))
-        return x_test[0].cpu().numpy(), y_test[0], outputs
+        return outputs
 
 
     def Predict(self, test_generator):
@@ -213,4 +205,6 @@ class ModelTrainer:
         logging.info('Test MSE: {}'.format(MSE))
         logging.info('Test MAE: {}'.format(MAE))
         logging.info('Test r_score: {}'.format(r_score))
+
+        return y_pred
 

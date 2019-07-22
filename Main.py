@@ -52,6 +52,5 @@ params = {'batch_size': 1,
 test_generator = data.DataLoader(test_set, **params)
 
 trainer = ModelTrainer(model)
-x_test_res , y_test_res, outputs = trainer.PerdictSingleSample(test_generator)
-DataVisualization.DisplayFrameAndPose(x_test_res , y_test_res, outputs)
+
 
