@@ -113,6 +113,10 @@ ax5.set_yticklabels([])
 scatter4gt = plt.scatter([], [], color='green', label='GT', s=100)
 scatter4pr = plt.scatter([], [],  color='blue', label='Prediction', s=100)
 
+plt.subplots_adjust(hspace=1.5)
+plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+
+
 # Set up formatting for the movie files
 Writer = animation.writers['ffmpeg']
 writer = Writer(fps=15, metadata=dict(artist='Me'))
