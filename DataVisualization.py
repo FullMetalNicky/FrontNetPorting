@@ -4,7 +4,7 @@ import torch
 import matplotlib.gridspec as gridspec
 import numpy as np
 import cv2
-
+import matplotlib.image as mpimg
 
 class DataVisualization:
 
@@ -289,6 +289,8 @@ class DataVisualization:
         ax3 = plt.subplot2grid((h, w), (1, 1), rowspan=bar_length, colspan=(w-2))
         ax3.set_yticklabels([])
         ax3.set_xticklabels([])
+        ax3.xaxis.set_ticks_position('none')
+        ax3.yaxis.set_ticks_position('none')
         frame = frame.transpose(1, 2, 0)
         frame = frame.astype(np.uint8)
         plt.imshow(frame)
@@ -320,6 +322,83 @@ class DataVisualization:
         return fig
     #    plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'GTandPredandPose.png')
 
+
+
+    @staticmethod
+    def CoolDroneStuff(frame, gt_labels, predictions):
+        fig = plt.figure(888, figsize=(12, 5))
+
+        img = mpimg.imread('minidrone.jpg')
+        frame = frame.transpose(1, 2, 0)
+        frame = frame.astype(np.uint8)
+
+        h = 5
+        w = 12
+
+        x_gt = gt_labels[0]
+        x_pred = predictions[0]
+        y_gt = gt_labels[1]
+        y_pred = predictions[1]
+        z_gt = gt_labels[2]
+        z_pred = predictions[2]
+        phi_gt = gt_labels[3]
+        phi_pred = predictions[3]
+
+        str1 = "x_gt={:05.3f}, y_gt={:05.3f}, z_gt={:05.3f}, phi_gt={:05.3f}".format(x_gt, y_gt, z_gt, phi_gt)
+        str2 = "x_pr={:05.3f}, y_pr={:05.3f}, z_pr={:05.3f}, phi_pr={:05.3f}".format(x_pred, y_pred, z_pred, phi_pred)
+
+
+        ax0 = plt.subplot2grid((h, w), (0, 0), colspan=6)
+        ax0.axis('off')
+        ax0.text(0, 1.5, str1, fontsize=10)
+        ax0.text(0, 1, str2, fontsize=10)
+
+        ax1 = plt.subplot2grid((h, w), (1, 0), colspan=6, rowspan=4)
+        ax1.set_title('Relative Pose (x,y)')
+        ax1.set_xlim([-3, 3])
+        ax1.set_ylim([0, 3])
+        ax1.yaxis.set_ticks([0, 1.5, 3])  # set y-ticks
+        ax1.xaxis.set_ticks([-3.0, -1.5, 0, 1.5, 3.0])  # set y-ticks
+        ax1.xaxis.tick_top()  # and move the X-Axis
+        ax1.yaxis.tick_left()  # remove right y-Ticks
+        ax1.spines['right'].set_visible(False)
+        ax1.spines['bottom'].set_visible(False)
+        trianglex = [3, 0, -3, 3]
+        triangley = [3, 0, 3, 3]
+        plt.fill(trianglex, triangley, facecolor='lightskyblue')
+
+        plt.scatter(x_gt, y_gt, color='green', label='GT', s=100)
+        plt.scatter(x_pred, y_pred, color='blue', label='Prediction', s=100)
+        ax1.arrow(x_gt, y_gt, np.cos(phi_gt), np.sin(phi_gt), head_width=0.05, head_length=0.05, color='green')
+        ax1.arrow(x_pred, y_pred, np.cos(phi_pred), np.sin(phi_pred), head_width=0.05, head_length=0.05, color='blue')
+        plt.legend(loc='lower right', bbox_to_anchor=(0.8, -0.5, 0.5, 0.5))
+
+
+        ax2 = plt.subplot2grid((h, w), (1, 6), rowspan=4)
+        ax2.set_title('Relative z')
+        ax2.yaxis.tick_right()
+        ax2.set_ylim([-1, 1])
+        ax2.set_xlim([-0.5, 0.5])
+        ax2.set_xticklabels([])
+        ax2.yaxis.set_ticks([-1, 0, 1])  # set y-ticks
+        ax2.xaxis.set_ticks_position('none')
+        plt.scatter(-0.05, z_gt, color='green', label='GT', s=100)
+        plt.scatter(0.05, z_pred, color='blue', label='Prediction', s=100)
+
+
+        ax3 = plt.subplot2grid((h, w), (0, 7), rowspan=5, colspan=5)
+        ax3.set_title('Frame')
+        ax3.set_yticklabels([])
+        ax3.set_xticklabels([])
+        ax3.xaxis.set_ticks_position('none')
+        ax3.yaxis.set_ticks_position('none')
+
+        plt.imshow(frame)
+        plt.subplots_adjust(wspace=1.5)
+
+        newax = fig.add_axes([0.257, 0.0, 0.1, 0.1], anchor='S')
+        newax.imshow(img)
+        newax.axis('off')
 
 
     @staticmethod

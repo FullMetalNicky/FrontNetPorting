@@ -52,8 +52,8 @@ ModelManager.Read('Models/FrontNet-097.pkl', model)
 
 DATA_PATH = "/Users/usi/PycharmProjects/data/"
 [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "test.pickle", 60, 108)
-x_test = x_test[:1000]
-y_test = y_test[:1000]
+#x_test = x_test[:1000]
+#y_test = y_test[:1000]
 test_set = Dataset(x_test, y_test)
 params = {'batch_size': 1,
           'shuffle': False,
@@ -92,6 +92,8 @@ scatter2pr = plt.scatter([], [], color='blue', label='Prediction', s=100)
 ax3 = plt.subplot2grid((h, w), (1, 1), rowspan=bar_length, colspan=(w - 2))
 ax3.set_yticklabels([])
 ax3.set_xticklabels([])
+ax3.xaxis.set_ticks_position('none')
+ax3.yaxis.set_ticks_position('none')
 frame = frames[0].transpose(1, 2, 0)
 frame = frame.astype(np.uint8)
 imgplot = plt.imshow(frame)
@@ -119,7 +121,7 @@ plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 
 # Set up formatting for the movie files
 Writer = animation.writers['ffmpeg']
-writer = Writer(fps=15, metadata=dict(artist='Me'))
+writer = Writer(fps=30, metadata=dict(artist='Me'))
 
 
 def animate(id):
