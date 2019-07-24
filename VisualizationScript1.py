@@ -9,8 +9,6 @@ from ModelManager import ModelManager
 from DataVisualization import DataVisualization
 import logging
 import numpy as np
-import cv2
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 
@@ -90,10 +88,7 @@ scatter2gt = plt.scatter([], [], color='green', label='GT', s=100)
 scatter2pr = plt.scatter([], [], color='blue', label='Prediction', s=100)
 
 ax3 = plt.subplot2grid((h, w), (1, 1), rowspan=bar_length, colspan=(w - 2))
-ax3.set_yticklabels([])
-ax3.set_xticklabels([])
-ax3.xaxis.set_ticks_position('none')
-ax3.yaxis.set_ticks_position('none')
+ax3.axis('off')
 frame = frames[0].transpose(1, 2, 0)
 frame = frame.astype(np.uint8)
 imgplot = plt.imshow(frame)

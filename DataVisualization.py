@@ -287,10 +287,7 @@ class DataVisualization:
         plt.scatter(0.05, y_pred, color='blue', label='Prediction', s=100)
 
         ax3 = plt.subplot2grid((h, w), (1, 1), rowspan=bar_length, colspan=(w-2))
-        ax3.set_yticklabels([])
-        ax3.set_xticklabels([])
-        ax3.xaxis.set_ticks_position('none')
-        ax3.yaxis.set_ticks_position('none')
+        ax3.axis('off')
         frame = frame.transpose(1, 2, 0)
         frame = frame.astype(np.uint8)
         plt.imshow(frame)
@@ -341,8 +338,8 @@ class DataVisualization:
         y_pred = predictions[1]
         z_gt = gt_labels[2]
         z_pred = predictions[2]
-        phi_gt = gt_labels[3]
-        phi_pred = predictions[3]
+        phi_gt = gt_labels[3] - np.pi/2
+        phi_pred = predictions[3] - np.pi/2
 
         str1 = "x_gt={:05.3f}, y_gt={:05.3f}, z_gt={:05.3f}, phi_gt={:05.3f}".format(x_gt, y_gt, z_gt, phi_gt)
         str2 = "x_pr={:05.3f}, y_pr={:05.3f}, z_pr={:05.3f}, phi_pr={:05.3f}".format(x_pred, y_pred, z_pred, phi_pred)
@@ -374,7 +371,7 @@ class DataVisualization:
 
 
         ax2 = plt.subplot2grid((h, w), (1, 7), rowspan=4)
-        ax2.set_title('Relative z')
+        ax2.set_title('Relative z', pad=20)
         ax2.yaxis.tick_right()
         ax2.set_ylim([-1, 1])
         ax2.set_xlim([-0.5, 0.5])
@@ -385,11 +382,7 @@ class DataVisualization:
         plt.scatter(0.05, z_pred, color='blue', label='Prediction', s=100)
 
         ax3 = plt.subplot2grid((h, w), (1, 8), rowspan=4, colspan=7)
-        ax3.set_title('Frame')
-        ax3.set_yticklabels([])
-        ax3.set_xticklabels([])
-        ax3.xaxis.set_ticks_position('none')
-        ax3.yaxis.set_ticks_position('none')
+        ax3.set_title('Frame', pad=25)
         ax3.axis('off')
 
         plt.imshow(frame)
