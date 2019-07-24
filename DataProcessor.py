@@ -53,6 +53,4 @@ class DataProcessor:
         y_test = test_set[:, 1]
         y_test = np.vstack(y_test[:]).astype(np.float32)
 
-        #DataVisualization.CoolDroneStuff(x_test[0], y_test[0], y_test[0])
-
         return [x_test, y_test]
