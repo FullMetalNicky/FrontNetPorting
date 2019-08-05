@@ -17,6 +17,17 @@ int main()
 		printf("outBuffer no memory\n");
 		return -1;
   }
+
+	if(access("../image_pipe", F_OK ))
+	{
+    int res = mkfifo("../image_pipe", 0666); 
+		if (res == -1) 
+		{
+			printf("Could not create pipe\n");
+			return -1;
+		}
+	}
+	
  
 	printf("Reading from pipe...\n");
 	

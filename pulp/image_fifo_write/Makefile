@@ -16,6 +16,4 @@ clean::
 
 
 
-
-#include $(GAP_SDK_HOME)/tools/rules/pulp_rules.mk
 include $(PULP_SDK_HOME)/install/rules/pulp_rt.mk
