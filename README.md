@@ -2,7 +2,8 @@
 
 The goal of this project is to port face-following capabilities to the PULP-shield, and run it on the Crazyflie 2.0. Images captured by the mounted Himax camera, are fed to the neural network suggested in [Dario Mantegazza's thesis](https://github.com/idsia-robotics/proximity-quadrotor-learning), which provides the drone's control variables as output. The original network was written in Keras and designed to run on a desktop. The adaptations and optimizations performed on the network were done according to the work published by [Daniele Palossi](https://github.com/pulp-platform/pulp-dronet) and with his generous help.
 
-![Crazyflie 2.0](/resources/crazyflie2.0.jpg)
+<img src="/resources/crazyflie2.0.jpg" alt="drawing" width="500"/>
+
 
 ### Milestones
   - Porting Dario's NN from Keras to PyTorch
@@ -21,7 +22,6 @@ The goal of this project is to port face-following capabilities to the PULP-shie
 
 # DNN: Desktop vs. ULP Platrform (Best diet on the market!)
 
-![alien](/resources/alienattack.png)
 
 # Real-time, Real-life 
 
