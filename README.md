@@ -23,6 +23,8 @@ The PyTorch implementation followed closely on the network architecture suggeste
 
 However, everything that wrapped the NN, from data loading to performance analysis had to be re-written completely to fit the PyTorch API. In Dario's work, he examines two networks- both take as input video frames, but the first outputs the pose variables (x,y,z,yaw) of the person relative to the drone, and the second one outputs the control variables of the drone (steering angle, speed). In the data collection process, each frames has the GT for the pose variables, provided by a MoCap system. Since this GT labels were readily available and easy to compare, I started by porting the first network.
 
+<img src="/resources/learning_curves.png" alt="drawing" width="500"/>
+
 The performance was evaluated in several ways:
 * Inspecting the trend in the training and validation loss, to ensure we do not overfit
 * MSE
