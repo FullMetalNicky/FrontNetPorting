@@ -17,7 +17,11 @@ The goal of this project is to port face-following capabilities to the PULP-shie
 
 # From Keras to PyTorch (Via Dolorosa)
 
+![viz1](/resources/viz1.gif)
+
 # DNN: Desktop vs. ULP Platrform (Best diet on the market!)
+
+![alien](/resources/alienattack.png)
 
 # Real-time, Real-life 
 
