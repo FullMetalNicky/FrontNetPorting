@@ -2,7 +2,9 @@
 
 The goal of this project is to port face-following capabilities to the PULP-shield, and run it on the Crazyflie 2.0. Images captured by the mounted Himax camera, are fed to the neural network suggested in [Dario Mantegazza's thesis](https://github.com/idsia-robotics/proximity-quadrotor-learning), which provides the drone's control variables as output. The original network was written in Keras and designed to run on a desktop. The adaptations and optimizations performed on the network were done according to the work published by [Daniele Palossi](https://github.com/pulp-platform/pulp-dronet) and with his generous help.
 
+<p align="center">
 <img src="/resources/crazyflie2.0.jpg" alt="drawing" width="500"/>
+</p>
 
 
 ### Milestones
@@ -23,7 +25,9 @@ The PyTorch implementation followed closely on the network architecture suggeste
 
 However, everything that wrapped the NN, from data loading to performance analysis had to be re-written completely to fit the PyTorch API. In Dario's work, he examines two networks- both take as input video frames, but the first outputs the pose variables (x,y,z,yaw) of the person relative to the drone, and the second one outputs the control variables of the drone (steering angle, speed). In the data collection process, each frames has the GT for the pose variables, provided by a MoCap system. Since this GT labels were readily available and easy to compare, I started by porting the first network.
 
+<p align="center">
 <img src="/resources/learning_curves.png" alt="drawing" width="500"/>
+<p/>
 
 The performance was evaluated in several ways:
 * Inspecting the trend in the training and validation loss, to ensure we do not overfit
@@ -33,7 +37,6 @@ The performance was evaluated in several ways:
 
 ![train](/resources/train.gif)
 
-
 Two visualization tools are implemented:
 * Pose variables - Prediction vs. GT
 ![viz1](/resources/viz1.gif)
@@ -41,7 +44,9 @@ Two visualization tools are implemented:
 ![viz2](/resources/viz2.gif)
 
 # DNN: Desktop vs. ULP Platrform 
+<p align="center">
 <img src="/resources/Gapuino.png" alt="drawing" width="500"/>
+<p/>
 
 
 # Real-time, Real-life 
