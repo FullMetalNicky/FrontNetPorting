@@ -31,6 +31,9 @@ The performance was evaluated in several ways:
 * MAE
 * R2 score
 
+![train](/resources/train.gif)
+
+
 Two visualization tools are implemented:
 * Pose variables - Prediction vs. GT
 ![viz1](/resources/viz1.gif)
