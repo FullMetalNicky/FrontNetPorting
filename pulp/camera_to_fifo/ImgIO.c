@@ -251,7 +251,7 @@ int WriteImageToFifo(char *fifoName, unsigned int W, unsigned int H, unsigned ch
 	int steps = (W*H) / CHUNK_SIZE;
 
 	for(int i=0;i<steps;i++){
-		progress_bar("Writing image ",i,steps);
+		//progress_bar("Writing image ",i,steps);
 		ret+=rt_bridge_write(File,OutBuffer +(CHUNK_SIZE*i), CHUNK_SIZE,NULL);
 	}
 	if(((W*H) % CHUNK_SIZE) != 0)
