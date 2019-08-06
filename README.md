@@ -17,7 +17,7 @@ The goal of this project is to port face-following capabilities to the PULP-shie
   - Porting the network to the crazyflie 2.0 and live testing
 
 # From Keras to PyTorch 
-The PyTorch implementation followed closely on the network architecture suggested by Dario, and I will post a diagram of it as soon as I learn how to do that. 
+The PyTorch implementation followed closely on the network architecture suggested by Dario:
 
 <img src="/resources/NN.png" alt="drawing" width="1000"/>
 
