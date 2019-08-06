@@ -9,6 +9,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+.idea/
 develop-eggs/
 dist/
 downloads/
@@ -126,3 +127,10 @@ dmypy.json
 /__pycache__
 /v1
 *.ckpt
+
+nemo/
+*.DS_Store
+*log.txt
+*build/
+*.out
+*.gch
