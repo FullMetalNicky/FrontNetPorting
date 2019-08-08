@@ -39,7 +39,7 @@ def read_from_pipe(pipein):
 
 def main():
 	rospy.init_node('pub_gap_camera', anonymous=True)
-	image_pub = rospy.Publisher("image_topic_2",Image)
+	image_pub = rospy.Publisher("himax_camera",Image)
 	bridge = CvBridge()
 
 	cv_file = cv2.FileStorage("calibration.yaml", cv2.FILE_STORAGE_READ)
