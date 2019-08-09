@@ -69,28 +69,29 @@ def main():
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
 
-    #DataProcessor.CreateGreyPickle(DATA_PATH + "train.pickle", 60, 108)
-    [train_mean, train_std, x_train, x_validation, y_train, y_validation] = DataProcessor.ReadGreyPickle("train_gray.pickle", 60, 108)
+    #DataProcessor.CreateGreyPickle(DATA_PATH + "test.pickle", 60, 108)
+    #[train_mean, train_std, x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainDataGray("train_gray.pickle", 60, 108)
 
 
 #    [train_mean, train_std, x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(DATA_PATH + "train.pickle", 60, 108)
-    training_set = Dataset(x_train, y_train, True)
-    params = {'batch_size': 64,
-               'shuffle': True,
-               'num_workers': 0}
-    training_generator = data.DataLoader(training_set, **params)
+#     training_set = Dataset(x_train, y_train, True)
+#     params = {'batch_size': 64,
+#                'shuffle': True,
+#                'num_workers': 0}
+#     training_generator = data.DataLoader(training_set, **params)
+#
+#     validation_set = Dataset(x_validation, y_validation)
+#     validation_generator = data.DataLoader(validation_set, **params)
 
-    validation_set = Dataset(x_validation, y_validation)
-    validation_generator = data.DataLoader(validation_set, **params)
+    [x_test, y_test] = DataProcessor.ProcessTestDataGray(DATA_PATH + "test_gray.pickle", 60, 108)
+    test_set = Dataset(x_test, y_test)
+    params = {'batch_size': 1,
+             'shuffle': False,
+             'num_workers': 0}
+    test_generator = data.DataLoader(test_set, **params)
 
-    #[x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "test.pickle", 60, 108)
-    #test_set = Dataset(x_test, y_test)
-    # params = {'batch_size': 1,
-    #          'shuffle': False,
-    #          'num_workers': 0}
-    # test_generator = data.DataLoader(test_set, **params)
-
-    trainer.Train(training_generator, validation_generator)
+    #trainer.Train(training_generator, validation_generator)
+    trainer.Predict(test_generator)
 
 
 if __name__ == '__main__':
