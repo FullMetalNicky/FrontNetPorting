@@ -2,7 +2,7 @@ from ImageIO import ImageIO
 from CameraCalibration import CameraCalibration 
 from RosbagUnpacker import RosbagUnpacker
 from CameraSynchronizer import CameraSynchronizer
-
+from ImageTransformer import ImageTransformer
 
 def TestImageIO():
 
@@ -30,10 +30,20 @@ def TestCameraSynchronizer():
 	sync_himax_images, sync_bebop_images = cs.SyncImages(himax_images, bebop_images, himax_stamps, bebop_stamps, -1817123289)
 	cs.CreateSyncVideo(sync_himax_images, sync_bebop_images, "test.avi")
 
+def TestImageTransformer():
+
+
+	himaxImages = ImageIO.ReadImagesFromFolder("../data/himax/", '.jpg')
+	bebopImages = ImageIO.ReadImagesFromFolder("../data/bebop/", '.jpg')
+	it = ImageTransformer()
+	himaxTransImages, bebopTransImages = it. TransformImages("../data/calibration.yaml", "../data/bebop_calibration.yaml", himaxImages, bebopImages)
+	ImageIO.WriteImagesToFolder(himaxTransImages, "../data/test/", '.jpg')
+
 def main():
 	#TestImageIO()
 	#TestRosbagUnpacker()
-	TestCameraSynchronizer()
+	#TestCameraSynchronizer()
+	TestImageTransformer()
 
 
 
