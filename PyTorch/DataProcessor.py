@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import random
 import logging
-from DataVisualization import DataVisualization
+
 
 class DataProcessor:
 
@@ -52,5 +52,18 @@ class DataProcessor:
         x_test = np.swapaxes(x_test, 2, 3)
         y_test = test_set[:, 1]
         y_test = np.vstack(y_test[:]).astype(np.float32)
+
+        return [x_test, y_test]
+
+    @staticmethod
+    def ProcessInferenceData(images):
+
+        x_test = np.stack(images, axis=0).astype(np.float32)
+        x_test = np.swapaxes(x_test, 1, 3)
+        x_test = np.swapaxes(x_test, 2, 3)
+        y_test = [0, 0, 0, 0] * len(x_test)
+        y_test = np.vstack(y_test[:]).astype(np.float32)
+        y_test = np.reshape(y_test, (-1, 4))
+
 
         return [x_test, y_test]

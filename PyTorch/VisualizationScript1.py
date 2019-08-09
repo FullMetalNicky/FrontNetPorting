@@ -111,7 +111,8 @@ def Viz4PoseVariables(frames, labels, outputs):
 
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save('plot.avi', writer=writer)
+    #ani.save('plot.avi', writer=writer)
+    ani.save('viz1.gif', dpi=80, writer='imagemagick')
     plt.show()
 
 def main():
@@ -133,8 +134,8 @@ def main():
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
     [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "test.pickle", 60, 108)
-    #x_test = x_test[:1000]
-    #y_test = y_test[:1000]
+    x_test = x_test[:500]
+    y_test = y_test[:500]
     test_set = Dataset(x_test, y_test)
     params = {'batch_size': 1,
               'shuffle': False,

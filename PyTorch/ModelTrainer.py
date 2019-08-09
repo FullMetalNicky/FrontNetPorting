@@ -208,3 +208,8 @@ class ModelTrainer:
 
         return y_pred
 
+    def Infer(self, live_generator):
+
+        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(live_generator)
+
+        return y_pred

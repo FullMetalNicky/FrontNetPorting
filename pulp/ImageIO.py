@@ -1,4 +1,4 @@
-	#!/usr/bin/env python
+# !/usr/bin/env python
 
 
 import numpy as np
@@ -8,28 +8,26 @@ import os
 
 class ImageIO:
 
-	@staticmethod
-	def WriteImagesToFolder(images, folderName, imgType='.jpg'):
-		frame_id = 1
+    @staticmethod
+    def WriteImagesToFolder(images, folderName, imgType='.jpg'):
+        frame_id = 1
 
-		for img in images:
-			img_name = folderName + "{}".format(frame_id) + imgType
-			frame_id = frame_id + 1
-			cv2.imwrite(img_name, img)
+        for img in images:
+            img_name = folderName + "{}".format(frame_id) + imgType
+            frame_id = frame_id + 1
+            cv2.imwrite(img_name, img)
 
+    @staticmethod
+    def ReadImagesFromFolder(folderName, imgType='.jpg'):
 
-	@staticmethod
-	def ReadImagesFromFolder(folderName, imgType = '.jpg'):
-	
-		files = []
-		images = []
-		for r, d, f in os.walk(folderName):
-			for file in f:
-				  if imgType in file:
-						files.append(os.path.join(r, file))
-		for f in files:
-			img = cv2.imread(f)
-			images.append(img)
+        files = []
+        images = []
+        for r, d, f in os.walk(folderName):
+            for file in f:
+                if imgType in file:
+                    files.append(os.path.join(r, file))
+        for f in files:
+            img = cv2.imread(f)
+            images.append(img)
 
-		return images
-				
+        return images
