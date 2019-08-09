@@ -38,7 +38,7 @@ class CameraCalibration:
 		images = []
 
 		while (1):
-			data = read_from_pipe(pipein)
+			data = self.read_from_pipe(pipein)
 			if data is not None:
 				cv_image = np.reshape(data, (height, width))
 				cv2.imshow("Calibration", cv_image)

@@ -88,6 +88,8 @@ def main(argv):
 		cv2.destroyAllWindows()
 		ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None,None)
 		h, w = img.shape[:2]
+		fovx, fovy, focalLength, principalPoint, aspectRatio = cv2.calibrationMatrixValues(mtx, (w, h), 0.0036, 0.0036) 
+		print("himax fovx {} fovy {}".format(fovx, fovy))
 		
 		cv_file = cv2.FileStorage("calibration.yaml", cv2.FILE_STORAGE_WRITE)
 		cv_file.write("k", mtx)

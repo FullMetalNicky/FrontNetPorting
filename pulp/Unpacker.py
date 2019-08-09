@@ -47,9 +47,9 @@ def main():
 
 		#if himax_cnt < 100:
 		#	continue
-		#cv2.imwrite(image_name, cv_image)
+		cv2.imwrite(image_name, cv_image)
 		
-		if himax_cnt > 20:
+		if himax_cnt > 10:
 			break
 		
 	bag.close()

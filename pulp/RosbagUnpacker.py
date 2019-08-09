@@ -17,7 +17,7 @@ class RosbagUnpacker:
 
 		bag = rosbag.Bag(bagName)
 		himax_msgs = []
-		bepop_msgs = []
+		bebop_msgs = []
 		himax_cnt = 1
 
 		for topic, msg, t in bag.read_messages(topics=['himax_camera', 'bebop/image_raw']):
@@ -27,29 +27,33 @@ class RosbagUnpacker:
 				himax_cnt = himax_cnt + 1
 
 			elif(topic == 'bebop/image_raw'):
-				bepop_msgs.append(msg)
+				bebop_msgs.append(msg)
 	
 			if himax_cnt > stopNum:
 				break
 		
 		bag.close()
 
-		return himax_msgs, bepop_msgs
+		return himax_msgs, bebop_msgs
 
 	def MessagesToImages(self, himax_msgs, bepop_msgs):
 
 		himax_images = []
-		bepop_images = []
+		himax_stamps = []
+		bebop_images = []
+		bebop_stamps = []
 		bridge = CvBridge()
 
 		for msg in himax_msgs:
 			cv_image = bridge.imgmsg_to_cv2(msg)
 			himax_images.append(cv_image)
+			himax_stamps.append(msg.header.stamp)
 
 		for msg in bepop_msgs:
 			cv_image = bridge.imgmsg_to_cv2(msg)
 			cv_image = cv2.cvtColor(cv_image, cv2.COLOR_RGB2BGR)
-			bepop_images.append(cv_image)
+			bebop_images.append(cv_image)
+			bebop_stamps.append(msg.header.stamp)
 
-		return himax_images, bepop_images
+		return himax_images, bebop_images, himax_stamps, bebop_stamps
 		
