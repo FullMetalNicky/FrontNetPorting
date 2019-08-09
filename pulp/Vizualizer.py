@@ -42,7 +42,7 @@ def main():
 	image_pub = rospy.Publisher("himax_camera",Image)
 	bridge = CvBridge()
 
-	cv_file = cv2.FileStorage("calibration.yaml", cv2.FILE_STORAGE_READ)
+	cv_file = cv2.FileStorage("../data/calibration.yaml", cv2.FILE_STORAGE_READ)
 	k = cv_file.getNode("k").mat()
 	D = cv_file.getNode("D").mat()
 	size = cv_file.getNode("size").mat()

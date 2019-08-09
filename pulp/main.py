@@ -9,14 +9,15 @@ from ImageTransformer import ImageTransformer
 def main():
 	
 	rbu = RosbagUnpacker()
-	himax_msgs, bebop_msgs = rbu.UnpackBag('../data/2019-08-08-08-17-30.bag', stopNum=3)
+	himax_msgs, bebop_msgs = rbu.UnpackBag('../data/2019-08-09-04-27-04.bag', stopNum=20)
 	himax_images, bebop_images, himax_stamps, bebop_stamps = rbu.MessagesToImages(himax_msgs, bebop_msgs)
 	cs = CameraSynchronizer()
 	sync_himax_images, sync_bebop_images = cs.SyncImages(himax_images, bebop_images, himax_stamps, bebop_stamps, -1817123289)
-	cs.CreateSyncVideo(sync_himax_images, sync_bebop_images, "test.avi")
 	it = ImageTransformer()
 	himaxTransImages, bebopTransImages = it. TransformImages("../data/calibration.yaml", "../data/bebop_calibration.yaml", sync_himax_images, sync_bebop_images)
-	ImageIO.WriteImagesToFolder(himaxTransImages, "../data/test/", '.jpg')
+	cs.CreateSyncVideo(himaxTransImages, bebopTransImages, "test.avi")
+	ImageIO.WriteImagesToFolder(himaxTransImages, "../data/himax_processed/", '.jpg')
+	ImageIO.WriteImagesToFolder(bebopTransImages, "../data/bebop_processed/", '.jpg')
 	
 
 if __name__ == '__main__':
