@@ -106,8 +106,8 @@ class FrontNet(nn.Module):
           #                   "or a 3-element tuple, got {}".format(replace_stride_with_dilation))
         self.groups = 1
         self.base_width = 64
-        self.conv = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3,
-                               bias=False)
+        #self.conv = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3, bias=False)
+        self.conv = nn.Conv2d(1, self.inplanes, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn =  nn.BatchNorm2d(self.inplanes)
 
         self.relu = nn.ReLU(inplace=True)

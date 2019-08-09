@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import random
 import logging
+import cv2
+import matplotlib.pyplot as plt
 
 
 class DataProcessor:
@@ -67,3 +69,60 @@ class DataProcessor:
 
 
         return [x_test, y_test]
+
+    @staticmethod
+    def CreateGreyPickle(trainPath, image_height, image_width):
+        train_set = pd.read_pickle(trainPath).values
+        logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
+
+        # split between train and test sets:
+        x_train = train_set[:, 0]
+        x_train = np.vstack(x_train[:])
+        x_train = np.reshape(x_train, (-1, image_height, image_width, 3))
+
+        x_train_grey = []
+        for i in range(len(x_train)):
+            gray_image = cv2.cvtColor(x_train[i], cv2.COLOR_RGB2GRAY)
+            x_train_grey.append(gray_image)
+
+        x_train_grey = np.array(x_train_grey)
+        x_train_grey = x_train_grey.flatten().reshape(len(x_train), -1)
+        y_train = train_set[:, 1]
+        t = (x_train_grey, y_train)
+
+        df = pd.DataFrame(t)
+        df.to_pickle("train_gray.pickle")
+
+    @staticmethod
+    def ReadGreyPickle(trainPath, image_height, image_width):
+        train_set = pd.read_pickle(trainPath).values
+        logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
+
+        n_val = 13000
+        np.random.seed()
+
+        # split between train and test sets:
+        x_train = train_set[0]
+        x_train = np.vstack(x_train[:]).astype(np.float32)
+        x_train = np.reshape(x_train, (-1, image_height, image_width,1))
+
+        x_train = np.swapaxes(x_train, 1, 3)
+        x_train = np.swapaxes(x_train, 2, 3)
+
+        y_train = train_set[1][0]
+        y_train = np.vstack(y_train[:]).astype(np.float32)
+
+        ix_val, ix_tr = np.split(np.random.permutation(x_train.shape[0]), [n_val])
+        x_validation = x_train[ix_val, :]
+        x_train = x_train[ix_tr, :]
+        y_validation = y_train[ix_val, :]
+        y_train = y_train[ix_tr, :]
+        train_mean = np.mean(y_train, 0)
+        train_std = np.std(y_train, 0)
+
+        shape_ = x_train.shape[0]
+        sel_idx = random.sample(range(0, shape_), k=50000)
+        x_train = x_train[sel_idx, :]
+        y_train = y_train[sel_idx, :]
+
+        return [train_mean, train_std, x_train, x_validation, y_train, y_validation]
