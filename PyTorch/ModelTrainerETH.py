@@ -207,7 +207,7 @@ class ModelTrainer:
             logging.info('[ModelTrainer] Validation MAE: {}'.format(MAE))
             logging.info('[ModelTrainer] Validation r_score: {}'.format(r_score))
 
-            checkpoint_filename = self.folderPath + 'FrontNet-{:03d}.pt'.format(epoch)
+            checkpoint_filename = self.folderPath + 'FrontNetGray-{:03d}.pt'.format(epoch)
             early_stopping(valid_loss, self.model, epoch, checkpoint_filename)
             if early_stopping.early_stop:
                 logging.info("[ModelTrainer] Early stopping")

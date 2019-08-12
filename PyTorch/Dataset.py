@@ -33,4 +33,11 @@ class Dataset(data.Dataset):
                 y[1] = -y[1]  # Y
                 y[3] = -y[3]  # Relative YAW
 
+            if np.random.choice([True, False]):
+                X = X.cpu().numpy()
+                dr = np.random.uniform(0.4, 0.8)  # dynamic range
+                lo = np.random.uniform(0, 0.3)
+                hi = min(1.0, lo + dr)
+                X = np.interp(X/255.0, [0, lo, hi, 1], [0, 0, 1, 1])
+                X = torch.from_numpy(X*255.0).float()
         return X, y
