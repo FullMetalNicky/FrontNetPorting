@@ -60,8 +60,9 @@ def Viz4PoseVariables(frames, labels, outputs):
     ax3 = plt.subplot2grid((h, w), (1, 1), rowspan=bar_length, colspan=(w - 2))
     ax3.axis('off')
     frame = frames[0].transpose(1, 2, 0)
+    frame = frame[:, :, 0]
     frame = frame.astype(np.uint8)
-    imgplot = plt.imshow(frame)
+    imgplot = plt.imshow(frame,cmap="gray", vmin=0, vmax=255)
 
     ax4 = plt.subplot2grid((h, w), (1, w-1), rowspan=bar_length)
     ax4.set_title('z')
@@ -88,7 +89,6 @@ def Viz4PoseVariables(frames, labels, outputs):
     Writer = animation.writers['ffmpeg']
     writer = Writer(fps=30, metadata=dict(artist='Me'))
 
-
     def animate(id):
         label = labels[id]
         scatter1gt.set_offsets(np.array([label[0], -0.05]))
@@ -99,6 +99,7 @@ def Viz4PoseVariables(frames, labels, outputs):
 
         frame = frames[id].transpose(1, 2, 0)
         frame = frame.astype(np.uint8)
+        frame = frame[:, :, 0]
         imgplot.set_array(frame)
 
         scatter3gt.set_offsets(np.array([-0.05, label[2]]))
@@ -130,12 +131,12 @@ def main():
     logging.getLogger('').addHandler(console)
 
     model = FrontNet(PreActBlock, [1, 1, 1])
-    ModelManager.Read('Models/FrontNet-097.pkl', model)
+    ModelManager.Read('Models/FrontNetGray-096.pt', model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "test.pickle", 60, 108)
-    x_test = x_test[:500]
-    y_test = y_test[:500]
+    [x_test, y_test] = DataProcessor.ProcessTestDataGray(DATA_PATH + "test_gray.pickle", 60, 108)
+    #x_test = x_test[:500]
+    #y_test = y_test[:500]
     test_set = Dataset(x_test, y_test)
     params = {'batch_size': 1,
               'shuffle': False,

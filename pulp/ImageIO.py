@@ -18,7 +18,7 @@ class ImageIO:
             cv2.imwrite(img_name, img)
 
     @staticmethod
-    def ReadImagesFromFolder(folderName, imgType='.jpg'):
+    def ReadImagesFromFolder(folderName, imgType='.jpg', read_mode=1):
 
         files = []
         images = []
@@ -27,7 +27,7 @@ class ImageIO:
                 if imgType in file:
                     files.append(os.path.join(r, file))
         for f in files:
-            img = cv2.imread(f)
+            img = cv2.imread(f, read_mode)
             images.append(img)
 
         return images
