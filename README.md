@@ -45,10 +45,23 @@ Two visualization tools are implemented:
 * Bird's-eye-view presentation with actual values
 ![viz2](/resources/viz2.gif)
 
-# DNN: Desktop vs. ULP Platrform 
+# DNN: Desktop vs. PULP Platrform 
+Working on the GAPuino introduced many challenges. The Himax camera accompanying the board is a grey-scale, low-resolution device, chosen for its ability to maintain a reasonable fps while consuming very little power. We were hoping to re-use the lovely dataset collected by Dario, for which he used the Parrot 2. But the images from the Himax camera differed greatly from the ones captured by the high-resolution, RGB camera of the Parrot 2. 
+So in order to still re-use the dataset, it was decided to adapt the original images to look more like those of the target camera. For that I hacked a setup where the Himax camera was attached to the drone, close to its camera, and image streams of both cameras was recorded into a rosbag. 
+<p align="center">
+<img src="/resources/hack.jpg" alt="drawing" width="500"/>
+<p/>
+I attached a time-stamp to each stamped image, so I can sync between the two streams. The Parrot 2 delivered images at roughly 30 fps, while the capturing from the Himax was drastically slower at around 0.4 fps. This is due to the fact that images from the Himax camera were written to the board's memory, and then had to be transferred through a bridge to my PC. The bridge is intended mainly for debugging purposes and not for image streaming, so it was expected that the performance would be lacking. 
+To orchestrate this recording setup, I wrote c code to run on the embedded device, which captured the images from the Himax camera and wrote them into a named pipe on the host (using the bridge). There was also a ROS node running on my PC, that read from that pipe, and published it as ROS image messages that can be recorded. 
 <p align="center">
 <img src="/resources/Gapuino.png" alt="drawing" width="500"/>
 <p/>
+After recording a few sessions, I focused on synching the images from both cameras. Of course, the fps was different, but there was also the need to account for the Himax's delay - the image is stamped when it reached the ROS node on the host, but it is actually captured awhile earlier. To calculate the delay I had one recording session where I captured my phone's timer, this allowed me to estimated the delay with an error of a few milliseconds. 
+Once I had the frames synced, I transformed the images to be more alike - gamma correction, FOV cropping, RGB->gray, and resized them both to the input resolution of the network.
+<p align="center">
+<img src="/resources/sync.gif" alt="drawing"/>
+</p>
+
 
 
 # Real-time, Real-life 

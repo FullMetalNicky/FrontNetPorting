@@ -142,7 +142,7 @@ class ModelTrainer:
             logging.info('Validation MAE: {}'.format(MAE))
             logging.info('Validation r_score: {}'.format(r_score))
 
-            checkpoint_filename = self.folderPath + 'FrontNet-{:03d}.pkl'.format(epoch)
+            checkpoint_filename = self.folderPath + 'FrontNetGray-{:03d}.pkl'.format(epoch)
             early_stopping(valid_loss, self.model, epoch, checkpoint_filename)
             if early_stopping.early_stop:
                 logging.info("Early stopping")
@@ -208,3 +208,8 @@ class ModelTrainer:
 
         return y_pred
 
+    def Infer(self, live_generator):
+
+        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(live_generator)
+
+        return y_pred
