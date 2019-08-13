@@ -18,12 +18,17 @@ class ImageTransformer:
 		print("{} : fovx {} fovy {}".format(calibFile, fovx, fovy))
 		return fovx, fovy, h, w
 
+	def adjust_gamma(self, gamma=1.0):
+		invGamma = 1.0 / gamma
+		table = np.array([((i / 255.0) ** invGamma) * 255
+			for i in np.arange(0, 256)]).astype("uint8")
+	
+		return table
 	
 
 	def get_crop_parameters(self, x_ratio, y_ratio, h, w):
 
 		new_size = (int(w * x_ratio) , int(h * y_ratio))
-		#print ("new size {}".format(new_size))
 		shift_x = 0.5*(w - new_size[0])
 		shift_y = 0.5*(h - new_size[1])
 
@@ -51,8 +56,11 @@ class ImageTransformer:
 			crop_img = cv2.resize(crop_img, (resize_w, resize_h), cv2.INTER_NEAREST)
 			himaxTransImages.append(crop_img)
 
+		table = self.adjust_gamma(0.6)
 		for img in bebopImages:
 			gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+			gray = cv2.LUT(gray, table)
+			gray = cv2.GaussianBlur(gray,(5,5),0)
 			gray = cv2.resize(gray, (w_himax, h_himax), cv2.INTER_AREA)
 			gray = cv2.resize(gray, (resize_w, resize_h), cv2.INTER_NEAREST)
 			bebopTransImages.append(gray)
