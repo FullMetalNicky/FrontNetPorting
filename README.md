@@ -9,9 +9,9 @@ The goal of this project is to port face-following capabilities to the PULP-shie
 
 ### Milestones
   - Porting Dario's NN from Keras to PyTorch
-  - Writing PyTorch-compatible tools for performance analysis and visualizatrion
+  - Writing PyTorch-compatible tools for performance analysis and visualization
   - Retraining the network from scratch and comparing the results with the original 
-  - Applying the quantization procedure developed in ETH whille maintaining the quality
+  - Applying the quantization procedure developed in ETH while maintaining the quality
   - Getting familiar with the [GAPuino](https://greenwaves-technologies.com/product/gapuino/)
   - Implementing image capture and viewing abilities for the GAPuino
   - Augmenting the original dataset with images taken with the GAPuino's Himax camera
@@ -23,7 +23,7 @@ The PyTorch implementation followed closely on the network architecture suggeste
 
 <img src="/resources/NN.png" alt="drawing" width="1000"/>
 
-However, everything that wrapped the NN, from data loading to performance analysis had to be re-written completely to fit the PyTorch API. In Dario's work, he examines two networks- both take as input video frames, but the first outputs the pose variables (x,y,z,yaw) of the person relative to the drone, and the second one outputs the control variables of the drone (steering angle, speed). In the data collection process, each frames has the GT for the pose variables, provided by a MoCap system. Since this GT labels were readily available and easy to compare, I started by porting the first network.
+However, everything that wrapped the NN, from data loading to performance analysis had to be re-written completely to fit the PyTorch API. In Dario's work, he examines two networks- both take as input video frames, but the first outputs the pose variables (x,y,z,yaw) of the person relative to the drone, and the second one outputs the control variables of the drone (steering angle, speed). In the data collection process, each frame has the GT for the pose variables, provided by a MoCap system. Since this GT labels were readily available and easy to compare, I started by porting the first network.
 
 <p align="center">
 <img src="/resources/learning_curves.png" alt="drawing" width="500"/>
@@ -51,12 +51,12 @@ So in order to still re-use the dataset, it was decided to adapt the original im
 <p align="center">
 <img src="/resources/hack.jpg" alt="drawing" width="500"/>
 <p/>
-I attached a time-stamp to each stamped image, so I can sync between the two streams. The Parrot 2 delivered images at roughly 30 fps, while the capturing from the Himax was drastically slower at around 0.4 fps. This is due to the fact that images from the Himax camera were written to the board's memory, and then had to be transferred through a bridge to my PC. The bridge is intended mainly for debugging purposes and not for image streaming, so it was expected that the performance would be lacking. 
-To orchestrate this recording setup, I wrote c code to run on the embedded device, which captured the images from the Himax camera and wrote them into a named pipe on the host (using the bridge). There was also a ROS node running on my PC, that read from that pipe, and published it as ROS image messages that can be recorded. 
+I attached a time-stamp to each stamped image, so I can sync between the two streams. The Parrot 2 delivered images at roughly 30 fps, while capturing from the Himax was dramatically slower at around 0.4 fps. This is due to the fact that images from the Himax camera were written to the board's memory, and then had to be transferred through a bridge to my PC. The bridge is intended mainly for debugging purposes and not for image streaming, so it was expected that the performance would be lacking. 
+To orchestrate this recording setup, I wrote c code to run on the embedded device, which captures the images from the Himax camera and writes them into a named pipe on the host (using the bridge). There is also a ROS node running on my PC, that reads from that pipe, and publishes it as ROS image messages that can be recorded. 
 <p align="center">
 <img src="/resources/Gapuino.png" alt="drawing" width="500"/>
 <p/>
-After recording a few sessions, I focused on synching the images from both cameras. Of course, the fps was different, but there was also the need to account for the Himax's delay - the image is stamped when it reached the ROS node on the host, but it is actually captured awhile earlier. To calculate the delay I had one recording session where I captured my phone's timer, this allowed me to estimated the delay with an error of a few milliseconds. 
+After recording a few sessions, I focused on synching the images from both cameras. Of course, the fps was different, but there was also the need to account for the Himax's delay - the image is stamped when it reached the ROS node on the host, but it is actually captured awhile earlier. To calculate the delay I had one recording session where I captured my phone's timer, this allowed me to estimate the delay with an error of a few milliseconds. 
 Once I had the frames synced, I transformed the images to be more alike - gamma correction, FOV cropping, RGB->gray, and resized them both to the input resolution of the network.
 <p align="center">
 <img src="/resources/sync.gif" alt="drawing"/>
@@ -65,7 +65,7 @@ Once I had the frames synced, I transformed the images to be more alike - gamma 
 
 
 # Real-time, Real-life 
-
+DBD
 
 ### Installation
 This code run on Ubuntou 16.04. If it happens to run on any other OS, consider it a miracle.
