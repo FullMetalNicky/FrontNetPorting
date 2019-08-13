@@ -5,7 +5,6 @@ import cv2
 import numpy as np
 from cv_bridge import CvBridge
 
-
 class CameraSynchronizer:
 
 	def __init__(self, bagName):
@@ -105,12 +104,24 @@ class CameraSynchronizer:
 			frames.append(viz)
 
 		height, width, layers = frames[0].shape
-  		size = (width,height)
+		size = (width,height)
 		out = cv2.VideoWriter(videoName, cv2.VideoWriter_fourcc(*'DIVX'), fps, size)
-	 
+
 		for i in range(len(frames)):
-			  out.write(frames[i])
+				out.write(frames[i])
 		out.release()
+
+	def GetSyncConcatFrames(self, sync_himax_images, sync_bebop_images):
+
+		if(len(sync_himax_images) != len(sync_bebop_images)):
+			print("Error, images not in the same length")
+
+		frames =[]
+		for i in range(len(sync_himax_images)):
+			viz = self.concat_images(sync_himax_images[i], sync_bebop_images[i])
+			frames.append(viz)
+		
+		return frames
 			
 
 	def UnpackBagStamps(self, stopNum=np.inf):
