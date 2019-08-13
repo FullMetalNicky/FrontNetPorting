@@ -10,7 +10,7 @@ import numpy as np
 
 class RosbagUnpacker:
 
-	def init(self):
+	def __init__(self):
 		self.node = rospy.init_node('unbag', anonymous=True)
 
 	def UnpackBag(self, bagName, stopNum=np.inf):
@@ -35,6 +35,29 @@ class RosbagUnpacker:
 		bag.close()
 
 		return himax_msgs, bebop_msgs
+
+	def UnpackBagStamps(self, bagName, stopNum=np.inf):
+		
+		bag = rosbag.Bag(bagName)
+		himax_stamps = []
+		bebop_stamps = []
+		himax_cnt = 1
+
+		for topic, msg, t in bag.read_messages(topics=['himax_camera', 'bebop/image_raw']):
+	
+			if(topic == 'himax_camera'):
+				himax_stamps.append(msg.header.stamp)
+				himax_cnt = himax_cnt + 1
+
+			elif(topic == 'bebop/image_raw'):
+				bebop_stamps.append(msg.header.stamp)
+	
+			if himax_cnt > stopNum:
+				break
+		
+		bag.close()
+
+		return himax_stamps, bebop_stamps
 
 	def MessagesToImages(self, himax_msgs, bepop_msgs):
 

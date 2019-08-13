@@ -8,14 +8,17 @@ from ImageTransformer import ImageTransformer
 #flow example
 def main():
 	
-	rbu = RosbagUnpacker()
-	himax_msgs, bebop_msgs = rbu.UnpackBag('../data/2019-08-09-04-27-04.bag', stopNum=20)
-	himax_images, bebop_images, himax_stamps, bebop_stamps = rbu.MessagesToImages(himax_msgs, bebop_msgs)
-	cs = CameraSynchronizer()
-	sync_himax_images, sync_bebop_images = cs.SyncImages(himax_images, bebop_images, himax_stamps, bebop_stamps, -1817123289)
+	cs = CameraSynchronizer('../data/2019-08-08-05-06-09.bag')
+	himax_stamps, bebop_stamps = cs.UnpackBagStamps()
+	print("get stamps")
+	sync_himax_ids, sync_bebop_ids = cs.SyncStamps(himax_stamps, bebop_stamps, -1817123289)
+	print("synched stamps")
+	sync_himax_images, sync_bebop_images = cs.SyncImagesByStamps(sync_himax_ids, sync_bebop_ids)
+	print("synched images")
 	it = ImageTransformer()
 	himaxTransImages, bebopTransImages = it. TransformImages("../data/calibration.yaml", "../data/bebop_calibration.yaml", sync_himax_images, sync_bebop_images)
-	cs.CreateSyncVideo(himaxTransImages, bebopTransImages, "test.avi")
+	print("transformed")
+#	cs.CreateSyncVideo(himaxTransImages, bebopTransImages, "test.avi")
 	ImageIO.WriteImagesToFolder(himaxTransImages, "../data/himax_processed/", '.jpg')
 	ImageIO.WriteImagesToFolder(bebopTransImages, "../data/bebop_processed/", '.jpg')
 	

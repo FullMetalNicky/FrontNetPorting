@@ -43,15 +43,18 @@ class ImageTransformer:
 		bebopTransImages = []
 		resize_h = 60
 		resize_w = 108
+		w_himax = himaxImages[0].shape[1]
+		h_himax = himaxImages[0].shape[0]
 
 		for img in himaxImages:
 			crop_img = img[shift_y:shift_y+new_size[1], shift_x:shift_x+ new_size[0]]	
-			crop_img = cv2.resize(crop_img, (resize_w, resize_h))
+			crop_img = cv2.resize(crop_img, (resize_w, resize_h), cv2.INTER_NEAREST)
 			himaxTransImages.append(crop_img)
 
 		for img in bebopImages:
 			gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-			gray = cv2.resize(gray, (resize_w, resize_h))
+			gray = cv2.resize(gray, (w_himax, h_himax), cv2.INTER_AREA)
+			gray = cv2.resize(gray, (resize_w, resize_h), cv2.INTER_NEAREST)
 			bebopTransImages.append(gray)
 
 		return himaxTransImages, bebopTransImages
