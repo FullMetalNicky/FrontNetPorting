@@ -24,6 +24,17 @@ class ImageTransformer:
 			for i in np.arange(0, 256)]).astype("uint8")
 	
 		return table
+
+	def ApplyVignette(self, rows, cols):
+
+		# generating vignette mask using Gaussian kernels
+		kernel_x = cv2.getGaussianKernel(cols,150)
+		kernel_y = cv2.getGaussianKernel(rows,150)
+		kernel = kernel_y * kernel_x.T
+		mask = 255 * kernel / np.linalg.norm(kernel)
+
+		return mask
+		 #output[:,:,i] = output[:,:,i] * mask
 	
 
 	def get_crop_parameters(self, x_ratio, y_ratio, h, w):
@@ -57,11 +68,13 @@ class ImageTransformer:
 			himaxTransImages.append(crop_img)
 
 		table = self.adjust_gamma(0.6)
+		mask = self.ApplyVignette(h_himax, w_himax)
 		for img in bebopImages:
 			gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 			gray = cv2.LUT(gray, table)
 			gray = cv2.GaussianBlur(gray,(5,5),0)
 			gray = cv2.resize(gray, (w_himax, h_himax), cv2.INTER_AREA)
+			gray = gray * mask
 			gray = cv2.resize(gray, (resize_w, resize_h), cv2.INTER_NEAREST)
 			bebopTransImages.append(gray)
 
