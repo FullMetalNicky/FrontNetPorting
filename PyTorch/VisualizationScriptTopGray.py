@@ -15,9 +15,26 @@ import matplotlib.image as mpimg
 import sys
 sys.path.append("../pulp/")
 from ImageIO import ImageIO
+import cv2
+
 
 
 import matplotlib.patches as patches
+
+
+def concat_images(img1, img2):
+    if len(img1.shape) < 3:
+        img1 = cv2.cvtColor(img1, cv2.COLOR_GRAY2RGB)
+    if len(img2.shape) < 3:
+        img2 = cv2.cvtColor(img2, cv2.COLOR_GRAY2RGB)
+    h1, w1 = img1.shape[:2]
+    h2, w2 = img2.shape[:2]
+
+    vis = np.zeros((max(h1, h2), w1 + w2, 3), np.uint8)
+
+    vis[:h1, :w1, :3] = img1
+    vis[:h2, w1:w1 + w2, :3] = img2
+    return vis
 
 
 def VizDroneBEV(frames, labels, outputs):
@@ -128,7 +145,7 @@ def VizDroneBEV(frames, labels, outputs):
 
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save('Pattern2ExposureModel.avi', writer=writer)
+    ani.save('diffroomnolightExposureModel.avi', writer=writer)
     #ani.save('himaxVsbebop.gif', dpi=80, writer='imagemagick')
     plt.show()
 
@@ -149,7 +166,7 @@ def main():
     ModelManager.Read('Models/FrontNetGrayExposure.pt', model)
     trainer = ModelTrainer(model)
 
-    images = ImageIO.ReadImagesFromFolder("../data/patterns2/himax_processed/", '.jpg', 0)
+    images = ImageIO.ReadImagesFromFolder("../data/diffroomnolight/himax_processed/", '.jpg', 0)
     [x_live, y_live] = DataProcessor.ProcessInferenceData(images, 60, 108)
     live_set = Dataset(x_live, y_live)
     params = {'batch_size': 1,
@@ -159,8 +176,9 @@ def main():
 
     y_pred_himax = trainer.Infer(live_generator)
     y_pred_himax = np.reshape(y_pred_himax, (-1, 4))
+    h_images = images
 
-    images = ImageIO.ReadImagesFromFolder("../data/patterns2/bebop_processed/", '.jpg', 0)
+    images = ImageIO.ReadImagesFromFolder("../data/diffroomnolight/bebop_processed/", '.jpg', 0)
     [x_live, y_live] = DataProcessor.ProcessInferenceData(images, 60, 108)
     live_set = Dataset(x_live, y_live)
     params = {'batch_size': 1,
@@ -171,7 +189,12 @@ def main():
     y_pred_bebop = trainer.Infer(live_generator)
     y_pred_bebop = np.reshape(y_pred_bebop, (-1, 4))
 
-    VizDroneBEV(images, y_pred_bebop, y_pred_himax)
+    combinedImages = []
+    for i in range(len(images)):
+        img = concat_images(images[i], h_images[i])
+        combinedImages.append(img)
+
+    VizDroneBEV(combinedImages, y_pred_bebop, y_pred_himax)
 
 
 if __name__ == '__main__':
