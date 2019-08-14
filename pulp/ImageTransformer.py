@@ -25,11 +25,11 @@ class ImageTransformer:
 	
 		return table
 
-	def ApplyVignette(self, rows, cols):
+	def ApplyVignette(self, rows, cols, sigma=150):
 
 		# generating vignette mask using Gaussian kernels
-		kernel_x = cv2.getGaussianKernel(cols,150)
-		kernel_y = cv2.getGaussianKernel(rows,150)
+		kernel_x = cv2.getGaussianKernel(cols,sigma)
+		kernel_y = cv2.getGaussianKernel(rows,sigma)
 		kernel = kernel_y * kernel_x.T
 		mask = 255 * kernel / np.linalg.norm(kernel)
 

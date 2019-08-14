@@ -39,15 +39,23 @@ class Dataset(data.Dataset):
                 y[1] = -y[1]  # Y
                 y[3] = -y[3]  # Relative YAW
 
+            X = X.cpu().numpy()
+            sigma = np.random.uniform(140, 210)
+            h, w = X.shape[1:3]
+            mask = self.it.ApplyVignette(h, w, sigma)
+            X = np.reshape(X, (h, w)).astype("uint8")
             if np.random.choice([True, False]):
                 gamma = np.random.uniform(0.6, 1.4)
                 table = self.it.adjust_gamma(gamma)
-                X = X.cpu().numpy()
-                h, w = X.shape[1:3]
-                X = np.reshape(X, (h, w)).astype("uint8")
+                #X = X.cpu().numpy()
+                #h, w = X.shape[1:3]
+                #X = np.reshape(X, (h, w)).astype("uint8")
                 X = cv2.LUT(X, table)
-                X = np.reshape(X, (1, h, w))
-                X = torch.from_numpy(X).float()
+                #X = np.reshape(X, (1, h, w))
+                #X = torch.from_numpy(X).float()
+            X = X * mask
+            X = np.reshape(X, (1, h, w))
+            X = torch.from_numpy(X).float()
             # if np.random.choice([True, False]):
             #     X = X.cpu().numpy()
             #     dr = np.random.uniform(0.4, 0.8)  # dynamic range
