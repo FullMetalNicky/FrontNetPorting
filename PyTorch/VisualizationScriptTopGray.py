@@ -41,7 +41,8 @@ def VizDroneBEV(frames, labels, outputs):
     ax1.yaxis.tick_left()  # remove right y-Ticks
     ax1.spines['right'].set_visible(False)
     ax1.spines['bottom'].set_visible(False)
-    trianglex = [3, 0, -3, 3]
+    ax1.invert_xaxis()
+    trianglex = [2, 0, -2, 2]
     triangley = [3, 0, 3, 3]
     collection = plt.fill(trianglex, triangley, facecolor='lightskyblue')
 
@@ -127,7 +128,7 @@ def VizDroneBEV(frames, labels, outputs):
 
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save('himaxVsbebopExposure.avi', writer=writer)
+    ani.save('Pattern2ExposureModel.avi', writer=writer)
     #ani.save('himaxVsbebop.gif', dpi=80, writer='imagemagick')
     plt.show()
 
@@ -148,7 +149,7 @@ def main():
     ModelManager.Read('Models/FrontNetGrayExposure.pt', model)
     trainer = ModelTrainer(model)
 
-    images = ImageIO.ReadImagesFromFolder("../data/himax_processed/", '.jpg', 0)
+    images = ImageIO.ReadImagesFromFolder("../data/patterns2/himax_processed/", '.jpg', 0)
     [x_live, y_live] = DataProcessor.ProcessInferenceData(images, 60, 108)
     live_set = Dataset(x_live, y_live)
     params = {'batch_size': 1,
@@ -159,7 +160,7 @@ def main():
     y_pred_himax = trainer.Infer(live_generator)
     y_pred_himax = np.reshape(y_pred_himax, (-1, 4))
 
-    images = ImageIO.ReadImagesFromFolder("../data/bebop_processed/", '.jpg', 0)
+    images = ImageIO.ReadImagesFromFolder("../data/patterns2/bebop_processed/", '.jpg', 0)
     [x_live, y_live] = DataProcessor.ProcessInferenceData(images, 60, 108)
     live_set = Dataset(x_live, y_live)
     params = {'batch_size': 1,
