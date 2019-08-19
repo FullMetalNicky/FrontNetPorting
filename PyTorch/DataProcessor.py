@@ -88,11 +88,12 @@ class DataProcessor:
         it = ImageTransformer()
 
         x_train_grey = []
+        sigma = 50
+        mask = it.ApplyVignette(image_width, image_width, sigma)
+
         for i in range(len(x_train)):
             gray_image = cv2.cvtColor(x_train[i], cv2.COLOR_RGB2GRAY)
-            sigma = np.random.uniform(140, 160)
-            mask = it.ApplyVignette(image_height, image_width, sigma)
-            gray_image = gray_image * mask
+            gray_image = gray_image * mask[24:84, 0:108]
             gray_image = gray_image.astype(np.uint8)
             x_train_grey.append(gray_image)
 
