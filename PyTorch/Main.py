@@ -19,7 +19,7 @@ import sklearn.metrics
 
 def TestCamerasAgainstEachPther():
     model = FrontNet(PreActBlock, [1, 1, 1])
-    ModelManager.Read('Models/FrontNetGray-096.pt', model)
+    ModelManager.Read('Models/FrontNetGrayGamma.pt', model)
     trainer = ModelTrainer(model)
 
 
@@ -86,7 +86,7 @@ def TrainGray():
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
     [train_mean, train_std, x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainDataGray(
-        DATA_PATH + "train_gray.pickle", 60, 108)
+        DATA_PATH + "train_vignette.pickle", 60, 108)
 
     training_set = Dataset(x_train, y_train, True)
     params = {'batch_size': 64,
@@ -98,6 +98,12 @@ def TrainGray():
     validation_generator = data.DataLoader(validation_set, **params)
 
     trainer.Train(training_generator, validation_generator)
+
+
+def ConvertToGray():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/"
+    DataProcessor.CreateGreyPickle(DATA_PATH + "train.pickle", 60, 108, "train_vignette.pickle")
+    DataProcessor.CreateGreyPickle(DATA_PATH + "test.pickle", 60, 108, "test_vignette.pickle")
 
 def main():
     logging.basicConfig(level=logging.INFO,
@@ -113,8 +119,9 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    TestCamerasAgainstEachPther()
-
+    #TestCamerasAgainstEachPther()
+    TrainGray()
+    #ConvertToGray()
 
 
 if __name__ == '__main__':

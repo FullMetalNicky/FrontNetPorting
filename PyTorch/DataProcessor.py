@@ -4,6 +4,10 @@ import random
 import logging
 import cv2
 import matplotlib.pyplot as plt
+import sys
+sys.path.append("../pulp/")
+from ImageTransformer import ImageTransformer
+
 
 
 class DataProcessor:
@@ -72,7 +76,7 @@ class DataProcessor:
         return [x_test, y_test]
 
     @staticmethod
-    def CreateGreyPickle(trainPath, image_height, image_width):
+    def CreateGreyPickle(trainPath, image_height, image_width, file_name="train.pickle"):
         train_set = pd.read_pickle(trainPath).values
         logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
 
@@ -81,9 +85,15 @@ class DataProcessor:
         x_train = np.vstack(x_train[:])
         x_train = np.reshape(x_train, (-1, image_height, image_width, 3))
 
+        it = ImageTransformer()
+
         x_train_grey = []
         for i in range(len(x_train)):
             gray_image = cv2.cvtColor(x_train[i], cv2.COLOR_RGB2GRAY)
+            sigma = np.random.uniform(140, 160)
+            mask = it.ApplyVignette(image_height, image_width, sigma)
+            gray_image = gray_image * mask
+            gray_image = gray_image.astype(np.uint8)
             x_train_grey.append(gray_image)
 
         x_train_grey = np.array(x_train_grey)
@@ -92,7 +102,7 @@ class DataProcessor:
         t = (x_train_grey, y_train)
 
         df = pd.DataFrame(t)
-        df.to_pickle("test_gray.pickle")
+        df.to_pickle(file_name)
 
     @staticmethod
     def ProcessTrainDataGray(trainPath, image_height, image_width):
