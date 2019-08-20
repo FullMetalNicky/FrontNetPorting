@@ -74,15 +74,15 @@ class DataVisualization:
         plt.plot(epochs, y, color='blue', label='y')
         z = MSE[:, 2]
         z = z.cpu().numpy()
-        plt.plot(epochs, z, color='r', marker='o', label='z')
+        plt.plot(epochs, z, color='r', label='z')
         phi = MSE[:, 3]
         phi = phi.cpu().numpy()
-        plt.plot(epochs, phi, color='m', marker='o', label='phi')
+        plt.plot(epochs, phi, color='m', label='phi')
         plt.legend()
         plt.title('Pose Variables MSE')
         plt.xlabel('Epoch')
         plt.ylabel('MSE')
-        plt.xticks(epochs)
+        plt.xticks(np.arange(1, epochs+1, step=5))
         plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'MSE.png')
 
 
@@ -102,15 +102,15 @@ class DataVisualization:
         plt.plot(epochs, y, color='blue', label='y')
         z = MAE[:, 2]
         z = z.cpu().numpy()
-        plt.plot(epochs, z, color='r', marker='o', label='z')
+        plt.plot(epochs, z, color='r', label='z')
         phi = MAE[:, 3]
         phi = phi.cpu().numpy()
-        plt.plot(epochs, phi, color='m', marker='o', label='phi')
+        plt.plot(epochs, phi, color='m', label='phi')
         plt.legend()
         plt.title('Pose Variables MAE')
         plt.xlabel('Epoch')
         plt.ylabel('MAE')
-        plt.xticks(epochs)
+        plt.xticks(np.arange(1, epochs+1, step=5))
         plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'MAE.png')
 
 
@@ -129,15 +129,15 @@ class DataVisualization:
         plt.plot(epochs, y, color='blue', label='y')
         z = r2_score[:, 2]
         z = z.cpu().numpy()
-        plt.plot(epochs, z, color='r', marker='o', label='z')
+        plt.plot(epochs, z, color='r',  label='z')
         phi = r2_score[:, 3]
         phi = phi.cpu().numpy()
-        plt.plot(epochs, phi, color='m', marker='o', label='phi')
+        plt.plot(epochs, phi, color='m', label='phi')
         plt.legend()
         plt.title('Pose Variables r2_score')
         plt.xlabel('Epoch')
         plt.ylabel('r2_score')
-        plt.xticks(epochs)
+        plt.xticks(np.arange(1, epochs+1, step=5))
         plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'Rsq.png')
 
 
