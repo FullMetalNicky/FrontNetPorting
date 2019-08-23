@@ -23,6 +23,7 @@ class CameraSynchronizer:
 		if len(img1.shape) < 3:
 			img1 = cv2.cvtColor(img1, cv2.COLOR_GRAY2RGB)
 		if len(img2.shape) < 3:
+			img2=img2.astype(np.uint8)
 			img2 = cv2.cvtColor(img2, cv2.COLOR_GRAY2RGB)
 		h1, w1 = img1.shape[:2]
 		h2, w2 = img2.shape[:2]

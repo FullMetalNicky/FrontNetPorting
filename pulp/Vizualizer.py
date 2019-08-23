@@ -10,6 +10,7 @@ import ctypes as c
 from time import time
 import cv2
 import fcntl
+from ImageTransformer import ImageTransformer
 
 height = 244
 width = 324
@@ -35,13 +36,14 @@ def read_from_pipe(pipein):
 	data = np.frombuffer(data, dtype=np.uint8)
 
 	return data
-	
+
+
 
 def main():
 	rospy.init_node('pub_gap_camera', anonymous=True)
 	image_pub = rospy.Publisher("himax_camera",Image)
 	bridge = CvBridge()
-
+	
 	cv_file = cv2.FileStorage("../data/calibration.yaml", cv2.FILE_STORAGE_READ)
 	k = cv_file.getNode("k").mat()
 	D = cv_file.getNode("D").mat()
@@ -56,6 +58,9 @@ def main():
 	camera_info.height = size[0][0]
 	camera_info.width = size[1][0]
 	print(camera_info)
+
+	it = ImageTransformer()
+	new_size, shift_x, shift_y = it.get_crop_parameters("../data/calibration.yaml", "../data/bebop_calibration.yaml")
 	
 	pipe_name = "image_pipe"
 	if not os.path.exists(pipe_name):
@@ -69,6 +74,7 @@ def main():
 		data = read_from_pipe(pipein)
 		if data is not None:
 			cv_image = np.reshape(data, (height, width))
+			cv_image = cv_image[shift_y:shift_y+new_size[1], shift_x:shift_x+ new_size[0]]	
 			msg = bridge.cv2_to_imgmsg(cv_image)
 			msg.header.stamp = rospy.Time.now()
 			image_pub.publish(msg)

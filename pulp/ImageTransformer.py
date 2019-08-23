@@ -37,13 +37,26 @@ class ImageTransformer:
 		 #output[:,:,i] = output[:,:,i] * mask
 	
 
-	def get_crop_parameters(self, x_ratio, y_ratio, h, w):
+	def get_crop_parameters(self, himaxCalibFile, bebopCalibFile):
+
+		himax_fovx, himax_fovy, himax_h, himax_w = self.CalculateFOVfromCalibration(himaxCalibFile)
+		bebop_fovx, bebop_fovy, bebop_h, bebop_w = self.CalculateFOVfromCalibration(bebopCalibFile)
+		x_ratio = bebop_fovx / himax_fovx
+		y_ratio = bebop_fovy / himax_fovy
+
+		new_size, shift_x, shift_y = self.calc_crop_parameters(x_ratio, y_ratio, himax_h, himax_w)
+
+		return new_size, shift_x, shift_y
+		
+
+	def calc_crop_parameters(self, x_ratio, y_ratio, h, w):
 
 		new_size = (int(w * x_ratio) , int(h * y_ratio))
 		shift_x = 0.5*(w - new_size[0])
 		shift_y = 0.5*(h - new_size[1])
 
 		return new_size, shift_x, shift_y
+
 
 
 	def TransformImages(self, himaxCalibFile, bebopCalibFile, himaxImages, bebopImages):
@@ -53,28 +66,31 @@ class ImageTransformer:
 		x_ratio = bebop_fovx / himax_fovx
 		y_ratio = bebop_fovy / himax_fovy
 
-		new_size, shift_x, shift_y = self.get_crop_parameters(x_ratio, y_ratio, himax_h, himax_w)
+		new_size, shift_x, shift_y = self.calc_crop_parameters(x_ratio, y_ratio, himax_h, himax_w)
 
 		himaxTransImages = []
 		bebopTransImages = []
 		resize_h = 60
 		resize_w = 108
-		w_himax = himaxImages[0].shape[1]
-		h_himax = himaxImages[0].shape[0]
+		#w_himax = himaxImages[0].shape[1]
+		#h_himax = himaxImages[0].shape[0]
+		w_himax = 324
+		h_himax = 244
 
 		for img in himaxImages:
-			crop_img = img[shift_y:shift_y+new_size[1], shift_x:shift_x+ new_size[0]]	
+			#crop_img = img[shift_y:shift_y+new_size[1], shift_x:shift_x+ new_size[0]]	
+			crop_img = img
 			crop_img = cv2.resize(crop_img, (resize_w, resize_h), cv2.INTER_NEAREST)
 			himaxTransImages.append(crop_img)
 
 		table = self.adjust_gamma(0.6)
-		mask = self.ApplyVignette(h_himax, w_himax)
+		mask = self.ApplyVignette(w_himax, w_himax, 150)
 		for img in bebopImages:
 			gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 			gray = cv2.LUT(gray, table)
 			gray = cv2.GaussianBlur(gray,(5,5),0)
 			gray = cv2.resize(gray, (w_himax, h_himax), cv2.INTER_AREA)
-			gray = gray * mask
+			gray = gray *  mask[40:284, 0:324]
 			gray = cv2.resize(gray, (resize_w, resize_h), cv2.INTER_NEAREST)
 			bebopTransImages.append(gray)
 
