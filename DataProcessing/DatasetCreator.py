@@ -97,11 +97,9 @@ class DatasetCreator:
 				y_dataset.append([int(isHand), rel_pose.x, rel_pose.y, rel_pose.z])
 
 		print("dataset ready x:{} y:{}".format(len(x_dataset), len(y_dataset)))
-		dataset = (x_dataset, y_dataset)
-		print(sys.getsizeof(x_dataset))
-		#df = pd.DataFrame(dataset)
-		#print("dataframe ready")
-		#df.to_pickle(datasetName)
+		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
+		print("dataframe ready")
+		df.to_pickle(datasetName)
 
 		
 		
