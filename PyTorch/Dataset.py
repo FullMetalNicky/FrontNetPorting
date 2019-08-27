@@ -3,7 +3,7 @@ from torch.utils import data
 import numpy as np
 import cv2
 import sys
-sys.path.append("../pulp/")
+sys.path.append("../DataProcessing/")
 from ImageTransformer import ImageTransformer
 
 
@@ -11,7 +11,6 @@ class Dataset(data.Dataset):
   'Characterizes a dataset for PyTorch'
 
   def __init__(self, data, labels, train=False):
-  #def __init__(self, list_IDs, labels):
         self.data = torch.from_numpy(data)
         self.labels = torch.from_numpy(labels)
         length = len(self.data)
@@ -26,8 +25,6 @@ class Dataset(data.Dataset):
 
   def __getitem__(self, index):
         'Generates one sample of data'
-        # Select sample
-
         ID = index
 
         X = self.data[ID]

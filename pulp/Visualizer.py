@@ -5,7 +5,7 @@ from sensor_msgs.msg import CameraInfo
 from cv_bridge import CvBridge
 import cv2
 import sys
-sys.path.append("/home/usi/Documents/Drone/FrontNetPorting/pulp")
+sys.path.append("/home/usi/Documents/Drone/FrontNetPorting/DataProcessing")
 from ImageEffects import ImageEffects
 
 

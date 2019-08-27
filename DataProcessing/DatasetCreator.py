@@ -5,14 +5,14 @@ import pandas as pd
 import rosbag
 import rospy
 import cv2
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
-
-import sys
-sys.path.append("../pulp/")
 from TimestampSynchronizer import TimestampSynchronizer
 from ImageEffects import ImageEffects
+
+import sys
 sys.path.append("../")
 import config
 
@@ -49,6 +49,26 @@ class DatasetCreator:
 
 		return sync_camera_ids, sync_optitrack_ids, sync_drone_ids
 
+	def CalculateRelativePose(self, optitrack_msg, drone_msg):
+
+		part_orient = optitrack_msg.pose.orientation
+		drone_orient = drone_msg.pose.orientation
+		part_pose = optitrack_msg.pose.position
+		drone_pose = drone_msg.pose.position
+
+		x = part_pose.x - drone_pose.x
+		y = part_pose.y - drone_pose.y
+		z = part_pose.z - drone_pose.z
+		part_quaternion = (part_orient.x, part_orient.y, part_orient.z, part_orient.w)
+		part_euler = euler_from_quaternion(part_quaternion)
+		drone_quaternion = (drone_orient.x, drone_orient.y, drone_orient.z, drone_orient.w)
+		drone_euler = euler_from_quaternion(drone_quaternion)
+		yaw = part_euler[2] - drone_euler[2]
+		#print("part_pose={}".format(part_pose))
+		#print("drone_pose={}".format(drone_pose))
+
+		return x, y, z, yaw
+
 	def CreateBebopDataset(self, delay, isHand, datasetName):
 	
 		if isHand == True:
@@ -84,18 +104,9 @@ class DatasetCreator:
 				bebop_id = sync_bebop_ids[chunk * chunk_size + i]
 				#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
 				
-				part_pose = optitrack_msgs[optitrack_id].pose.position
-				drone_pose = drone_msgs[drone_id].pose.position
-				rel_pose = PoseStamped().pose.position
-				rel_pose.x = part_pose.x - drone_pose.x
-				rel_pose.y = part_pose.y - drone_pose.y
-				rel_pose.z = part_pose.z - drone_pose.z
-
-				#print("isHand={}, part_pose={}".format(int(isHand), part_pose))
-				#print("drone_pose={}".format(drone_pose))
-				#print("rel_pose={}".format(rel_pose))
-				#print([int(isHand), rel_pose.x, rel_pose.y, rel_pose.z])
-				y_dataset.append([int(isHand), rel_pose.x, rel_pose.y, rel_pose.z])
+				x, y, z, yaw = self.CalculateRelativePose(optitrack_msgs[optitrack_id], drone_msgs[drone_id])
+				
+				y_dataset.append([int(isHand), x, y, z, yaw])
 
 		print("dataset ready x:{} y:{}".format(len(x_dataset), len(y_dataset)))
 		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
@@ -146,13 +157,9 @@ class DatasetCreator:
 				bebop_id = sync_bebop_ids[chunk * chunk_size + i]
 				#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
 				
-				part_pose = optitrack_msgs[optitrack_id].pose.position
-				drone_pose = drone_msgs[drone_id].pose.position
-				rel_pose = PoseStamped().pose.position
-				rel_pose.x = part_pose.x - drone_pose.x
-				rel_pose.y = part_pose.y - drone_pose.y
-				rel_pose.z = part_pose.z - drone_pose.z
-				y_dataset.append([int(isHand), rel_pose.x, rel_pose.y, rel_pose.z])
+				x, y, z, yaw = self.CalculateRelativePose(optitrack_msgs[optitrack_id], drone_msgs[drone_id])
+				
+				y_dataset.append([int(isHand), x, y, z, yaw])
 
 		print("finished transformed bebop")
 		self.camera_topic = "himax_camera"
@@ -169,13 +176,9 @@ class DatasetCreator:
 			himax_id = sync_himax_ids[i]
 			#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
 			
-			part_pose = optitrack_msgs[optitrack_id].pose.position
-			drone_pose = drone_msgs[drone_id].pose.position
-			rel_pose = PoseStamped().pose.position
-			rel_pose.x = part_pose.x - drone_pose.x
-			rel_pose.y = part_pose.y - drone_pose.y
-			rel_pose.z = part_pose.z - drone_pose.z
-			y_dataset.append([int(isHand), rel_pose.x, rel_pose.y, rel_pose.z])
+			x, y, z, yaw = self.CalculateRelativePose(optitrack_msgs[optitrack_id], drone_msgs[drone_id])
+				
+			y_dataset.append([int(isHand), x, y, z, yaw])
 
 		print("dataset ready x:{} y:{}".format(len(x_dataset), len(y_dataset)))
 		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})

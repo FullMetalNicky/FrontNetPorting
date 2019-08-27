@@ -5,7 +5,7 @@ import logging
 import cv2
 import matplotlib.pyplot as plt
 import sys
-sys.path.append("../pulp/")
+sys.path.append("../DataProcessing/")
 from ImageTransformer import ImageTransformer
 
 

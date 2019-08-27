@@ -11,6 +11,7 @@ from time import time
 import cv2
 import fcntl
 import sys
+sys.path.append("/home/usi/Documents/Drone/FrontNetPorting/DataProcessing")
 from ImageTransformer import ImageTransformer
 sys.path.append("/home/usi/Documents/Drone/FrontNetPorting")
 import config
