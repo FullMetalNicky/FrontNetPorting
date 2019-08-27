@@ -13,7 +13,8 @@ import sys
 sys.path.append("../pulp/")
 from TimestampSynchronizer import TimestampSynchronizer
 from ImageTransformer import ImageTransformer
-
+sys.path.append("../")
+import config
 
 class DatasetCreator:
 
@@ -75,7 +76,7 @@ class DatasetCreator:
 			for i in range(len(bebop_msgs)):
 				cv_image = bridge.imgmsg_to_cv2(bebop_msgs[i])
 				cv_image = cv2.cvtColor(cv_image, cv2.COLOR_RGB2BGR)
-				cv_image = cv2.resize(cv_image, (108, 60), cv2.INTER_AREA)
+				cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
 				x_dataset.append(cv_image)		
 	
 				optitrack_id = sync_optitrack_ids[chunk * chunk_size + i]		

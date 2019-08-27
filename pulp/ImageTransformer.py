@@ -1,7 +1,9 @@
 import cv2
 import numpy as np
 import os
-
+import sys
+sys.path.append("../")
+import config
 
 class ImageTransformer:
 
@@ -70,12 +72,10 @@ class ImageTransformer:
 
 		himaxTransImages = []
 		bebopTransImages = []
-		resize_h = 60
-		resize_w = 108
-		#w_himax = himaxImages[0].shape[1]
-		#h_himax = himaxImages[0].shape[0]
-		w_himax = 324
-		h_himax = 244
+		resize_h = config.input_height
+		resize_w = config.input_width
+		w_himax = config.himax_width
+		h_himax = config.himax_height
 
 		for img in himaxImages:
 			#crop_img = img[shift_y:shift_y+new_size[1], shift_x:shift_x+ new_size[0]]	

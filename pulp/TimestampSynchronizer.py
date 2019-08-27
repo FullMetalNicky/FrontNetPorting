@@ -99,7 +99,6 @@ class TimestampSynchronizer:
 		topic1_cnt = 0
 		topic2_cnt = 0
 
-		print(sync_topic2_ids[1])
 		for topic, msg, t in bag.read_messages(topics=[topic1, topic2]):
 			if((topic == topic1) and (len(sync_topic1_ids)>0)):
 				if (topic1_cnt == sync_topic1_ids[0]):
