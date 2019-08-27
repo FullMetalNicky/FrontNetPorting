@@ -10,16 +10,18 @@ import ctypes as c
 from time import time
 import cv2
 import fcntl
+import sys
 from ImageTransformer import ImageTransformer
+sys.path.append("/home/usi/Documents/Drone/FrontNetPorting")
+import config
 
-height = 244
-width = 324
+
 page_size = 4096
 F_GETPIPE_SZ = 1032  # Linux 2.6.35+
 F_SETPIPE_SZ = 1031  # Linux 2.6.35+
 
 def read_from_pipe(pipein):
-	remaining_size = height * width
+	remaining_size = config.himax_height * config.himax_width
 	
 	data = []
 	while(remaining_size > 0):
@@ -29,8 +31,8 @@ def read_from_pipe(pipein):
 
 	data=''.join(data)
 
-	if (len(data) < height*width):
-			rospy.loginfo("Error, expecting {} bytes, received {}.".format(height*width, len(data)))
+	if (len(data) < config.himax_height*config.himax_width):
+			rospy.loginfo("Error, expecting {} bytes, received {}.".format(config.himax_height*config.himax_width, len(data)))
 			return None
 
 	data = np.frombuffer(data, dtype=np.uint8)
@@ -44,7 +46,7 @@ def main():
 	image_pub = rospy.Publisher("himax_camera",Image)
 	bridge = CvBridge()
 	
-	cv_file = cv2.FileStorage("../data/calibration.yaml", cv2.FILE_STORAGE_READ)
+	cv_file = cv2.FileStorage(config.folder_path +"/data/calibration.yaml", cv2.FILE_STORAGE_READ)
 	k = cv_file.getNode("k").mat()
 	D = cv_file.getNode("D").mat()
 	size = cv_file.getNode("size").mat()
@@ -60,9 +62,12 @@ def main():
 	print(camera_info)
 
 	it = ImageTransformer()
-	new_size, shift_x, shift_y = it.get_crop_parameters("../data/calibration.yaml", "../data/bebop_calibration.yaml")
+	new_size, shift_x, shift_y = it.get_crop_parameters(config.folder_path + "/data/calibration.yaml", config.folder_path + "/data/bebop_calibration.yaml")
+	shift_x = int(shift_x)
+	shift_y = int(shift_y)
+
 	
-	pipe_name = "image_pipe"
+	pipe_name = config.folder_path + "/pulp/image_pipe"
 	if not os.path.exists(pipe_name):
 		os.mkfifo(pipe_name)
 		
@@ -73,7 +78,7 @@ def main():
 	while not rospy.is_shutdown():
 		data = read_from_pipe(pipein)
 		if data is not None:
-			cv_image = np.reshape(data, (height, width))
+			cv_image = np.reshape(data, (config.himax_height, config.himax_width))
 			cv_image = cv_image[shift_y:shift_y+new_size[1], shift_x:shift_x+ new_size[0]]	
 			msg = bridge.cv2_to_imgmsg(cv_image)
 			msg.header.stamp = rospy.Time.now()

@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 import sys
-sys.path.append("../")
+sys.path.append("/home/usi/Documents/Drone/FrontNetPorting")
 import config
 
 class ImageTransformer:

@@ -25,12 +25,15 @@ static rt_event_t *		event_capture;
 static rt_camera_t *	camera;
 static int frame_id = 0;
 
+
 static void end_of_frame() 
 {
 
 	rt_cam_control(camera, CMD_PAUSE, NULL);
 
-	WriteImageToFifo("../../../image_pipe", WIDTH, HEIGHT, L2_image);
+	//WriteImageToFifo("../../../image_pipe", WIDTH, HEIGHT, L2_image);
+	WriteImageToFifo("/home/usi/Documents/Drone/FrontNetPorting/pulp/image_pipe", WIDTH, HEIGHT, L2_image);
+
 
 	imgTransferDone = 1;
 }
