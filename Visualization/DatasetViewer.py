@@ -6,6 +6,10 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
+import sys
+sys.path.append("../")
+import config
+
 class DatasetViewer:
 
 	def LoadDataset(self, fileName):
@@ -67,7 +71,7 @@ class DatasetViewer:
 
 		plt.subplots_adjust(wspace=1.5)
 
-		img = mpimg.imread('minidrone.jpg')
+		img = mpimg.imread(config.folder_path + '/resources/minidrone.jpg')
 		newax = fig.add_axes([0.26, 0.0, 0.1, 0.1], anchor='S')
 		newax.imshow(img)
 		newax.axis('off')

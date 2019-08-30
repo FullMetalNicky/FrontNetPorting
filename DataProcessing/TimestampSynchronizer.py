@@ -42,6 +42,7 @@ class TimestampSynchronizer:
 			for topic in range(len(topics_stamps_list)):
 				ind = self.closest(topics_stamps_list[topic], t)
 				sync_other_topics_ids[topic].append(ind)
+			
 			sync_main_topic_ids.append(i)
 
 		return sync_main_topic_ids, sync_other_topics_ids

@@ -1,13 +1,19 @@
 from ImageIO import ImageIO
-from CameraCalibration import CameraCalibration 
-from RosbagUnpacker import RosbagUnpacker
 from CameraSynchronizer import CameraSynchronizer
 from ImageTransformer import ImageTransformer
+from DatasetCreator import DatasetCreator
+import pandas as pd
+
+import sys
+sys.path.append("/home/usi/Documents/Drone/FrontNetPorting/pulp")
+from CameraCalibration import CameraCalibration 
+sys.path.append("/home/usi/Documents/Drone/FrontNetPorting")
+import config
 
 def TestImageIO():
 
-	images = ImageIO.ReadImagesFromFolder("../data/himax/", '.jpg')
-	ImageIO.WriteImagesToFolder(images, "../data/test/", '.jpg')
+	images = ImageIO.ReadImagesFromFolder(config.folder_path + "/data/himax/", '.jpg')
+	ImageIO.WriteImagesToFolder(images, config.folder_path + "/data/test/", '.jpg')
 
 
 def TestCameraCalibration():
@@ -15,36 +21,36 @@ def TestCameraCalibration():
 	images = cc.CaptureCalibration("image_pipe")
 	cc.CalibrateImages(images, "test.yaml")
 
-def TestRosbagUnpacker():
-	rbu = RosbagUnpacker()
-	himax_msgs, bebop_msgs = rbu.UnpackBag('../data/2019-08-08-08-17-30.bag', stopNum=3)
-	himax_images, bebop_images, himax_stamps, bebop_stamps = rbu.MessagesToImages(himax_msgs, bebop_msgs)
-	ImageIO.WriteImagesToFolder(himax_images, "../data/test/", '.jpg')	
 
-
-def TestCameraSynchronizer():
-	rbu = RosbagUnpacker()
-	himax_msgs, bebop_msgs = rbu.UnpackBag('../data/2019-08-08-08-17-30.bag', stopNum=3)
-	himax_images, bebop_images, himax_stamps, bebop_stamps = rbu.MessagesToImages(himax_msgs, bebop_msgs)
-	cs = CameraSynchronizer()
-	sync_himax_images, sync_bebop_images = cs.SyncImages(himax_images, bebop_images, himax_stamps, bebop_stamps, -1817123289)
-	cs.CreateSyncVideo(sync_himax_images, sync_bebop_images, "test.avi")
+#def TestCameraSynchronizer():
+	#re-write test
 
 def TestImageTransformer():
 
-
-	himaxImages = ImageIO.ReadImagesFromFolder("../data/himax/", '.jpg')
-	bebopImages = ImageIO.ReadImagesFromFolder("../data/bebop/", '.jpg')
+	himaxImages = ImageIO.ReadImagesFromFolder(config.folder_path + "/data/himax/", '.jpg')
+	bebopImages = ImageIO.ReadImagesFromFolder(config.folder_path + "/data/bebop/", '.jpg')
 	it = ImageTransformer()
-	himaxTransImages, bebopTransImages = it. TransformImages("../data/calibration.yaml", "../data/bebop_calibration.yaml", himaxImages, bebopImages)
-	ImageIO.WriteImagesToFolder(himaxTransImages, "../data/test/", '.jpg')
+	himaxTransImages, bebopTransImages = it. TransformImages(config.folder_path + "/data/calibration.yaml", config.folder_path + "/data/bebop_calibration.yaml", himaxImages, bebopImages)
+	ImageIO.WriteImagesToFolder(himaxTransImages, config.folder_path + "/data/test/", '.jpg')
+
+def TestDatasetCreator():
+	dc = DatasetCreator(config.folder_path + '/data/nickyrighthand.bag')
+	#dc.CreateBebopDataset(0, True, "trainHand.pickle")
+	dc.CreateHimaxDataset(config.himax_delay, False, "trainHimaxHead.pickle")
+	train_set = pd.read_pickle("trainHimaxHead.pickle").values
+	
+	x_train = train_set[:, 0]
+	y_train = train_set[:, 1]
+	print(type(y_train))
+	print(y_train[0])
+
 
 def main():
 	#TestImageIO()
 	#TestRosbagUnpacker()
 	#TestCameraSynchronizer()
-	TestImageTransformer()
-
+	#TestImageTransformer()
+	TestDatasetCreator()
 
 
 if __name__ == '__main__':

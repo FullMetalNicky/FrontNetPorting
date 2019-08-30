@@ -5,12 +5,14 @@ import pandas as pd
 import rosbag
 import rospy
 import cv2
+import tf
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from TimestampSynchronizer import TimestampSynchronizer
 from ImageEffects import ImageEffects
+import subprocess
 
 import sys
 sys.path.append("../")
@@ -49,6 +51,16 @@ class DatasetCreator:
 
 		return sync_camera_ids, sync_optitrack_ids, sync_drone_ids
 
+
+	def BroadcastTF(self, msg, name):
+		br = tf.TransformBroadcaster()
+		rate = rospy.Rate(20.0)
+		br.sendTransform((msg.pose.position.x, msg.pose.position.y, msg.pose.position.z),
+		(msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z, msg.pose.orientation.w),
+		rospy.Time.now(), name, "World")
+		rate.sleep()
+
+
 	def CalculateRelativePose(self, optitrack_msg, drone_msg):
 
 		part_orient = optitrack_msg.pose.orientation
@@ -56,16 +68,29 @@ class DatasetCreator:
 		part_pose = optitrack_msg.pose.position
 		drone_pose = drone_msg.pose.position
 
-		x = part_pose.x - drone_pose.x
-		y = part_pose.y - drone_pose.y
-		z = part_pose.z - drone_pose.z
-		part_quaternion = (part_orient.x, part_orient.y, part_orient.z, part_orient.w)
-		part_euler = euler_from_quaternion(part_quaternion)
-		drone_quaternion = (drone_orient.x, drone_orient.y, drone_orient.z, drone_orient.w)
-		drone_euler = euler_from_quaternion(drone_quaternion)
-		yaw = part_euler[2] - drone_euler[2]
+		rate = rospy.Rate(20.0)
+		listener = tf.TransformListener()
+		trans = None
+		rot = None
+
+		while ((trans == None) or (rot == None)):
+			self.BroadcastTF(optitrack_msg, "/part")
+			self.BroadcastTF(drone_msg, "/drone")
+			try:
+				now = rospy.Time(0)
+				(trans,rot) = listener.lookupTransform("/drone", "/part", now)
+		 	except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+				continue
+
+	
+  		x = trans[0]
+  		y = trans[1]
+  		z = trans[2]
+  		yaw = rot[2] 
+
 		#print("part_pose={}".format(part_pose))
 		#print("drone_pose={}".format(drone_pose))
+		#print("rel_pose={}, {}, {}, {}".format(x,y,z,yaw))
 
 		return x, y, z, yaw
 
@@ -80,7 +105,6 @@ class DatasetCreator:
 		sync_bebop_ids, sync_optitrack_ids, sync_drone_ids = self.Sync(delay)
 		optitrack_msgs = self.ts.GetMessages(self.body_topic)
 		drone_msgs = self.ts.GetMessages(self.drone_topic)
-		
 		bridge = CvBridge()
 		
 		x_dataset = []
@@ -105,8 +129,11 @@ class DatasetCreator:
 				#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
 				
 				x, y, z, yaw = self.CalculateRelativePose(optitrack_msgs[optitrack_id], drone_msgs[drone_id])
+				if isHand == True:
+					yaw = 0.0
 				
-				y_dataset.append([int(isHand), x, y, z, yaw])
+				#y_dataset.append([int(isHand), x, y, z, yaw])
+				y_dataset.append([x, y, z, yaw])
 
 		print("dataset ready x:{} y:{}".format(len(x_dataset), len(y_dataset)))
 		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
@@ -126,8 +153,8 @@ class DatasetCreator:
 		drone_msgs = self.ts.GetMessages(self.drone_topic)
 		bridge = CvBridge()
 
-		sync_bebop_ids, sync_optitrack_ids, sync_drone_ids = self.Sync(delay)
-		
+		sync_bebop_ids, sync_optitrack_ids, sync_drone_ids = self.Sync(config.optitrack_delay)
+
 		x_dataset = []
 		y_dataset = []
 	
@@ -143,6 +170,7 @@ class DatasetCreator:
 
 			for i in range(len(bebop_msgs)):
 				cv_image = bridge.imgmsg_to_cv2(bebop_msgs[i])
+
 				# image transform
 				cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
 				cv_image = cv2.LUT(cv_image, gammaLUT)
@@ -156,29 +184,36 @@ class DatasetCreator:
 				drone_id = sync_drone_ids[chunk * chunk_size + i]
 				bebop_id = sync_bebop_ids[chunk * chunk_size + i]
 				#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
-				
+				#print("bebop id={}". format(bebop_id))
+				#print("track_t={}, drone_t={}". format(drone_msgs[drone_id].header.stamp, optitrack_msgs[optitrack_id].header.stamp))
+
+
 				x, y, z, yaw = self.CalculateRelativePose(optitrack_msgs[optitrack_id], drone_msgs[drone_id])
-				
-				y_dataset.append([int(isHand), x, y, z, yaw])
+				if isHand == True:
+					yaw = 0.0
+				#y_dataset.append([int(isHand), x, y, z, yaw])
+				y_dataset.append([x, y, z, yaw])
 
 		print("finished transformed bebop")
-		self.camera_topic = "himax_camera"
-		himax_msgs = self.ts.GetMessages(self.camera_topic)
-		sync_himax_ids, sync_optitrack_ids, sync_drone_ids = self.Sync(delay)		
+		# self.camera_topic = "himax_camera"
+		# himax_msgs = self.ts.GetMessages(self.camera_topic)
+		# sync_himax_ids, sync_optitrack_ids, sync_drone_ids = self.Sync(delay)		
 
-		for i in range(len(himax_msgs)):
-			cv_image = bridge.imgmsg_to_cv2(himax_msgs[i])
-			cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
-			x_dataset.append(cv_image)		
+		# for i in range(len(himax_msgs)):
+		# 	cv_image = bridge.imgmsg_to_cv2(himax_msgs[i])
+		# 	cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
+		# 	x_dataset.append(cv_image)		
 
-			optitrack_id = sync_optitrack_ids[i]		
-			drone_id = sync_drone_ids[i]
-			himax_id = sync_himax_ids[i]
-			#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
+		# 	optitrack_id = sync_optitrack_ids[i]		
+		# 	drone_id = sync_drone_ids[i]
+		# 	himax_id = sync_himax_ids[i]
+		# 	#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
 			
-			x, y, z, yaw = self.CalculateRelativePose(optitrack_msgs[optitrack_id], drone_msgs[drone_id])
-				
-			y_dataset.append([int(isHand), x, y, z, yaw])
+		# 	x, y, z, yaw = self.CalculateRelativePose(optitrack_msgs[optitrack_id], drone_msgs[drone_id])
+		# 	if isHand == True:
+		# 			yaw = 0.0	
+		# 	#y_dataset.append([int(isHand), x, y, z, yaw])
+		# 	y_dataset.append([x, y, z, yaw])
 
 		print("dataset ready x:{} y:{}".format(len(x_dataset), len(y_dataset)))
 		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
