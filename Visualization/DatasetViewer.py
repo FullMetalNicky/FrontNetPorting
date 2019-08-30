@@ -14,10 +14,8 @@ class DatasetViewer:
 		self.frames = test_set[:, 0]
 		self.labels = test_set[:, 1]
 
-		#self.frames = np.reshape(frames, (len(frames), 60, 108))
-		#self.labels = np.reshape(labels, (-1, 4))
 
-	def PlotTrackingAndDisplayVideo(self, video=False):
+	def PlotTrackingAndDisplayVideo(self, isVideo=False, videoName = "test.avi"):
 		
 		fig = plt.figure(888, figsize=(15, 5))
 
@@ -41,15 +39,14 @@ class DatasetViewer:
 		ax1.invert_xaxis()
 		trianglex = [2, 0, -2, 2]
 		triangley = [3, 0, 3, 3]
-		#collection = plt.fill(trianglex, triangley, facecolor='lightskyblue')
+		collection = plt.fill(trianglex, triangley, facecolor='lightskyblue')
 
 		plot1gt, = plt.plot([], [], color='green', label='GT', linestyle='None', marker='o', markersize=10)
-		#arr1gt = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='green', animated=True)
-		#arr1pr = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='blue', animated=True)
+		arr1gt = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='green', animated=True)
 		plt.legend(loc='lower right', bbox_to_anchor=(0.8, 0.2, 0.25, 0.25))
 
 		ax2 = plt.subplot2grid((h, w), (2, 8), rowspan=7)
-		#ax2.set_title('Relative z', pad=20)
+		ax2.set_title('Relative z', pad=20)
 		ax2.yaxis.tick_right()
 		ax2.set_xlim([-0.5, 0.5])
 		ax2.set_xticklabels([])
@@ -75,8 +72,8 @@ class DatasetViewer:
 		newax.imshow(img)
 		newax.axis('off')
 
-		#Writer = animation.writers['ffmpeg']
-		#writer = Writer(fps=2, metadata=dict(artist='FullMetalNicky'))
+		Writer = animation.writers['ffmpeg']
+		writer = Writer(fps=2, metadata=dict(artist='FullMetalNicky'))
 
 
 		def animate(id):
@@ -91,14 +88,11 @@ class DatasetViewer:
 
 		    plot1gt.set_data(np.array([y_gt, x_gt]))
 
-		  #  if(len(ax1.patches) > 1):
-		   #     ax1.patches.pop()
-		    #    ax1.patches.pop()
+		    if(len(ax1.patches) > 1):
+		        ax1.patches.pop()
 
-		    #patch1 = patches.FancyArrow(y_gt, x_gt, 0.5*np.cos(phi_gt), 0.5*np.sin(phi_gt), head_width=0.05, head_length=0.05, color='green')
-		    #patch2 = patches.FancyArrow(y_pred, x_pred, 0.5*np.cos(phi_pred), 0.5*np.sin(phi_pred), head_width=0.05, head_length=0.05, color='blue')
-		    #ax1.add_patch(patch1)
-		    #ax1.add_patch(patch2)
+		    patch1 = patches.FancyArrow(y_gt, x_gt, 0.5*np.cos(phi_gt), 0.5*np.sin(phi_gt), head_width=0.05, head_length=0.05, color='green')
+		    ax1.add_patch(patch1)
 
 		    scatter2gt.set_offsets(np.array([-0.05, z_gt]))
 
@@ -108,14 +102,13 @@ class DatasetViewer:
 		    annotation2.set_text('Frame {}'.format(id))
 
 		    #use the first one for viz on screen and second one for video recording
-		    #return plot1gt, imgplot
-		    #return plot1gt, plot1pr, patch1, patch2, scatter2gt, scatter2pr, imgplot, annotation, annotation2
-		    #return plot1gt, plot1pr, scatter2gt, scatter2pr, imgplot, annotation, annotation2
+		    #return plot1gt, scatter2gt, imgplot, annotation, annotation2
+		    return plot1gt, patch1, scatter2gt, imgplot, annotation, annotation2
 
 
 		ani = animation.FuncAnimation(fig, animate, frames=len(self.frames), interval=1, blit=True)
-		if video == True:
-			ani.save('head.avi', writer=writer)
+		if isVideo == True:
+			ani.save(videoName, writer=writer)
 		plt.show()
 
 
@@ -123,8 +116,10 @@ class DatasetViewer:
 
 def main():
 	dsv = DatasetViewer()
-	dsv.LoadDataset("../DataProcessing/trainHimaxHead.pickle")
-	dsv.PlotTrackingAndDisplayVideo(False)
+	DATA_PATH = "/Users/usi/PycharmProjects/data/"
+
+	dsv.LoadDataset(DATA_PATH + "trainHimaxHead.pickle")
+	dsv.PlotTrackingAndDisplayVideo(True, "test.avi")
 
 
 if __name__ == '__main__':
