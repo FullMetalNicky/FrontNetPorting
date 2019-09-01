@@ -33,9 +33,9 @@ class DatasetCreator:
 
 		print("unpacking...")
 		#unpack the stamps
-		camera_stamps = self.ts.UnpackBagStampsSingle(self.camera_topic)
-		optitrack_stamps = self.ts.UnpackBagStampsSingle(self.body_topic)
-		drone_stamps = self.ts.UnpackBagStampsSingle(self.drone_topic )
+		camera_stamps = self.ts.ExtractStampsFromHeader(self.camera_topic)
+		optitrack_stamps = self.ts.ExtractStampsFromRosbag(self.body_topic)
+		drone_stamps = self.ts.ExtractStampsFromRosbag(self.drone_topic )
 		if((len(drone_stamps) < len(camera_stamps) ) or (len(optitrack_stamps) < len(camera_stamps))):
 			print("Error:recording data corrupted. not enough MoCap stamps.") 
 			return
@@ -55,7 +55,7 @@ class DatasetCreator:
 	def BroadcastTF(self, msg, name):
 		br = tf.TransformBroadcaster()
 		rate = rospy.Rate(20.0)
-		br.sendTransform((msg.pose.position.x, msg.pose.position.y, msg.pose.position.z),
+		br.sendTransform((msg.pose.position.x+config.dronemarker_offset , msg.pose.position.y, msg.pose.position.z),
 		(msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z, msg.pose.orientation.w),
 		rospy.Time.now(), name, "World")
 		rate.sleep()
@@ -81,12 +81,12 @@ class DatasetCreator:
 				(trans,rot) = listener.lookupTransform("/drone", "/part", now)
 		 	except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
 				continue
-
 	
+		euler = tf.transformations.euler_from_quaternion(rot)
   		x = trans[0]
   		y = trans[1]
   		z = trans[2]
-  		yaw = rot[2] 
+  		yaw = euler[2] 
 
 		#print("part_pose={}".format(part_pose))
 		#print("drone_pose={}".format(drone_pose))
@@ -153,7 +153,8 @@ class DatasetCreator:
 		drone_msgs = self.ts.GetMessages(self.drone_topic)
 		bridge = CvBridge()
 
-		sync_bebop_ids, sync_optitrack_ids, sync_drone_ids = self.Sync(config.optitrack_delay)
+		#sync_bebop_ids, sync_optitrack_ids, sync_drone_ids = self.Sync(config.optitrack_delay)
+		sync_bebop_ids, sync_optitrack_ids, sync_drone_ids = self.Sync(0)
 
 		x_dataset = []
 		y_dataset = []
@@ -186,7 +187,6 @@ class DatasetCreator:
 				#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
 				#print("bebop id={}". format(bebop_id))
 				#print("track_t={}, drone_t={}". format(drone_msgs[drone_id].header.stamp, optitrack_msgs[optitrack_id].header.stamp))
-
 
 				x, y, z, yaw = self.CalculateRelativePose(optitrack_msgs[optitrack_id], drone_msgs[drone_id])
 				if isHand == True:

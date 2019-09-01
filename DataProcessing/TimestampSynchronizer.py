@@ -71,7 +71,7 @@ class TimestampSynchronizer:
 
 		return topic1_stamps, topic2_stamps
 
-	def UnpackBagStampsSingle(self, topic1 = "himax_camera", stopNum=np.inf):
+	def ExtractStampsFromHeader(self, topic1 = "himax_camera", stopNum=np.inf):
 	
 		bag = rosbag.Bag(self.bagName)
 		topic1_stamps = []
@@ -86,6 +86,26 @@ class TimestampSynchronizer:
 			if topic1_cnt > stopNum:
 				break
 	
+		bag.close()
+
+		return topic1_stamps
+
+
+	def ExtractStampsFromRosbag(self, topic1 = "himax_camera", stopNum=np.inf):
+	
+		bag = rosbag.Bag(self.bagName)
+		topic1_stamps = []
+		topic1_cnt = 1
+
+		for topic, msg, t in bag.read_messages(topics=[topic1]):
+
+			if(topic == topic1):
+				topic1_stamps.append(t)
+				topic1_cnt = topic1_cnt + 1
+
+			if topic1_cnt > stopNum:
+				break
+
 		bag.close()
 
 		return topic1_stamps
