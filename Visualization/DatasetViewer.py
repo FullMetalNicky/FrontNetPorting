@@ -19,7 +19,7 @@ class DatasetViewer:
 		self.labels = test_set[:, 1]
 
 
-	def PlotTrackingAndDisplayVideo(self, isVideo=False, videoName = "test.avi"):
+	def PlotTrackingAndDisplayVideo(self, isGray, isVideo=False, videoName = "test.avi"):
 		
 		fig = plt.figure(888, figsize=(15, 5))
 
@@ -61,7 +61,10 @@ class DatasetViewer:
 		ax3 = plt.subplot2grid((h, w), (2, 9), rowspan=7, colspan=7)
 		ax3.axis('off')
 		frame = self.frames[0].astype(np.uint8)
-		imgplot = plt.imshow(frame,cmap="gray", vmin=0, vmax=255)
+		if isGray == True:
+			imgplot = plt.imshow(frame,cmap="gray", vmin=0, vmax=255)
+		else:
+			imgplot = plt.imshow(frame)
 
 		ax4 = plt.subplot2grid((h, w), (0, 9), colspan=7)
 		ax4.set_xlim([0, 8])
@@ -86,7 +89,7 @@ class DatasetViewer:
 
 		    str1 = "x_gt={:05.3f}, y_gt={:05.3f}, z_gt={:05.3f}, phi_gt={:05.3f} {}".format(x_gt, y_gt, z_gt, phi_gt, "\n")
 
-		    phi_gt = phi_gt - np.pi / 2
+		    phi_gt = phi_gt + np.pi / 2
 
 		    annotation.set_text(str1)
 
@@ -122,8 +125,9 @@ def main():
 	dsv = DatasetViewer()
 	DATA_PATH = "/Users/usi/PycharmProjects/data/"
 
-	dsv.LoadDataset(DATA_PATH + "trainHimaxHead.pickle")
-	dsv.PlotTrackingAndDisplayVideo(True, "test.avi")
+	#dsv.LoadDataset(DATA_PATH + "trainHimaxHead.pickle")
+	dsv.LoadDataset(DATA_PATH + "trainBebopHand.pickle")
+	dsv.PlotTrackingAndDisplayVideo(False,True, "beboptest.avi")
 
 
 if __name__ == '__main__':

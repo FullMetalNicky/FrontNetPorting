@@ -156,3 +156,23 @@ class DataProcessor:
         y_test = np.vstack(y_test[:]).astype(np.float32)
 
         return [x_test, y_test]
+
+    @staticmethod
+    def ProcessTestDataGray2(testPath, image_height, image_width):
+        test_set = pd.read_pickle(testPath).values
+
+        x_test = test_set[:, 0]
+        y_test = test_set[:, 1]
+
+        x_test = np.vstack(x_test[:]).astype(np.float32)
+        x_test = np.reshape(x_test, (-1, image_height, image_width, 1))
+
+        logging.info('[DataProcessor] test shape: ' + str(x_test.shape))
+
+        x_test = np.swapaxes(x_test, 1, 3)
+        x_test = np.swapaxes(x_test, 2, 3)
+        y_test = np.vstack(y_test[:]).astype(np.float32)
+
+        return [x_test, y_test]
+
+
