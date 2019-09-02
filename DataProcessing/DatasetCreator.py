@@ -27,6 +27,7 @@ class DatasetCreator:
 		self.drone_topic = "optitrack/drone"
 		self.camera_topic = "bebop/image_raw"
 		self.body_topic = "optitrack/hand"
+		self.rate = rospy.Rate(50.0)
 
 
 	def Sync(self, delay):
@@ -54,11 +55,10 @@ class DatasetCreator:
 
 	def BroadcastTF(self, msg, name):
 		br = tf.TransformBroadcaster()
-		rate = rospy.Rate(20.0)
 		br.sendTransform((msg.pose.position.x+config.dronemarker_offset , msg.pose.position.y, msg.pose.position.z),
 		(msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z, msg.pose.orientation.w),
 		rospy.Time.now(), name, "World")
-		rate.sleep()
+		self.rate.sleep()
 
 
 	def CalculateRelativePose(self, optitrack_msg, drone_msg):
@@ -68,7 +68,6 @@ class DatasetCreator:
 		part_pose = optitrack_msg.pose.position
 		drone_pose = drone_msg.pose.position
 
-		rate = rospy.Rate(20.0)
 		listener = tf.TransformListener()
 		trans = None
 		rot = None
@@ -112,20 +111,24 @@ class DatasetCreator:
 				if  start_frame is None:
 					cv2.imshow("hand", cv_image)
 					key = cv2.waitKey(0)
-					print(t)
+					#print(t)
 					if key == ord('s'):
 						start_frame = t
 				else:
 					if (bebop_id > (bebop_msgs_count -200)) and (end_frame is None):
 						cv2.imshow("hand", cv_image)
 						key = cv2.waitKey(0)
-						print(t)
+						#print(t)
 						if key == ord('s'):
 							end_frame = t
 							print("start={}, end={}".format(start_frame, end_frame)) 
+							print("recording time {} seconds".format((end_frame-start_frame)/1000000000))
+							cv2.destroyAllWindows()
 							return start_frame, end_frame
 
 		print("start={}, end={}".format(start_frame, t)) 
+		print("recording time {} seconds".format((t-start_frame)/1000000000))
+		cv2.destroyAllWindows()
 		return start_frame, t
 
 
@@ -255,6 +258,25 @@ class DatasetCreator:
 		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
 		print("dataframe ready")
 		df.to_pickle(datasetName)
+
+
+	@staticmethod
+	def JoinPickleFiles(fileList, datasetName, folderPath=""):
+		x_dataset = []
+		y_dataset = []
+
+		for file in fileList:
+			dataset = pd.read_pickle(folderPath + file).values
+			print(len(dataset[:, 0]))
+			x_dataset.extend(dataset[:, 0])
+			y_dataset.extend(dataset[:, 1])
+
+		print("dataset ready x:{} y:{}".format(len(x_dataset), len(y_dataset)))
+		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
+		print("dataframe ready")
+		df.to_pickle(datasetName)
+
+
 
 		
 		

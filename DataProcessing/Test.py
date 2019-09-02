@@ -34,17 +34,16 @@ def TestImageTransformer():
 	ImageIO.WriteImagesToFolder(himaxTransImages, config.folder_path + "/data/test/", '.jpg')
 
 def TestDatasetCreator():
-	dc = DatasetCreator(config.folder_path + '/data/nickyrighthand.bag')
-#	start_frame, end_frame = dc.FrameSelector()
-	dc.CreateBebopDataset(0, True, "trainBebopHand.pickle", 1567175068652886038, 1567175152238984312)
+	# subject_name = "nicky2"
+	# dc = DatasetCreator(config.folder_path + "/data/Hand/" + subject_name + ".bag")
+	# start_frame, end_frame = dc.FrameSelector()
+	# dc.CreateBebopDataset(0, True, config.folder_path + "/data/Hand/" + subject_name + "Hand.pickle", start_frame, end_frame)
 	#dc.CreateHimaxDataset(config.himax_delay, False, "trainHimaxHead.pickle")
-	#train_set = pd.read_pickle("trainHimaxHead.pickle").values
+	folderPath = config.folder_path + "/data/Hand/"
+	fileList = ["lilithHand.pickle", "dario1Hand.pickle", "dario2Hand.pickle", "nicky1Hand.pickle", 
+	"nicky2Hand.pickle", "mirko1Hand.pickle", "mirko2Hand.pickle"]
+	DatasetCreator.JoinPickleFiles(fileList, config.folder_path + "/data/Hand/Hand.pickle", folderPath)
 	
-	#x_train = train_set[:, 0]
-	#y_train = train_set[:, 1]
-	#print(type(y_train))
-	#print(y_train[0])
-
 
 def main():
 	#TestImageIO()
