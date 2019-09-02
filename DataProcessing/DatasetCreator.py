@@ -94,14 +94,48 @@ class DatasetCreator:
 
 		return x, y, z, yaw
 
-	def CreateBebopDataset(self, delay, isHand, datasetName):
+	def FrameSelector(self):
+
+		bridge = CvBridge()
+		bebop_msgs_count = self.ts.GetMessagesCount(self.camera_topic)
+		chunk_size = 1000
+		chunks = (bebop_msgs_count/chunk_size) + 1
+		start_frame = None
+		end_frame = None
+		for chunk in range(chunks):
+			bebop_msgs = self.ts.GetMessages(self.camera_topic, chunk * chunk_size + 1, (chunk+1) * chunk_size)
+
+			for i in range(len(bebop_msgs)):
+				cv_image = bridge.imgmsg_to_cv2(bebop_msgs[i])
+				bebop_id = chunk * chunk_size + i
+				t = bebop_msgs[i].header.stamp.to_nsec()
+				if  start_frame is None:
+					cv2.imshow("hand", cv_image)
+					key = cv2.waitKey(0)
+					print(t)
+					if key == ord('s'):
+						start_frame = t
+				else:
+					if (bebop_id > (bebop_msgs_count -200)) and (end_frame is None):
+						cv2.imshow("hand", cv_image)
+						key = cv2.waitKey(0)
+						print(t)
+						if key == ord('s'):
+							end_frame = t
+							print("start={}, end={}".format(start_frame, end_frame)) 
+							return start_frame, end_frame
+
+		print("start={}, end={}".format(start_frame, t)) 
+		return start_frame, t
+
+
+	def CreateBebopDataset(self, delay, isHand, datasetName, start = 0, end = sys.maxint):
 	
 		if isHand == True:
 			self.body_topic = "optitrack/hand"
 		else:
 			self.body_topic = "optitrack/head"
 
-		
 		sync_bebop_ids, sync_optitrack_ids, sync_drone_ids = self.Sync(delay)
 		optitrack_msgs = self.ts.GetMessages(self.body_topic)
 		drone_msgs = self.ts.GetMessages(self.drone_topic)
@@ -118,22 +152,24 @@ class DatasetCreator:
 			bebop_msgs = self.ts.GetMessages(self.camera_topic, chunk * chunk_size + 1, (chunk+1) * chunk_size)
 
 			for i in range(len(bebop_msgs)):
-				cv_image = bridge.imgmsg_to_cv2(bebop_msgs[i])
-				cv_image = cv2.cvtColor(cv_image, cv2.COLOR_RGB2BGR)
-				cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
-				x_dataset.append(cv_image)		
-	
-				optitrack_id = sync_optitrack_ids[chunk * chunk_size + i]		
-				drone_id = sync_drone_ids[chunk * chunk_size + i]
-				bebop_id = sync_bebop_ids[chunk * chunk_size + i]
-				#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
-				
-				x, y, z, yaw = self.CalculateRelativePose(optitrack_msgs[optitrack_id], drone_msgs[drone_id])
-				if isHand == True:
-					yaw = 0.0
-				
-				#y_dataset.append([int(isHand), x, y, z, yaw])
-				y_dataset.append([x, y, z, yaw])
+				t = bebop_msgs[i].header.stamp.to_nsec()
+				if (t >= start) and (t <=end):
+					cv_image = bridge.imgmsg_to_cv2(bebop_msgs[i])
+					cv_image = cv2.cvtColor(cv_image, cv2.COLOR_RGB2BGR)
+					cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
+					x_dataset.append(cv_image)		
+		
+					optitrack_id = sync_optitrack_ids[chunk * chunk_size + i]		
+					drone_id = sync_drone_ids[chunk * chunk_size + i]
+					bebop_id = sync_bebop_ids[chunk * chunk_size + i]
+					#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
+
+					x, y, z, yaw = self.CalculateRelativePose(optitrack_msgs[optitrack_id], drone_msgs[drone_id])
+					if isHand == True:
+						yaw = 0.0
+					
+					#y_dataset.append([int(isHand), x, y, z, yaw])
+					y_dataset.append([x, y, z, yaw])
 
 		print("dataset ready x:{} y:{}".format(len(x_dataset), len(y_dataset)))
 		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
@@ -141,7 +177,7 @@ class DatasetCreator:
 		df.to_pickle(datasetName)
 
 
-	def CreateHimaxDataset(self, delay, isHand, datasetName):
+	def CreateHimaxDataset(self, delay, isHand, datasetName, start = 0, end = sys.maxint):
 	
 		if isHand == True:
 			self.body_topic = "optitrack/hand"

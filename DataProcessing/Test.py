@@ -35,14 +35,15 @@ def TestImageTransformer():
 
 def TestDatasetCreator():
 	dc = DatasetCreator(config.folder_path + '/data/nickyrighthand.bag')
-	#dc.CreateBebopDataset(0, True, "trainHand.pickle")
-	dc.CreateHimaxDataset(config.himax_delay, False, "trainHimaxHead.pickle")
-	train_set = pd.read_pickle("trainHimaxHead.pickle").values
+#	start_frame, end_frame = dc.FrameSelector()
+	dc.CreateBebopDataset(0, True, "trainBebopHand.pickle", 1567175068652886038, 1567175152238984312)
+	#dc.CreateHimaxDataset(config.himax_delay, False, "trainHimaxHead.pickle")
+	#train_set = pd.read_pickle("trainHimaxHead.pickle").values
 	
-	x_train = train_set[:, 0]
-	y_train = train_set[:, 1]
-	print(type(y_train))
-	print(y_train[0])
+	#x_train = train_set[:, 0]
+	#y_train = train_set[:, 1]
+	#print(type(y_train))
+	#print(y_train[0])
 
 
 def main():
