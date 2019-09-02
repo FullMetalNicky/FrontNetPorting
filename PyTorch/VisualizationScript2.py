@@ -37,7 +37,8 @@ def VizDroneBEV(frames, labels, outputs):
     ax1.yaxis.tick_left()  # remove right y-Ticks
     ax1.spines['right'].set_visible(False)
     ax1.spines['bottom'].set_visible(False)
-    trianglex = [3, 0, -3, 3]
+    ax1.invert_xaxis()
+    trianglex = [2, 0, -2, 2]
     triangley = [3, 0, 3, 3]
     collection = plt.fill(trianglex, triangley, facecolor='lightskyblue')
 
@@ -77,7 +78,7 @@ def VizDroneBEV(frames, labels, outputs):
     newax.axis('off')
 
     Writer = animation.writers['ffmpeg']
-    writer = Writer(fps=30, metadata=dict(artist='FullMetalNicky'))
+    writer = Writer(fps=20, metadata=dict(artist='FullMetalNicky'))
 
 
     def animate(id):
@@ -120,8 +121,8 @@ def VizDroneBEV(frames, labels, outputs):
 
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    #ani.save('droneplot.avi', writer=writer)
-    ani.save('viz2.gif', dpi=80, writer='imagemagick')
+    ani.save('hand.avi', writer=writer)
+    #ani.save('viz2.gif', dpi=80, writer='imagemagick')
     plt.show()
 
 def main():
@@ -138,12 +139,12 @@ def main():
     logging.getLogger('').addHandler(console)
 
     model = FrontNet(PreActBlock, [1, 1, 1])
-    ModelManager.Read('Models/FrontNet-097.pkl', model)
+    ModelManager.Read('Models/FrontNetMixed.pt', model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "test.pickle", 60, 108)
-    x_test = x_test[:500]
-    y_test = y_test[:500]
+    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "TestHand.pickle", 60, 108)
+    x_test = x_test
+    y_test = y_test
     test_set = Dataset(x_test, y_test)
     params = {'batch_size': 1,
               'shuffle': False,

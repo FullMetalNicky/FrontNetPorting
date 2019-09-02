@@ -64,7 +64,7 @@ class DataVisualization:
         DataVisualization.figure_counter += 1
         plt.figure(DataVisualization.figure_counter, figsize=(10, 6))
 
-        epochs = range(1, len(MSE) + 1, step=5)
+        epochs = range(1, len(MSE) + 1, 5)
         MSE = torch.stack(MSE, 0)
         x = MSE[:, 0]
         x = x.cpu().numpy()
@@ -92,7 +92,7 @@ class DataVisualization:
         DataVisualization.figure_counter += 1
         plt.figure(DataVisualization.figure_counter, figsize=(10, 6))
 
-        epochs = range(1, len(MAE) + 1, step=5)
+        epochs = range(1, len(MAE) + 1, 5)
         MAE = torch.stack(MAE, 0)
         x = MAE[:, 0]
         x = x.cpu().numpy()
@@ -119,7 +119,7 @@ class DataVisualization:
         DataVisualization.figure_counter += 1
         plt.figure(DataVisualization.figure_counter, figsize=(10, 6))
 
-        epochs = range(1, len(r2_score) + 1, step=5)
+        epochs = range(1, len(r2_score) + 1, 5)
         r2_score = torch.stack(r2_score, 0)
         x = r2_score[:, 0]
         x = x.cpu().numpy()

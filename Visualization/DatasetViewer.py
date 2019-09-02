@@ -80,7 +80,7 @@ class DatasetViewer:
 		newax.axis('off')
 
 		Writer = animation.writers['ffmpeg']
-		writer = Writer(fps=2, metadata=dict(artist='FullMetalNicky'))
+		writer = Writer(fps=20, metadata=dict(artist='FullMetalNicky'))
 
 
 		def animate(id):
@@ -125,9 +125,10 @@ def main():
 	dsv = DatasetViewer()
 	DATA_PATH = "/Users/usi/PycharmProjects/data/"
 
+	subject_name = "nicky1"
 	#dsv.LoadDataset(DATA_PATH + "trainHimaxHead.pickle")
-	dsv.LoadDataset(DATA_PATH + "trainBebopHand.pickle")
-	dsv.PlotTrackingAndDisplayVideo(False,True, "beboptest.avi")
+	dsv.LoadDataset(DATA_PATH + subject_name + "Hand.pickle")
+	dsv.PlotTrackingAndDisplayVideo(False,True, subject_name + ".avi")
 
 
 if __name__ == '__main__':
