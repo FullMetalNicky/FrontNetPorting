@@ -158,7 +158,6 @@ class DatasetCreator:
 				t = bebop_msgs[i].header.stamp.to_nsec()
 				if (t >= start) and (t <=end):
 					cv_image = bridge.imgmsg_to_cv2(bebop_msgs[i])
-					cv_image = cv2.cvtColor(cv_image, cv2.COLOR_RGB2BGR)
 					cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
 					x_dataset.append(cv_image)		
 		
