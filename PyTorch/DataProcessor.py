@@ -3,12 +3,9 @@ import numpy as np
 import random
 import logging
 import cv2
-import matplotlib.pyplot as plt
 import sys
 sys.path.append("../DataProcessing/")
 from ImageTransformer import ImageTransformer
-
-
 
 class DataProcessor:
 
@@ -16,10 +13,10 @@ class DataProcessor:
     def ProcessTrainData(trainPath, image_height, image_width):
         train_set = pd.read_pickle(trainPath).values
         logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
+        size = len(train_set[:, 0])
+        n_val = int(float(size) * 0.2)
 
-        n_val = 13000
         np.random.seed()
-
         # split between train and test sets:
         x_train = train_set[:, 0]
         x_train = np.vstack(x_train[:]).astype(np.float32)
@@ -40,7 +37,7 @@ class DataProcessor:
         train_std = np.std(y_train, 0)
 
         shape_ = x_train.shape[0]
-        sel_idx = random.sample(range(0, shape_), k=50000)
+        sel_idx = random.sample(range(0, shape_), k=(size-n_val))
         x_train = x_train[sel_idx, :]
         y_train = y_train[sel_idx, :]
 
@@ -157,22 +154,7 @@ class DataProcessor:
 
         return [x_test, y_test]
 
-    @staticmethod
-    def ProcessTestDataGray2(testPath, image_height, image_width):
-        test_set = pd.read_pickle(testPath).values
 
-        x_test = test_set[:, 0]
-        y_test = test_set[:, 1]
 
-        x_test = np.vstack(x_test[:]).astype(np.float32)
-        x_test = np.reshape(x_test, (-1, image_height, image_width, 1))
-
-        logging.info('[DataProcessor] test shape: ' + str(x_test.shape))
-
-        x_test = np.swapaxes(x_test, 1, 3)
-        x_test = np.swapaxes(x_test, 2, 3)
-        y_test = np.vstack(y_test[:]).astype(np.float32)
-
-        return [x_test, y_test]
 
 
