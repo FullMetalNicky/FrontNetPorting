@@ -59,6 +59,23 @@ class DataProcessor:
         return [x_test, y_test]
 
     @staticmethod
+    def ProcessTestDataExtended(testPath, image_height, image_width):
+        test_set = pd.read_pickle(testPath).values
+        logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
+
+        x_test = test_set[:, 0]
+        x_test = np.vstack(x_test[:]).astype(np.float32)
+        x_test = np.reshape(x_test, (-1, image_height, image_width, 3))
+        x_test = np.swapaxes(x_test, 1, 3)
+        x_test = np.swapaxes(x_test, 2, 3)
+        y_test = test_set[:, 1]
+        y_test = np.vstack(y_test[:]).astype(np.float32)
+        z_test = test_set[:, 2]
+        z_test = np.vstack(z_test[:]).astype(np.float32)
+
+        return [x_test, y_test, z_test]
+
+    @staticmethod
     def ProcessInferenceData(images, image_height, image_width):
 
         x_test = np.stack(images, axis=0).astype(np.float32)
