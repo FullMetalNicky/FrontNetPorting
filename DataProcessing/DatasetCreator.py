@@ -178,6 +178,70 @@ class DatasetCreator:
 		print("dataframe ready")
 		df.to_pickle(datasetName)
 
+	def CreateExtendedBebopDataset(self, delay, datasetName, start = 0, end = sys.maxint):
+	
+		print("unpacking...")
+		#unpack the stamps
+		camera_stamps = self.ts.ExtractStampsFromHeader(self.camera_topic)
+		hand_stamps = self.ts.ExtractStampsFromRosbag("optitrack/hand")
+		head_stamps = self.ts.ExtractStampsFromRosbag("optitrack/head")
+		drone_stamps = self.ts.ExtractStampsFromRosbag(self.drone_topic)
+
+		if((len(drone_stamps) < len(camera_stamps) ) or (len(hand_stamps) < len(camera_stamps)) or (len(head_stamps) < len(camera_stamps))):
+			print("Error:recording data corrupted. not enough MoCap stamps.") 
+			return
+
+		print("unpacked stamps")
+		
+		#get the sync ids 
+		otherTopics = [hand_stamps, head_stamps, drone_stamps]
+		sync_bebop_ids, sync_other_ids = self.ts.SyncStampsToMain(camera_stamps, otherTopics, delay)
+		sync_hand_ids = sync_other_ids[0]
+		sync_head_ids = sync_other_ids[1]
+		sync_drone_ids = sync_other_ids[2]	
+
+		print("synced ids")
+
+		hand_msgs = self.ts.GetMessages("optitrack/hand")
+		head_msgs = self.ts.GetMessages("optitrack/head")
+		drone_msgs = self.ts.GetMessages(self.drone_topic)
+		bridge = CvBridge()
+		
+		x_dataset = []
+		hand_dataset = []
+		head_dataset = []
+
+		#read in chunks because memory is low
+		bebop_msgs_count = self.ts.GetMessagesCount(self.camera_topic)
+		chunk_size = 1000
+		chunks = (bebop_msgs_count/chunk_size) + 1
+		for chunk in range(chunks):
+			bebop_msgs = self.ts.GetMessages(self.camera_topic, chunk * chunk_size + 1, (chunk+1) * chunk_size)
+
+			for i in range(len(bebop_msgs)):
+				t = bebop_msgs[i].header.stamp.to_nsec()
+				if (t >= start) and (t <=end):
+					cv_image = bridge.imgmsg_to_cv2(bebop_msgs[i])
+					cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
+					x_dataset.append(cv_image)		
+		
+					hand_id = sync_hand_ids[chunk * chunk_size + i]		
+					head_id = sync_head_ids[chunk * chunk_size + i]		
+					drone_id = sync_drone_ids[chunk * chunk_size + i]
+					bebop_id = sync_bebop_ids[chunk * chunk_size + i]
+					#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
+
+					x, y, z, yaw = self.CalculateRelativePose(hand_msgs[hand_id], drone_msgs[drone_id])
+					hand_dataset.append([x, y, z, 0.0])
+
+					x, y, z, yaw = self.CalculateRelativePose(head_msgs[head_id], drone_msgs[drone_id])
+					head_dataset.append([x, y, z, yaw])
+
+		print("dataset ready x:{} hand:{} head:{}".format(len(x_dataset), len(hand_dataset), len(head_dataset)))
+		df = pd.DataFrame(data={'x': x_dataset, 'y': hand_dataset, 'z' : head_dataset})
+		print("dataframe ready")
+		df.to_pickle(datasetName)
+
 
 	def CreateHimaxDataset(self, delay, isHand, datasetName, start = 0, end = sys.maxint):
 	
@@ -274,6 +338,25 @@ class DatasetCreator:
 		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
 		print("dataframe ready")
 		df.to_pickle(datasetName)
+
+	@staticmethod
+	def JoinExtendedPickleFiles(fileList, datasetName, folderPath=""):
+		x_dataset = []
+		y_dataset = []
+		z_dataset = []
+
+		for file in fileList:
+			dataset = pd.read_pickle(folderPath + file).values
+			print(len(dataset[:, 0]))
+			x_dataset.extend(dataset[:, 0])
+			y_dataset.extend(dataset[:, 1])
+			z_dataset.extend(dataset[:, 2])
+
+		print("dataset ready x:{} hand:{} head:{}".format(len(x_dataset), len(y_dataset), len(z_dataset)))
+		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset, 'z' : z_dataset})
+		print("dataframe ready")
+		df.to_pickle(datasetName)
+
 
 
 
