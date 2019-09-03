@@ -13,10 +13,43 @@ from cv_bridge import CvBridge
 from TimestampSynchronizer import TimestampSynchronizer
 from ImageEffects import ImageEffects
 import subprocess
+from tqdm import tqdm
+import PyKDL
 
 import sys
 sys.path.append("../")
 import config
+
+def _frame(stamped_pose):
+	q = stamped_pose.pose.orientation
+	p = stamped_pose.pose.position
+	rotation = PyKDL.Rotation.Quaternion(q.x, q.y, q.z, q.w)
+	translation = PyKDL.Vector(p.x, p.y, p.z)
+	return PyKDL.Frame(rotation, translation)
+
+def _pose(frame, reference_frame='reference'):
+    pose = PoseStamped()
+    pose.pose.position.x = frame[(0, 3)]
+    pose.pose.position.y = frame[(1, 3)]
+    pose.pose.position.z = frame[(2, 3)]
+    o = pose.pose.orientation
+    (o.x, o.y, o.z, o.w) = frame.M.GetQuaternion()
+    pose.header.frame_id = reference_frame
+    return pose
+
+def relative_pose(stamped_pose, reference_pose, reference_frame='reference'):
+	frame = _frame(stamped_pose)
+	ref_frame = _frame(reference_pose)
+	rel_frame = ref_frame.Inverse() * frame
+	res = _pose(rel_frame, reference_frame)
+
+	position = res.pose.position
+	x, y, z = position.x , position.y, position.z
+	q = res.pose.orientation
+	_, _, yaw = tf.transformations.euler_from_quaternion((q.x, q.y, q.z, q.w))
+
+	return x, y, z, yaw
+
 
 class DatasetCreator:
 
@@ -27,71 +60,6 @@ class DatasetCreator:
 		self.drone_topic = "optitrack/drone"
 		self.camera_topic = "bebop/image_raw"
 		self.body_topic = "optitrack/hand"
-		self.rate = rospy.Rate(50.0)
-
-
-	def Sync(self, delay):
-
-		print("unpacking...")
-		#unpack the stamps
-		camera_stamps = self.ts.ExtractStampsFromHeader(self.camera_topic)
-		optitrack_stamps = self.ts.ExtractStampsFromRosbag(self.body_topic)
-		drone_stamps = self.ts.ExtractStampsFromRosbag(self.drone_topic )
-		if((len(drone_stamps) < len(camera_stamps) ) or (len(optitrack_stamps) < len(camera_stamps))):
-			print("Error:recording data corrupted. not enough MoCap stamps.") 
-			return
-
-		print("unpacked stamps")
-		
-		#get the sync ids 
-		otherTopics = [optitrack_stamps, drone_stamps]
-		sync_camera_ids, sync_other_ids = self.ts.SyncStampsToMain(camera_stamps, otherTopics, delay)
-		sync_optitrack_ids = sync_other_ids[0]
-		sync_drone_ids = sync_other_ids[1]	
-		print("synced ids")
-
-		return sync_camera_ids, sync_optitrack_ids, sync_drone_ids
-
-
-	def BroadcastTF(self, msg, name):
-		br = tf.TransformBroadcaster()
-		br.sendTransform((msg.pose.position.x+config.dronemarker_offset , msg.pose.position.y, msg.pose.position.z),
-		(msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z, msg.pose.orientation.w),
-		rospy.Time.now(), name, "World")
-		self.rate.sleep()
-
-
-	def CalculateRelativePose(self, optitrack_msg, drone_msg):
-
-		part_orient = optitrack_msg.pose.orientation
-		drone_orient = drone_msg.pose.orientation
-		part_pose = optitrack_msg.pose.position
-		drone_pose = drone_msg.pose.position
-
-		listener = tf.TransformListener()
-		trans = None
-		rot = None
-
-		while ((trans == None) or (rot == None)):
-			self.BroadcastTF(optitrack_msg, "/part")
-			self.BroadcastTF(drone_msg, "/drone")
-			try:
-				now = rospy.Time(0)
-				(trans,rot) = listener.lookupTransform("/drone", "/part", now)
-		 	except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-				continue
-	
-		euler = tf.transformations.euler_from_quaternion(rot)
-  		x = trans[0]
-  		y = trans[1]
-  		z = trans[2]
-  		yaw = euler[2] 
-
-		#print("part_pose={}".format(part_pose))
-		#print("drone_pose={}".format(drone_pose))
-		#print("rel_pose={}, {}, {}, {}".format(x,y,z,yaw))
-
-		return x, y, z, yaw
 
 	def FrameSelector(self):
 
@@ -132,53 +100,7 @@ class DatasetCreator:
 		return start_frame, t
 
 
-	def CreateBebopDataset(self, delay, isHand, datasetName, start = 0, end = sys.maxint):
-	
-		if isHand == True:
-			self.body_topic = "optitrack/hand"
-		else:
-			self.body_topic = "optitrack/head"
-
-		sync_bebop_ids, sync_optitrack_ids, sync_drone_ids = self.Sync(delay)
-		optitrack_msgs = self.ts.GetMessages(self.body_topic)
-		drone_msgs = self.ts.GetMessages(self.drone_topic)
-		bridge = CvBridge()
-		
-		x_dataset = []
-		y_dataset = []
-
-		#read in chunks because memory is low
-		bebop_msgs_count = self.ts.GetMessagesCount(self.camera_topic)
-		chunk_size = 1000
-		chunks = (bebop_msgs_count/chunk_size) + 1
-		for chunk in range(chunks):
-			bebop_msgs = self.ts.GetMessages(self.camera_topic, chunk * chunk_size + 1, (chunk+1) * chunk_size)
-
-			for i in range(len(bebop_msgs)):
-				t = bebop_msgs[i].header.stamp.to_nsec()
-				if (t >= start) and (t <=end):
-					cv_image = bridge.imgmsg_to_cv2(bebop_msgs[i])
-					cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
-					x_dataset.append(cv_image)		
-		
-					optitrack_id = sync_optitrack_ids[chunk * chunk_size + i]		
-					drone_id = sync_drone_ids[chunk * chunk_size + i]
-					bebop_id = sync_bebop_ids[chunk * chunk_size + i]
-					#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
-
-					x, y, z, yaw = self.CalculateRelativePose(optitrack_msgs[optitrack_id], drone_msgs[drone_id])
-					if isHand == True:
-						yaw = 0.0
-					
-					#y_dataset.append([int(isHand), x, y, z, yaw])
-					y_dataset.append([x, y, z, yaw])
-
-		print("dataset ready x:{} y:{}".format(len(x_dataset), len(y_dataset)))
-		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
-		print("dataframe ready")
-		df.to_pickle(datasetName)
-
-	def CreateExtendedBebopDataset(self, delay, datasetName, start = 0, end = sys.maxint):
+	def CreateBebopDataset(self, delay, datasetName, start = 0, end = sys.maxint):
 	
 		print("unpacking...")
 		#unpack the stamps
@@ -215,10 +137,10 @@ class DatasetCreator:
 		bebop_msgs_count = self.ts.GetMessagesCount(self.camera_topic)
 		chunk_size = 1000
 		chunks = (bebop_msgs_count/chunk_size) + 1
-		for chunk in range(chunks):
+		for chunk in tqdm(range(chunks)):
 			bebop_msgs = self.ts.GetMessages(self.camera_topic, chunk * chunk_size + 1, (chunk+1) * chunk_size)
 
-			for i in range(len(bebop_msgs)):
+			for i in tqdm(range(len(bebop_msgs))):
 				t = bebop_msgs[i].header.stamp.to_nsec()
 				if (t >= start) and (t <=end):
 					cv_image = bridge.imgmsg_to_cv2(bebop_msgs[i])
@@ -231,10 +153,10 @@ class DatasetCreator:
 					bebop_id = sync_bebop_ids[chunk * chunk_size + i]
 					#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
 
-					x, y, z, yaw = self.CalculateRelativePose(hand_msgs[hand_id], drone_msgs[drone_id])
-					hand_dataset.append([x, y, z, 0.0])
+					x, y, z, yaw = relative_pose(hand_msgs[hand_id], drone_msgs[drone_id])
+					hand_dataset.append([x, y, z, yaw])
 
-					x, y, z, yaw = self.CalculateRelativePose(head_msgs[head_id], drone_msgs[drone_id])
+					x, y, z, yaw = relative_pose(head_msgs[head_id], drone_msgs[drone_id])
 					head_dataset.append([x, y, z, yaw])
 
 		print("dataset ready x:{} hand:{} head:{}".format(len(x_dataset), len(hand_dataset), len(head_dataset)))
@@ -245,21 +167,34 @@ class DatasetCreator:
 
 	def CreateHimaxDataset(self, delay, isHand, datasetName, start = 0, end = sys.maxint):
 	
-		if isHand == True:
-			self.body_topic = "optitrack/hand"
-		else:
-			self.body_topic = "optitrack/head"
+		print("unpacking...")
+		#unpack the stamps
+		camera_stamps = self.ts.ExtractStampsFromHeader(self.camera_topic)
+		hand_stamps = self.ts.ExtractStampsFromRosbag("optitrack/hand")
+		head_stamps = self.ts.ExtractStampsFromRosbag("optitrack/head")
+		drone_stamps = self.ts.ExtractStampsFromRosbag(self.drone_topic)
 
+		if((len(drone_stamps) < len(camera_stamps) ) or (len(hand_stamps) < len(camera_stamps)) or (len(head_stamps) < len(camera_stamps))):
+			print("Error:recording data corrupted. not enough MoCap stamps.") 
+			return
+
+		print("unpacked stamps")
 		
-		optitrack_msgs = self.ts.GetMessages(self.body_topic)
+		#get the sync ids 
+		otherTopics = [hand_stamps, head_stamps, drone_stamps]
+		sync_bebop_ids, sync_other_ids = self.ts.SyncStampsToMain(camera_stamps, otherTopics, delay)
+		sync_hand_ids = sync_other_ids[0]
+		sync_head_ids = sync_other_ids[1]
+		sync_drone_ids = sync_other_ids[2]	
+
+		hand_msgs = self.ts.GetMessages("optitrack/hand")
+		head_msgs = self.ts.GetMessages("optitrack/head")
 		drone_msgs = self.ts.GetMessages(self.drone_topic)
 		bridge = CvBridge()
-
-		#sync_bebop_ids, sync_optitrack_ids, sync_drone_ids = self.Sync(config.optitrack_delay)
-		sync_bebop_ids, sync_optitrack_ids, sync_drone_ids = self.Sync(0)
-
+		
 		x_dataset = []
-		y_dataset = []
+		hand_dataset = []
+		head_dataset = []
 	
 		gammaLUT = ImageEffects.GetGammaLUT(0.6)
 		vignetteMask = ImageEffects.GetVignetteMask(config.himax_width, config.himax_width)
@@ -283,64 +218,54 @@ class DatasetCreator:
 				cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_NEAREST)
 				x_dataset.append(cv_image)		
 	
-				optitrack_id = sync_optitrack_ids[chunk * chunk_size + i]		
+				hand_id = sync_hand_ids[chunk * chunk_size + i]		
+				head_id = sync_head_ids[chunk * chunk_size + i]		
 				drone_id = sync_drone_ids[chunk * chunk_size + i]
 				bebop_id = sync_bebop_ids[chunk * chunk_size + i]
 				#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
-				#print("bebop id={}". format(bebop_id))
-				#print("track_t={}, drone_t={}". format(drone_msgs[drone_id].header.stamp, optitrack_msgs[optitrack_id].header.stamp))
 
-				x, y, z, yaw = self.CalculateRelativePose(optitrack_msgs[optitrack_id], drone_msgs[drone_id])
-				if isHand == True:
-					yaw = 0.0
-				#y_dataset.append([int(isHand), x, y, z, yaw])
-				y_dataset.append([x, y, z, yaw])
+				x, y, z, yaw = relative_pose(hand_msgs[hand_id], drone_msgs[drone_id])
+				hand_dataset.append([x, y, z, yaw])
+
+				x, y, z, yaw = relative_pose(head_msgs[head_id], drone_msgs[drone_id])
+				head_dataset.append([x, y, z, yaw])
 
 		print("finished transformed bebop")
-		# self.camera_topic = "himax_camera"
-		# himax_msgs = self.ts.GetMessages(self.camera_topic)
-		# sync_himax_ids, sync_optitrack_ids, sync_drone_ids = self.Sync(delay)		
+		self.camera_topic = "himax_camera"
+		camera_stamps = self.ts.ExtractStampsFromHeader(self.camera_topic)
+		himax_msgs = self.ts.GetMessages(self.camera_topic)
+		#get the sync ids 
+		otherTopics = [hand_stamps, head_stamps, drone_stamps]
+		sync_himax_ids, sync_other_ids = self.ts.SyncStampsToMain(camera_stamps, otherTopics, delay)
+		sync_hand_ids = sync_other_ids[0]
+		sync_head_ids = sync_other_ids[1]
+		sync_drone_ids = sync_other_ids[2]		
 
-		# for i in range(len(himax_msgs)):
-		# 	cv_image = bridge.imgmsg_to_cv2(himax_msgs[i])
-		# 	cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
-		# 	x_dataset.append(cv_image)		
+		for i in range(len(himax_msgs)):
+			cv_image = bridge.imgmsg_to_cv2(himax_msgs[i])
+			cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
+			x_dataset.append(cv_image)		
 
-		# 	optitrack_id = sync_optitrack_ids[i]		
-		# 	drone_id = sync_drone_ids[i]
-		# 	himax_id = sync_himax_ids[i]
-		# 	#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
+			optitrack_id = sync_optitrack_ids[i]		
+			head_id = sync_head_ids[i]
+			hand_id = sync_hand_ids[i]
+			himax_id = sync_himax_ids[i]
+
+			x, y, z, yaw = relative_pose(hand_msgs[hand_id], drone_msgs[drone_id])
+			hand_dataset.append([x, y, z, yaw])
+
+			x, y, z, yaw = relative_pose(head_msgs[head_id], drone_msgs[drone_id])
+			head_dataset.append([x, y, z, yaw])
 			
-		# 	x, y, z, yaw = self.CalculateRelativePose(optitrack_msgs[optitrack_id], drone_msgs[drone_id])
-		# 	if isHand == True:
-		# 			yaw = 0.0	
-		# 	#y_dataset.append([int(isHand), x, y, z, yaw])
-		# 	y_dataset.append([x, y, z, yaw])
 
-		print("dataset ready x:{} y:{}".format(len(x_dataset), len(y_dataset)))
-		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
+		print("dataset ready x:{} hand:{} head:{}".format(len(x_dataset), len(hand_dataset), len(head_dataset)))
+		df = pd.DataFrame(data={'x': x_dataset, 'y': hand_dataset, 'z' : head_dataset})
 		print("dataframe ready")
 		df.to_pickle(datasetName)
 
 
 	@staticmethod
 	def JoinPickleFiles(fileList, datasetName, folderPath=""):
-		x_dataset = []
-		y_dataset = []
-
-		for file in fileList:
-			dataset = pd.read_pickle(folderPath + file).values
-			print(len(dataset[:, 0]))
-			x_dataset.extend(dataset[:, 0])
-			y_dataset.extend(dataset[:, 1])
-
-		print("dataset ready x:{} y:{}".format(len(x_dataset), len(y_dataset)))
-		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
-		print("dataframe ready")
-		df.to_pickle(datasetName)
-
-	@staticmethod
-	def JoinExtendedPickleFiles(fileList, datasetName, folderPath=""):
 		x_dataset = []
 		y_dataset = []
 		z_dataset = []
