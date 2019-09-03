@@ -7,3 +7,4 @@ input_width = 108
 input_height = 60
 himax_delay = -1817123289
 optitrack_delay = 4777750000
+dronemarker_offset = 0
