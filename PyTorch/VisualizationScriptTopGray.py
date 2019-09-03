@@ -63,8 +63,8 @@ def VizDroneBEV(frames, labels, outputs):
     triangley = [3, 0, 3, 3]
     collection = plt.fill(trianglex, triangley, facecolor='lightskyblue')
 
-    plot1gt, = plt.plot([], [], color='green', label='Bebop', linestyle='None', marker='o', markersize=10)
-    plot1pr, = plt.plot([], [], color='blue', label='Himax', linestyle='None', marker='o', markersize=10)
+    plot1gt, = plt.plot([], [], color='green', label='GT', linestyle='None', marker='o', markersize=10)
+    plot1pr, = plt.plot([], [], color='blue', label='Prediction', linestyle='None', marker='o', markersize=10)
     arr1gt = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='green', animated=True)
     arr1pr = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='blue', animated=True)
     plt.legend(loc='lower right', bbox_to_anchor=(0.8, 0.2, 0.25, 0.25))
@@ -76,8 +76,8 @@ def VizDroneBEV(frames, labels, outputs):
     ax2.set_xticklabels([])
     ax2.yaxis.set_ticks([-1, 0, 1])  # set y-ticks
     ax2.xaxis.set_ticks_position('none')
-    scatter2gt = plt.scatter([], [], color='green', label='Bebop', s=100)
-    scatter2pr = plt.scatter([], [], color='blue', label='Himax', s=100)
+    scatter2gt = plt.scatter([], [], color='green', label='GT', s=100)
+    scatter2pr = plt.scatter([], [], color='blue', label='Prediction', s=100)
 
     ax3 = plt.subplot2grid((h, w), (2, 9), rowspan=7, colspan=7)
     ax3.axis('off')
@@ -109,8 +109,10 @@ def VizDroneBEV(frames, labels, outputs):
         x_gt, y_gt, z_gt, phi_gt = label[0], label[1], label[2], label[3]
         x_pred, y_pred, z_pred, phi_pred = output[0], output[1], output[2], output[3]
 
-        str1 = "x_b={:05.3f}, y_b={:05.3f}, z_b={:05.3f}, phi_b={:05.3f} {}".format(x_gt, y_gt, z_gt, phi_gt, "\n")
-        str1 = str1 + "x_h={:05.3f}, y_h={:05.3f}, z_h={:05.3f}, phi_h={:05.3f}".format(x_pred, y_pred, z_pred, phi_pred)
+        #str1 = "x_b={:05.3f}, y_b={:05.3f}, z_b={:05.3f}, phi_b={:05.3f} {}".format(x_gt, y_gt, z_gt, phi_gt, "\n")
+        #str1 = str1 + "x_h={:05.3f}, y_h={:05.3f}, z_h={:05.3f}, phi_h={:05.3f}".format(x_pred, y_pred, z_pred, phi_pred)
+        str1 = "x_gt={:05.3f}, y_gt={:05.3f}, z_gt={:05.3f}, phi_gt={:05.3f} {}".format(x_gt, y_gt, z_gt, phi_gt, "\n")
+        str1 = str1 + "x_pr={:05.3f}, y_pr={:05.3f}, z_pr={:05.3f}, phi_pr={:05.3f}".format(x_pred, y_pred, z_pred, phi_pred)
 
         phi_gt = phi_gt - np.pi / 2
         phi_pred = phi_pred - np.pi / 2
@@ -145,9 +147,44 @@ def VizDroneBEV(frames, labels, outputs):
 
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save('diffroomnolightExposureModel.avi', writer=writer)
+    ani.save('head.avi', writer=writer)
     #ani.save('himaxVsbebop.gif', dpi=80, writer='imagemagick')
     plt.show()
+
+
+def InferenceData(trainer):
+    images = ImageIO.ReadImagesFromFolder("../data/monster/himax_processed/", '.jpg', 0)
+    [x_live, y_live] = DataProcessor.ProcessInferenceData(images, 60, 108)
+    live_set = Dataset(x_live, y_live)
+    params = {'batch_size': 1,
+              'shuffle': False,
+              'num_workers': 0}
+    live_generator = data.DataLoader(live_set, **params)
+
+    y_pred_himax = trainer.Infer(live_generator)
+    y_pred_himax = np.reshape(y_pred_himax, (-1, 4))
+    h_images = images
+
+    images = ImageIO.ReadImagesFromFolder("../data/monster/bebop_processed/", '.jpg', 0)
+    [x_live, y_live] = DataProcessor.ProcessInferenceData(images, 60, 108)
+    live_set = Dataset(x_live, y_live)
+    params = {'batch_size': 1,
+              'shuffle': False,
+              'num_workers': 0}
+    live_generator = data.DataLoader(live_set, **params)
+
+    y_pred_bebop = trainer.Infer(live_generator)
+    y_pred_bebop = np.reshape(y_pred_bebop, (-1, 4))
+
+    DataVisualization.PlotBebopandHimaxVsTime(y_pred_bebop, y_pred_himax)
+
+    combinedImages = []
+    for i in range(len(images)):
+        img = concat_images(images[i], h_images[i])
+        combinedImages.append(img)
+
+    VizDroneBEV(combinedImages, y_pred_bebop, y_pred_himax)
+
 
 def main():
     logging.basicConfig(level=logging.INFO,
@@ -163,38 +200,29 @@ def main():
     logging.getLogger('').addHandler(console)
 
     model = FrontNet(PreActBlock, [1, 1, 1])
-    ModelManager.Read('Models/FrontNetGrayExposure.pt', model)
+    ModelManager.Read('Models/FrontNetGray-vignette3.pt', model)
     trainer = ModelTrainer(model)
 
-    images = ImageIO.ReadImagesFromFolder("../data/diffroomnolight/himax_processed/", '.jpg', 0)
-    [x_live, y_live] = DataProcessor.ProcessInferenceData(images, 60, 108)
-    live_set = Dataset(x_live, y_live)
+
+
+    DATA_PATH = "/Users/usi/PycharmProjects/data/"
+
+    [x_test, y_test] = DataProcessor.ProcessTestDataGray2(
+        DATA_PATH + "trainHimaxHead.pickle", 60, 108)
+
+    test_set = Dataset(x_test, y_test)
+    size = len(x_test)
     params = {'batch_size': 1,
               'shuffle': False,
               'num_workers': 0}
-    live_generator = data.DataLoader(live_set, **params)
+    test_generator = data.DataLoader(test_set, **params)
+    y_pred = trainer.Infer(test_generator)
 
-    y_pred_himax = trainer.Infer(live_generator)
-    y_pred_himax = np.reshape(y_pred_himax, (-1, 4))
-    h_images = images
+    x_test = np.reshape(x_test, (size, 60, 108))
+    y_pred = np.reshape(y_pred, (-1, 4))
 
-    images = ImageIO.ReadImagesFromFolder("../data/diffroomnolight/bebop_processed/", '.jpg', 0)
-    [x_live, y_live] = DataProcessor.ProcessInferenceData(images, 60, 108)
-    live_set = Dataset(x_live, y_live)
-    params = {'batch_size': 1,
-              'shuffle': False,
-              'num_workers': 0}
-    live_generator = data.DataLoader(live_set, **params)
 
-    y_pred_bebop = trainer.Infer(live_generator)
-    y_pred_bebop = np.reshape(y_pred_bebop, (-1, 4))
-
-    combinedImages = []
-    for i in range(len(images)):
-        img = concat_images(images[i], h_images[i])
-        combinedImages.append(img)
-
-    VizDroneBEV(combinedImages, y_pred_bebop, y_pred_himax)
+    VizDroneBEV(x_test, y_test, y_pred)
 
 
 if __name__ == '__main__':
