@@ -40,7 +40,7 @@ def Train():
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
 
-    [train_mean, train_std, x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
+    [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
         DATA_PATH + "HandHead.pickle", 60, 108)
 
     training_set = Dataset(x_train, y_train, True)
@@ -61,8 +61,8 @@ def TrainGray():
     trainer = ModelTrainer(model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    [train_mean, train_std, x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainDataGray(
-        DATA_PATH + "train_vignette3.pickle", 60, 108)
+    [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
+        DATA_PATH + "train_vignette.pickle", 60, 108, True)
 
     training_set = Dataset(x_train, y_train, True)
     params = {'batch_size': 64,
@@ -95,10 +95,10 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    #TrainGray()
+    TrainGray()
     #ConvertToGray()
     #MergeDatasets()
-    Train()
+    #Train()
 
 
 if __name__ == '__main__':
