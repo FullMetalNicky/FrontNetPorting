@@ -10,10 +10,21 @@ from torch.utils import data
 from ModelManager import ModelManager
 import logging
 import numpy as np
+import cv2
 import sys
 sys.path.append("../pulp/")
 import pandas as pd
 
+
+def TestInference():
+
+    frame = cv2.imread("sample.png")
+    frame = cv2.resize(frame, (108, 60))
+    model = FrontNet(PreActBlock, [1, 1, 1])
+    ModelManager.Read("Models/FrontNetMixed.pt", model)
+    trainer = ModelTrainer(model)
+    v1_pred = trainer.InferSingleSample(frame)
+    print(v1_pred)
 
 
 def MergeDatasets():
@@ -95,11 +106,11 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    TrainGray()
+    #TrainGray()
     #ConvertToGray()
     #MergeDatasets()
     #Train()
-
+    TestInference()
 
 if __name__ == '__main__':
     main()

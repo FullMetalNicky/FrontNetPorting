@@ -181,6 +181,26 @@ class ModelTrainer:
         logging.info('Prediction Values: {}'.format(outputs))
         return outputs
 
+    def InferSingleSample(self, frame):
+
+        shape = frame.shape
+        frame = np.reshape(frame, (1, shape[0], shape[1], shape[2]))
+        frame = np.swapaxes(frame, 1, 3)
+        frame = np.swapaxes(frame, 2, 3)
+        frame = frame.astype(np.float32)
+        frame = torch.from_numpy(frame)
+        self.model.eval()
+
+        with torch.no_grad():
+            frame = frame.to(self.device)
+            outputs = self.model(frame)
+
+        outputs = torch.stack(outputs, 0)
+        outputs = torch.squeeze(outputs)
+        outputs = torch.t(outputs)
+        outputs = outputs.cpu().numpy()
+        return outputs
+
 
     def Predict(self, test_generator):
 

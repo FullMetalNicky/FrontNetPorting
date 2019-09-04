@@ -80,10 +80,13 @@ class DataProcessor:
             return [x_test, y_test, z_test]
 
     @staticmethod
-    def ProcessInferenceData(images, image_height, image_width):
+    def ProcessInferenceData(images, image_height, image_width, isGray=False):
 
         x_test = np.stack(images, axis=0).astype(np.float32)
-        x_test = np.reshape(x_test, (-1, image_height, image_width, 1))
+        if isGray == True:
+            x_test = np.reshape(x_test, (-1, image_height, image_width, 1))
+        else:
+            x_test = np.reshape(x_test, (-1, image_height, image_width, 3))
         x_test = np.swapaxes(x_test, 1, 3)
         x_test = np.swapaxes(x_test, 2, 3)
         y_test = [0, 0, 0, 0] * len(x_test)
