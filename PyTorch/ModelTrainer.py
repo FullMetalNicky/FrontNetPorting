@@ -184,7 +184,10 @@ class ModelTrainer:
     def InferSingleSample(self, frame):
 
         shape = frame.shape
-        frame = np.reshape(frame, (1, shape[0], shape[1], shape[2]))
+        #print(frame.shape)
+        if len(frame.shape) == 3:
+            frame = np.reshape(frame, (1, shape[0], shape[1], shape[2]))
+
         frame = np.swapaxes(frame, 1, 3)
         frame = np.swapaxes(frame, 2, 3)
         frame = frame.astype(np.float32)
