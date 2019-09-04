@@ -47,6 +47,8 @@ def relative_pose(stamped_pose, reference_pose, reference_frame='reference'):
 	x, y, z = position.x , position.y, position.z
 	q = res.pose.orientation
 	_, _, yaw = tf.transformations.euler_from_quaternion((q.x, q.y, q.z, q.w))
+	yaw = yaw - np.pi # 0 pointing towards the drone
+	yaw = (yaw + np.pi) % (2 * np.pi) - np.pi
 
 	return x, y, z, (yaw - np.pi)
 
