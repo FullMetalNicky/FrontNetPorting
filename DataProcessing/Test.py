@@ -34,15 +34,15 @@ def TestImageTransformer():
 	ImageIO.WriteImagesToFolder(himaxTransImages, config.folder_path + "/data/test/", '.jpg')
 
 def TestDatasetCreator():
-	subject_name = "patterns"
-	dc = DatasetCreator(config.folder_path + "/data/Hand/" + subject_name + ".bag")
-	#start_frame, end_frame = dc.FrameSelector()
-	dc.CreateBebopDataset(0, config.folder_path + "/data/Hand/" + subject_name + "2HandHead.pickle", 1567519708539417334, 1567519899301070946)
-	# folderPath = config.folder_path + "/data/Hand/"
-	# fileList = ["nickyTest2HandHead.pickle", "nickyTestHandHead.pickle"]
+	# subject_name = "test1"
+	# dc = DatasetCreator(config.folder_path + "/data/Nicky/" + subject_name + ".bag")
+	# start_frame, end_frame = dc.FrameSelector()
+	# dc.CreateBebopDataset(0, config.folder_path + "/data/Nicky/" + subject_name + "Hand.pickle", start_frame, end_frame)
+	folderPath = config.folder_path + "/data/Nicky/"
+	fileList = ["train1Hand.pickle", "train2Hand.pickle", "train3Hand.pickle", "train4Hand.pickle"]
 	# # fileList = ["lilithHand.pickle", "dario1Hand.pickle", "dario2Hand.pickle", "nicky1Hand.pickle", 
 	# # "nicky2Hand.pickle", "mirko1Hand.pickle", "mirko2Hand.pickle"]
-	# DatasetCreator.JoinExtendedPickleFiles(fileList, config.folder_path + "/data/Hand/TestHandExtended.pickle", folderPath)
+	DatasetCreator.JoinPickleFiles(fileList, config.folder_path + "/data/Nicky/TrainNicky.pickle", folderPath)
 	
 
 	

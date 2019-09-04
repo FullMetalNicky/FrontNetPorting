@@ -48,7 +48,7 @@ def relative_pose(stamped_pose, reference_pose, reference_frame='reference'):
 	q = res.pose.orientation
 	_, _, yaw = tf.transformations.euler_from_quaternion((q.x, q.y, q.z, q.w))
 
-	return x, y, z, yaw
+	return x, y, z, (yaw - np.pi)
 
 
 class DatasetCreator:
