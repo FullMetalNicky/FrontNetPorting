@@ -142,7 +142,7 @@ class ModelTrainer:
             logging.info('Validation MAE: {}'.format(MAE))
             logging.info('Validation r_score: {}'.format(r_score))
 
-            checkpoint_filename = self.folderPath + 'FrontNetGray-{:03d}.pkl'.format(epoch)
+            checkpoint_filename = self.folderPath + 'FrontNet-{:03d}.pkl'.format(epoch)
             early_stopping(valid_loss, self.model, epoch, checkpoint_filename)
             if early_stopping.early_stop:
                 logging.info("Early stopping")
@@ -184,7 +184,6 @@ class ModelTrainer:
     def InferSingleSample(self, frame):
 
         shape = frame.shape
-        #print(frame.shape)
         if len(frame.shape) == 3:
             frame = np.reshape(frame, (1, shape[0], shape[1], shape[2]))
 

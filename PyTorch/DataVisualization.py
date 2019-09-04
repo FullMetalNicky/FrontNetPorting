@@ -64,7 +64,7 @@ class DataVisualization:
         DataVisualization.figure_counter += 1
         plt.figure(DataVisualization.figure_counter, figsize=(10, 6))
 
-        epochs = range(1, len(MSE) + 1, 5)
+        epochs = range(1, len(MSE) + 1)
         MSE = torch.stack(MSE, 0)
         x = MSE[:, 0]
         x = x.cpu().numpy()
@@ -82,7 +82,7 @@ class DataVisualization:
         plt.title('Pose Variables MSE')
         plt.xlabel('Epoch')
         plt.ylabel('MSE')
-        plt.xticks(epochs)
+        plt.xticks(np.arange(0, len(MSE), step=5))
         plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'MSE.png')
 
 
@@ -92,7 +92,7 @@ class DataVisualization:
         DataVisualization.figure_counter += 1
         plt.figure(DataVisualization.figure_counter, figsize=(10, 6))
 
-        epochs = range(1, len(MAE) + 1, 5)
+        epochs = range(1, len(MAE) + 1)
         MAE = torch.stack(MAE, 0)
         x = MAE[:, 0]
         x = x.cpu().numpy()
@@ -110,7 +110,7 @@ class DataVisualization:
         plt.title('Pose Variables MAE')
         plt.xlabel('Epoch')
         plt.ylabel('MAE')
-        plt.xticks(epochs)
+        plt.xticks(np.arange(0, len(MAE), step=5))
         plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'MAE.png')
 
 
@@ -119,7 +119,7 @@ class DataVisualization:
         DataVisualization.figure_counter += 1
         plt.figure(DataVisualization.figure_counter, figsize=(10, 6))
 
-        epochs = range(1, len(r2_score) + 1, 5)
+        epochs = range(1, len(r2_score) + 1)
         r2_score = torch.stack(r2_score, 0)
         x = r2_score[:, 0]
         x = x.cpu().numpy()
@@ -137,7 +137,7 @@ class DataVisualization:
         plt.title('Pose Variables r2_score')
         plt.xlabel('Epoch')
         plt.ylabel('r2_score')
-        plt.xticks(epochs)
+        plt.xticks(np.arange(0, len(r2_score), step=5))
         plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'Rsq.png')
 
 

@@ -1,6 +1,8 @@
 from __future__ import print_function
 from FrontNet import PreActBlock
 from FrontNet import FrontNet
+from FrontNet import GrayFrontNet
+
 from DataProcessor import DataProcessor
 from ModelTrainerETH import ModelTrainer
 from Dataset import Dataset
@@ -58,9 +60,9 @@ def Parse(parser):
 
 def LoadData(args):
 
-    [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
+    [x_train, x_validation, y_train, y_validation, z_train, z_validation] = DataProcessor.ProcessTrainData(
         args.load_trainset, 60, 108)
-    [x_test, y_test] = DataProcessor.ProcessTestData(args.load_testset, 60, 108)
+    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(args.load_testset, 60, 108)
 
 
     training_set = Dataset(x_train, y_train, True)
@@ -120,8 +122,10 @@ def main():
             except ValueError:
                 regime[k] = rr[k]
 
-
-    model = FrontNet(PreActBlock, [1, 1, 1])
+    if args.gray is not None:
+        model = GrayFrontNet(PreActBlock, [1, 1, 1])
+    else:
+        model = FrontNet(PreActBlock, [1, 1, 1])
 
     # [NeMO] This used to preload the model with pretrained weights.
     if args.load_model is not None:
@@ -136,6 +140,7 @@ def main():
 
     if args.save_model is not None:
         torch.save(trainer.model.state_dict(), args.save_model)
+        ModelManager.Write(trainer.GetModel, args.save_model)
 
 if __name__ == '__main__':
     main()

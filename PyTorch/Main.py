@@ -19,11 +19,10 @@ import pandas as pd
 
 def TestInference():
 
-    frame = cv2.imread("sample.png")
+    frame = cv2.imread("sample2.png")
     frame = cv2.resize(frame, (108, 60))
     model = FrontNet(PreActBlock, [1, 1, 1])
     ModelManager.Read("Models/FrontNetMixed.pt", model)
-    #torch.save(model.state_dict(), "Models/FrontNetMixedState.pt")
     trainer = ModelTrainer(model)
     v1_pred = trainer.InferSingleSample(frame)
     print(v1_pred)
@@ -33,7 +32,7 @@ def MergeDatasets():
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
 
     dataset = pd.read_pickle(DATA_PATH + "train.pickle").values
-    dataset2 = pd.read_pickle(DATA_PATH + "Hand2.pickle").values
+    dataset2 = pd.read_pickle(DATA_PATH + "TrainNicky.pickle").values
     x_dataset = dataset[:, 0]
     y_dataset = dataset[:, 1]
     x_dataset2 = dataset2[:, 0]
@@ -44,7 +43,7 @@ def MergeDatasets():
     print("dataset ready x:{} y:{}".format(len(x_dataset), len(y_dataset)))
     df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
     print("dataframe ready")
-    df.to_pickle("HandHead.pickle")
+    df.to_pickle("TrainNickyFull.pickle")
 
 
 def Train():
@@ -110,9 +109,9 @@ def main():
 
     #TrainGray()
     #ConvertToGray()
-    #MergeDatasets()
+    MergeDatasets()
     #Train()
-    TestInference()
+    #TestInference()
 
 if __name__ == '__main__':
     main()

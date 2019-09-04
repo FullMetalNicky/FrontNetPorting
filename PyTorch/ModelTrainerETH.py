@@ -207,7 +207,7 @@ class ModelTrainer:
             logging.info('[ModelTrainer] Validation MAE: {}'.format(MAE))
             logging.info('[ModelTrainer] Validation r_score: {}'.format(r_score))
 
-            checkpoint_filename = self.folderPath + 'FrontNetGray-{:03d}.pt'.format(epoch)
+            checkpoint_filename = self.folderPath + 'FrontNetG-{:03d}.pt'.format(epoch)
             early_stopping(valid_loss, self.model, epoch, checkpoint_filename)
             if early_stopping.early_stop:
                 logging.info("[ModelTrainer] Early stopping")
@@ -251,6 +251,28 @@ class ModelTrainer:
         logging.info('[ModelTrainer] Prediction Values: {}'.format(outputs))
         return x_test[0].cpu().numpy(), y_test[0], outputs
 
+
+    def InferSingleSample(self, frame):
+
+        shape = frame.shape
+        if len(frame.shape) == 3:
+            frame = np.reshape(frame, (1, shape[0], shape[1], shape[2]))
+
+        frame = np.swapaxes(frame, 1, 3)
+        frame = np.swapaxes(frame, 2, 3)
+        frame = frame.astype(np.float32)
+        frame = torch.from_numpy(frame)
+        self.model.eval()
+
+        with torch.no_grad():
+            frame = frame.to(self.device)
+            outputs = self.model(frame)
+
+        outputs = torch.stack(outputs, 0)
+        outputs = torch.squeeze(outputs)
+        outputs = torch.t(outputs)
+        outputs = outputs.cpu().numpy()
+        return outputs
 
     def Predict(self, test_generator):
 
