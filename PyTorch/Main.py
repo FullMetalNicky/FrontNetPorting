@@ -12,6 +12,7 @@ import logging
 import numpy as np
 import cv2
 import sys
+import torch
 sys.path.append("../pulp/")
 import pandas as pd
 
@@ -22,6 +23,7 @@ def TestInference():
     frame = cv2.resize(frame, (108, 60))
     model = FrontNet(PreActBlock, [1, 1, 1])
     ModelManager.Read("Models/FrontNetMixed.pt", model)
+    #torch.save(model.state_dict(), "Models/FrontNetMixedState.pt")
     trainer = ModelTrainer(model)
     v1_pred = trainer.InferSingleSample(frame)
     print(v1_pred)
