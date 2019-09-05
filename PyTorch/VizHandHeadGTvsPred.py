@@ -16,7 +16,7 @@ import matplotlib.image as mpimg
 import matplotlib.patches as patches
 
 
-def VizDroneBEV(frames, labels, outputs):
+def VizDroneBEV(frames, hand_labels, head_labels, outputs):
 
     fig = plt.figure(888, figsize=(15, 5))
 
@@ -42,10 +42,17 @@ def VizDroneBEV(frames, labels, outputs):
     triangley = [3, 0, 3, 3]
     collection = plt.fill(trianglex, triangley, facecolor='lightskyblue')
 
-    plot1gt, = plt.plot([], [], color='green', label='GT', linestyle='None', marker='o', markersize=10)
-    plot1pr, = plt.plot([], [], color='blue', label='Prediction', linestyle='None', marker='o', markersize=10)
-    arr1gt = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='green', animated=True)
-    arr1pr = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='blue', animated=True)
+    plot1gthead, = plt.plot([], [], color='green', label='Head GT', linestyle='None', marker='o', markersize=10)
+    arr1gthead = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='green',
+                           animated=True)
+
+    plot1gthand, = plt.plot([], [], color='blue', label='Hand GT', linestyle='None', marker='o', markersize=10)
+    arr1gthand = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='blue',
+                           animated=True)
+
+    plot1pr, = plt.plot([], [], color='red', label='Prediction', linestyle='None', marker='o', markersize=10)
+    arr1pr = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='red',
+                       animated=True)
     plt.legend(loc='lower right', bbox_to_anchor=(0.8, 0.2, 0.25, 0.25))
 
     ax2 = plt.subplot2grid((h, w), (2, 8), rowspan=7)
@@ -55,8 +62,9 @@ def VizDroneBEV(frames, labels, outputs):
     ax2.set_xticklabels([])
     ax2.yaxis.set_ticks([-1, 0, 1])  # set y-ticks
     ax2.xaxis.set_ticks_position('none')
-    scatter2gt = plt.scatter([], [], color='green', label='GT', s=100)
-    scatter2pr = plt.scatter([], [], color='blue', label='Prediction', s=100)
+    scatter2gthead = plt.scatter([], [], color='green', label='Head GT', s=100)
+    scatter2gthand = plt.scatter([], [], color='blue', label='Hand GT', s=100)
+    scatter2pr = plt.scatter([], [], color='red', label='Prediction', s=100)
 
     ax3 = plt.subplot2grid((h, w), (2, 9), rowspan=7, colspan=7)
     ax3.axis('off')
@@ -82,32 +90,45 @@ def VizDroneBEV(frames, labels, outputs):
 
 
     def animate(id):
-        label = labels[id]
-        x_gt, y_gt, z_gt, phi_gt = label[0], label[1], label[2], label[3]
+        head_label = head_labels[id]
+        hand_label = hand_labels[id]
+
+        x_head, y_head, z_head, phi_head = head_label[0], head_label[1], head_label[2], head_label[3]
+        x_hand, y_hand, z_hand, phi_hand = hand_label[0], hand_label[1], hand_label[2], hand_label[3]
+
+        str1 = "x_head={:05.3f}, y_head={:05.3f}, z_head={:05.3f}, phi_head={:05.3f} {}".format(x_head, y_head, z_head,
+                                                                                                phi_head, "\n")
+        str1 = str1 + "x_hand={:05.3f}, y_hand={:05.3f}, z_hand={:05.3f}, phi_hand={:05.3f} {}".format(x_hand, y_hand,
+                                                                                                       z_hand, phi_hand,
+                                                                                                       "\n")
+
         x_pred, y_pred, z_pred, phi_pred = outputs[id*4 + 0], outputs[id*4 + 1], outputs[id*4 + 2], outputs[id*4 + 3]
 
-        str1 = "x_gt={:05.3f}, y_gt={:05.3f}, z_gt={:05.3f}, phi_gt={:05.3f} {}".format(x_gt, y_gt, z_gt, phi_gt, "\n")
-        str1 = str1 + "x_pr={:05.3f}, y_pr={:05.3f}, z_pr={:05.3f}, phi_pr={:05.3f}".format(x_pred, y_pred, z_pred, phi_pred)
-
-        phi_gt = - phi_gt - np.pi / 2
-        phi_pred = -phi_pred - np.pi / 2
+        phi_head = - phi_head - np.pi/2
+        phi_hand = - phi_hand - np.pi/2
+        phi_pred = -phi_pred - np.pi/2
 
         annotation.set_text(str1)
 
-        plot1gt.set_data(np.array([y_gt, x_gt]))
+        plot1gthead.set_data(np.array([y_head, x_head]))
+        plot1gthand.set_data(np.array([y_hand, x_hand]))
         plot1pr.set_data(np.array([y_pred, x_pred]))
 
         if(len(ax1.patches) > 1):
             ax1.patches.pop()
             ax1.patches.pop()
+            ax1.patches.pop()
 
-        patch1 = patches.FancyArrow(y_gt, x_gt, 0.5*np.cos(phi_gt), 0.5*np.sin(phi_gt), head_width=0.05, head_length=0.05, color='green')
-        patch2 = patches.FancyArrow(y_pred, x_pred, 0.5*np.cos(phi_pred), 0.5*np.sin(phi_pred), head_width=0.05, head_length=0.05, color='blue')
+        patch1 = patches.FancyArrow(y_head, x_head, 0.5*np.cos(phi_head), 0.5*np.sin(phi_head), head_width=0.05, head_length=0.05, color='green')
+        patch2 = patches.FancyArrow(y_hand, x_hand, 0.5*np.cos(phi_hand), 0.5*np.sin(phi_hand), head_width=0.05, head_length=0.05, color='blue')
+        patch3 = patches.FancyArrow(y_pred, x_pred, 0.5*np.cos(phi_pred), 0.5*np.sin(phi_pred), head_width=0.05, head_length=0.05, color='red')
         ax1.add_patch(patch1)
         ax1.add_patch(patch2)
+        ax1.add_patch(patch3)
 
-        scatter2gt.set_offsets(np.array([-0.05, label[2]]))
-        scatter2pr.set_offsets(np.array([0.05, outputs[id*4 + 2]]))
+        scatter2gthead.set_offsets(np.array([-0.05, z_head]))
+        scatter2gthand.set_offsets(np.array([-0.0, z_hand]))
+        scatter2pr.set_offsets(np.array([0.05, z_pred]))
 
         frame = frames[id].transpose(1, 2, 0)
         frame = frame.astype(np.uint8)
@@ -117,11 +138,11 @@ def VizDroneBEV(frames, labels, outputs):
 
         #use the first one for viz on screen and second one for video recording
         #return plot1gt, plot1pr, patch1, patch2, scatter2gt, scatter2pr, imgplot, ax1, ax3, annotation, annotation2
-        return plot1gt, plot1pr, patch1, patch2, scatter2gt, scatter2pr, imgplot, annotation, annotation2
+        return plot1gthead, plot1gthand, plot1pr, patch1, patch2, patch3, scatter2gthead, scatter2gthand, scatter2pr, imgplot, annotation, annotation2
 
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save('hand.avi', writer=writer)
+    ani.save('TestNicky.mp4', writer=writer)
     #ani.save('viz2.gif', dpi=80, writer='imagemagick')
     plt.show()
 
@@ -139,12 +160,13 @@ def main():
     logging.getLogger('').addHandler(console)
 
     model = FrontNet(PreActBlock, [1, 1, 1])
-    ModelManager.Read('Models/FrontNetMixed.pt', model)
+    ModelManager.Read('Models/FrontNetNicky.pt', model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "TestHand.pickle", 60, 108)
-    x_test = x_test
-    y_test = y_test
+
+    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "TestNicky.pickle", 60, 108)
+    #x_test = x_test
+    #y_test = y_test
     test_set = Dataset(x_test, y_test)
     params = {'batch_size': 1,
               'shuffle': False,
@@ -155,7 +177,7 @@ def main():
     valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, outputs, gt_labels = trainer.ValidateSingleEpoch(
         test_generator)
 
-    VizDroneBEV(x_test, y_test, outputs)
+    VizDroneBEV(x_test, y_test, z_test, outputs)
 
 
 if __name__ == '__main__':

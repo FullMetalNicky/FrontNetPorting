@@ -1,7 +1,7 @@
 from __future__ import print_function
-from FrontNet import PreActBlock
+from PreActBlock import PreActBlock
 from FrontNet import FrontNet
-from FrontNet import GrayFrontNet
+from GrayFrontNet import GrayFrontNet
 
 from DataProcessor import DataProcessor
 from ModelTrainerETH import ModelTrainer

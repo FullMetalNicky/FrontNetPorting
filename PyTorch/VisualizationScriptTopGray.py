@@ -114,8 +114,8 @@ def VizDroneBEV(frames, labels, outputs):
         str1 = "x_gt={:05.3f}, y_gt={:05.3f}, z_gt={:05.3f}, phi_gt={:05.3f} {}".format(x_gt, y_gt, z_gt, phi_gt, "\n")
         str1 = str1 + "x_pr={:05.3f}, y_pr={:05.3f}, z_pr={:05.3f}, phi_pr={:05.3f}".format(x_pred, y_pred, z_pred, phi_pred)
 
-        phi_gt = phi_gt - np.pi / 2
-        phi_pred = phi_pred - np.pi / 2
+        phi_gt = - phi_gt - np.pi / 2
+        phi_pred = -phi_pred - np.pi / 2
 
         annotation.set_text(str1)
 
