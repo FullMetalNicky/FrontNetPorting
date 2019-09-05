@@ -50,7 +50,7 @@ def relative_pose(stamped_pose, reference_pose, reference_frame='reference'):
 	yaw = yaw - np.pi # 0 pointing towards the drone
 	yaw = (yaw + np.pi) % (2 * np.pi) - np.pi
 
-	return x, y, z, (yaw - np.pi)
+	return x, y, z, yaw
 
 
 class DatasetCreator:
