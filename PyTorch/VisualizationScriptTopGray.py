@@ -147,7 +147,7 @@ def VizDroneBEV(frames, labels, outputs):
 
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save('head.avi', writer=writer)
+    ani.save('head.mp4', writer=writer)
     #ani.save('himaxVsbebop.gif', dpi=80, writer='imagemagick')
     plt.show()
 

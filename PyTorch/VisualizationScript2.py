@@ -1,6 +1,8 @@
 from __future__ import print_function
-from FrontNet import PreActBlock
+from PreActBlock import PreActBlock
 from FrontNet import FrontNet
+from Dronet import Dronet
+
 from DataProcessor import DataProcessor
 from ModelTrainer import ModelTrainer
 from Dataset import Dataset
@@ -121,7 +123,7 @@ def VizDroneBEV(frames, labels, outputs):
 
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save('hand.avi', writer=writer)
+    ani.save('dronet.mp4', writer=writer)
     #ani.save('viz2.gif', dpi=80, writer='imagemagick')
     plt.show()
 
@@ -138,11 +140,11 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    model = FrontNet(PreActBlock, [1, 1, 1])
-    ModelManager.Read('Models/FrontNetMixed.pt', model)
+    model = Dronet(PreActBlock, [1, 1, 1])
+    ModelManager.Read('Models/Dronet.pt', model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "TestHand.pickle", 60, 108)
+    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "test.pickle", 60, 108)
     x_test = x_test
     y_test = y_test
     test_set = Dataset(x_test, y_test)

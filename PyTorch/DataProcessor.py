@@ -13,8 +13,8 @@ class DataProcessor:
     def ProcessTrainData(trainPath, image_height, image_width, isGray = False):
         train_set = pd.read_pickle(trainPath).values
         isExtended = False
-        if (train_set.shape[1] == 3):
-            isExtended = True
+        #if (train_set.shape[1] == 3):
+            #isExtended = True
 
         logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
         size = len(train_set[:, 0])
@@ -72,12 +72,14 @@ class DataProcessor:
         y_test = test_set[:, 1]
         y_test = np.vstack(y_test[:]).astype(np.float32)
 
-        if(test_set.shape[1] == 2):
-            return [x_test, y_test]
-        elif (test_set.shape[1] == 3):
-            z_test = test_set[:, 2]
-            z_test = np.vstack(z_test[:]).astype(np.float32)
-            return [x_test, y_test, z_test]
+        return [x_test, y_test]
+
+        # if(test_set.shape[1] == 2):
+        #     return [x_test, y_test]
+        # elif (test_set.shape[1] == 3):
+        #     z_test = test_set[:, 2]
+        #     z_test = np.vstack(z_test[:]).astype(np.float32)
+        #     return [x_test, y_test, z_test]
 
     @staticmethod
     def ProcessInferenceData(images, image_height, image_width, isGray=False):

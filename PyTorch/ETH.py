@@ -2,6 +2,8 @@ from __future__ import print_function
 from PreActBlock import PreActBlock
 from FrontNet import FrontNet
 from GrayFrontNet import GrayFrontNet
+from Dronet import Dronet
+
 
 from DataProcessor import DataProcessor
 from ModelTrainerETH import ModelTrainer
@@ -53,6 +55,8 @@ def Parse(parser):
     # [NeMO] The training regime (in JSON) used to store all NeMO configuration.
     parser.add_argument('--regime', default=None, type=str,
                         help='for loading the model')
+    parser.add_argument('--gray', default=None, type=int,
+                        help='for choosing the model')
     args = parser.parse_args()
 
     return args
@@ -60,9 +64,9 @@ def Parse(parser):
 
 def LoadData(args):
 
-    [x_train, x_validation, y_train, y_validation, z_train, z_validation] = DataProcessor.ProcessTrainData(
+    [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
         args.load_trainset, 60, 108)
-    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(args.load_testset, 60, 108)
+    [x_test, y_test] = DataProcessor.ProcessTestData(args.load_testset, 60, 108)
 
 
     training_set = Dataset(x_train, y_train, True)
@@ -123,9 +127,9 @@ def main():
                 regime[k] = rr[k]
 
     if args.gray is not None:
-        model = GrayFrontNet(PreActBlock, [1, 1, 1])
+        model = Dronet(PreActBlock, [1, 1, 1], True)
     else:
-        model = FrontNet(PreActBlock, [1, 1, 1])
+        model = Dronet(PreActBlock, [1, 1, 1], False)
 
     # [NeMO] This used to preload the model with pretrained weights.
     if args.load_model is not None:

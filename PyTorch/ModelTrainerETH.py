@@ -66,16 +66,16 @@ class ModelTrainer:
         evale = nemo.evaluation.EvaluationEngine(self.model, precision_rule=precision_rule,
                                                  validate_fn=self.ValidateSingleEpoch,
                                                  validate_data=validation_loader)
-        while evale.step():
-            valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-                validation_loader)
-            acc = torch.tensor(float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi))
-            evale.report(acc)
-            logging.info("[ModelTrainer] %.1f-bit W, %.1f-bit x: %.2f" % (
-                evale.wgrid[evale.idx], evale.xgrid[evale.idx], acc))
+        # while evale.step():
+        #     valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+        #         validation_loader)
+        #     acc = torch.tensor(float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi))
+        #     evale.report(acc)
+        #     logging.info("[ModelTrainer] %.1f-bit W, %.1f-bit x: %.2f" % (
+        #         evale.wgrid[evale.idx], evale.xgrid[evale.idx], acc))
         #Wbits, xbits = evale.get_next_config(upper_threshold=0.97)
-        Wbits = 8
-        xbits = 8
+        Wbits = 16
+        xbits = 16
         precision_rule['0']['W_bits'] = min(Wbits, precision_rule['0']['W_bits'])
         precision_rule['0']['x_bits'] = min(xbits, precision_rule['0']['x_bits'])
         logging.info("[ModelTrainer] Choosing %.1f-bit W, %.1f-bit x for first step" % (
@@ -207,7 +207,7 @@ class ModelTrainer:
             logging.info('[ModelTrainer] Validation MAE: {}'.format(MAE))
             logging.info('[ModelTrainer] Validation r_score: {}'.format(r_score))
 
-            checkpoint_filename = self.folderPath + 'FrontNetG-{:03d}.pt'.format(epoch)
+            checkpoint_filename = self.folderPath + 'Dronet-{:03d}.pt'.format(epoch)
             early_stopping(valid_loss, self.model, epoch, checkpoint_filename)
             if early_stopping.early_stop:
                 logging.info("[ModelTrainer] Early stopping")

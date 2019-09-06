@@ -112,7 +112,7 @@ def Viz4PoseVariables(frames, labels, outputs):
 
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    #ani.save('plot.avi', writer=writer)
+    #ani.save('plot.mp4', writer=writer)
     ani.save('viz1.gif', dpi=80, writer='imagemagick')
     plt.show()
 
