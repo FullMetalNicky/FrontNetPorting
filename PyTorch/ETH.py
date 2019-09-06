@@ -65,8 +65,8 @@ def Parse(parser):
 def LoadData(args):
 
     [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
-        args.load_trainset, 60, 108)
-    [x_test, y_test] = DataProcessor.ProcessTestData(args.load_testset, 60, 108)
+        args.load_trainset, 60, 108, True)
+    [x_test, y_test] = DataProcessor.ProcessTestData(args.load_testset, 60, 108, True)
 
 
     training_set = Dataset(x_train, y_train, True)
@@ -143,8 +143,8 @@ def main():
     trainer.Predict(test_loader)
 
     if args.save_model is not None:
-        torch.save(trainer.model.state_dict(), args.save_model)
-        ModelManager.Write(trainer.GetModel, args.save_model)
+        #torch.save(trainer.model.state_dict(), args.save_model)
+        ModelManager.Write(trainer.GetModel(), args.save_model)
 
 if __name__ == '__main__':
     main()
