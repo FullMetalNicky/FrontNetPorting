@@ -18,7 +18,7 @@ import matplotlib.image as mpimg
 import matplotlib.patches as patches
 
 
-def VizDroneBEV(frames, labels, outputs):
+def VizDroneBEV(frames, labels, outputs, isGray=False):
 
     fig = plt.figure(888, figsize=(15, 5))
 
@@ -62,9 +62,12 @@ def VizDroneBEV(frames, labels, outputs):
 
     ax3 = plt.subplot2grid((h, w), (2, 9), rowspan=7, colspan=7)
     ax3.axis('off')
-    frame = frames[0].transpose(1, 2, 0)
-    frame = frame.astype(np.uint8)
-    imgplot = plt.imshow(frame)
+    frame = frames[0].astype(np.uint8)
+    if isGray == True:
+        imgplot = plt.imshow(frame, cmap="gray", vmin=0, vmax=255)
+    else:
+        frame = frame.transpose(1, 2, 0)
+        imgplot = plt.imshow(frame)
 
     ax4 = plt.subplot2grid((h, w), (0, 9), colspan=7)
     ax4.set_xlim([0, 8])
@@ -111,8 +114,9 @@ def VizDroneBEV(frames, labels, outputs):
         scatter2gt.set_offsets(np.array([-0.05, label[2]]))
         scatter2pr.set_offsets(np.array([0.05, outputs[id*4 + 2]]))
 
-        frame = frames[id].transpose(1, 2, 0)
-        frame = frame.astype(np.uint8)
+        frame = frames[id].astype(np.uint8)
+        if isGray == False:
+            frame = frame.transpose(1, 2, 0)
         imgplot.set_array(frame)
 
         annotation2.set_text('Frame {}'.format(id))
@@ -123,7 +127,7 @@ def VizDroneBEV(frames, labels, outputs):
 
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save('dronet.mp4', writer=writer)
+    ani.save('dronetGray.mp4', writer=writer)
     #ani.save('viz2.gif', dpi=80, writer='imagemagick')
     plt.show()
 
@@ -140,13 +144,12 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    model = Dronet(PreActBlock, [1, 1, 1])
-    ModelManager.Read('Models/Dronet.pt', model)
+    model = Dronet(PreActBlock, [1, 1, 1], True)
+    ModelManager.Read('Models/DronetGray.pt', model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "test.pickle", 60, 108)
-    x_test = x_test
-    y_test = y_test
+    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "test_vignette4.pickle", 60, 108, True)
+
     test_set = Dataset(x_test, y_test)
     params = {'batch_size': 1,
               'shuffle': False,
@@ -156,8 +159,8 @@ def main():
 
     valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, outputs, gt_labels = trainer.ValidateSingleEpoch(
         test_generator)
-
-    VizDroneBEV(x_test, y_test, outputs)
+    x_test = np.reshape(x_test, (-1, 60, 108))
+    VizDroneBEV(x_test, y_test, outputs, True)
 
 
 if __name__ == '__main__':

@@ -2,6 +2,7 @@ from __future__ import print_function
 from PreActBlock import PreActBlock
 from FrontNet import FrontNet
 from GrayFrontNet import GrayFrontNet
+from Dronet import Dronet
 
 from DataProcessor import DataProcessor
 from ModelTrainer import ModelTrainer
@@ -15,6 +16,7 @@ import sys
 import torch
 sys.path.append("../pulp/")
 import pandas as pd
+from torchsummary import summary
 
 
 def TestInference():
@@ -69,12 +71,13 @@ def Train():
 
 
 def TrainGray():
-    model = GrayFrontNet(PreActBlock, [1, 1, 1])
+    model = Dronet(PreActBlock, [1, 1, 1], True)
+    summary(model, (1, 60, 108))
     trainer = ModelTrainer(model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
     [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
-        DATA_PATH + "train_vignette.pickle", 60, 108, True)
+        DATA_PATH + "train_vignette4.pickle", 60, 108, True)
 
     training_set = Dataset(x_train, y_train, True)
     params = {'batch_size': 64,
@@ -90,8 +93,8 @@ def TrainGray():
 
 def ConvertToGray():
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    DataProcessor.CreateGreyPickle(DATA_PATH + "train.pickle", 60, 108, "train_vignette.pickle")
-    DataProcessor.CreateGreyPickle(DATA_PATH + "test.pickle", 60, 108, "test_vignette.pickle")
+    DataProcessor.CreateGreyPickle(DATA_PATH + "train.pickle", 60, 108, "train_vignette4.pickle")
+    DataProcessor.CreateGreyPickle(DATA_PATH + "test.pickle", 60, 108, "test_vignette4.pickle")
 
 def main():
     logging.basicConfig(level=logging.INFO,

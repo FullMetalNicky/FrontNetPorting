@@ -144,7 +144,7 @@ def main():
 
     if args.save_model is not None:
         #torch.save(trainer.model.state_dict(), args.save_model)
-        ModelManager.Write(trainer.GetModel(), args.save_model)
+        ModelManager.Write(trainer.GetModel(), 100, args.save_model)
 
 if __name__ == '__main__':
     main()
