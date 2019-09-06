@@ -8,6 +8,7 @@ from EarlyStopping import EarlyStopping
 from ValidationUtils import Metrics
 import nemo
 import logging
+from collections import OrderedDict
 
 class ModelTrainer:
     def __init__(self, model, args, regime):
@@ -40,33 +41,64 @@ class ModelTrainer:
         self.model = nemo.transform.quantize_pact(self.model)
         logging.info("[ModelTrainer] Model: %s", self.model)
         # [NeMO] NeMO re-training usually converges better using an Adam optimizer, and a smaller learning rate
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=float(self.regime['lr']),
-                                     weight_decay=float(self.regime['weight_decay']))
+        # optimizer = torch.optim.Adam(self.model.parameters(), lr=float(self.regime['lr']),
+        #                              weight_decay=float(self.regime['weight_decay']))
 
         # [NeMO] DNNs that do not employ batch normalization layers nor have clipped activations (e.g. ReLU6) require
         # an initial calibration to transfer to a quantization-aware version. This is used to calibrate the scaling
         # parameters of quantization-aware activation layers to the point defined by the maximum activation value
         # seen during a validation run. DNNs that employ BN or ReLU6 (or both) do not require this operation, as their
         # activations are already statistically bounded in terms of dynamic range.
-        logging.info("[ModelTrainer] Gather statistics for non batch-normed activations")
+        # logging.info("[ModelTrainer] Gather statistics for non batch-normed activations")
+
+        # dict = {"layer1.conv1": "layer1.bn1",
+        # "layer1.conv2": "layer1.bn2",
+        # "layer2.conv2": "layer2.bn2"}
+        # self.model.fold_bn(OrderedDict(dict))
+        dict = {"layer1.conv1": "layer1.bn2",
+            "layer1.conv2": "layer2.bn1",
+            "layer1.shortcut": "layer2.bn1",
+            "layer2.conv1": "layer2.bn2",
+            "layer2.conv2": "layer3.bn1",
+            "layer2.shortcut": "layer3.bn1",
+            "layer3.conv1": "layer3.bn2"}
+        self.model.fold_bn(OrderedDict(dict))
+        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+            validation_loader)
+        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+        print("[ModelTrainer]: After BN folding: %f" % acc)
+
+
         self.model.set_statistics_act()
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
         self.model.unset_statistics_act()
         self.model.reset_alpha_act()
-        logging.info("[ModelTrainer] %.2f" % acc)
+        logging.info("[ModelTrainer] statistics %.2f" % acc)
 
         precision_rule = self.regime['relaxation']
+
+        # [NeMO] Change precision and reset weight clipping parameters
+        self.model.change_precision(bits=16)
+        self.model.reset_alpha_weights()
+        # [NeMO] Export legacy-style INT-16 weights. Clipping parameters are changed!
+        self.model.export_weights_legacy_int16()
+        # [NeMO] Re-check validation accuracy
+        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+            validation_loader)
+        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+        print("[ModelTrainer]: After export: %f" % acc)
+
 
         # [NeMO] The evaluation engine performs a simple grid search to decide, among the possible quantization configurations,
         # which one is the most promising step for the relaxation procedure. It uses an internal heuristic binning validation
         # results in top-bin (high accuracy), middle-bin (reduced accuracy, but not garbage) and bottom-bin (garbage results).
         # It typically selects a step from the middle-bin to maximize training speed without sacrificing the final results.
-        evale = nemo.evaluation.EvaluationEngine(self.model, precision_rule=precision_rule,
-                                                 validate_fn=self.ValidateSingleEpoch,
-                                                 validate_data=validation_loader)
-        # while evale.step():
+        # evale = nemo.evaluation.EvaluationEngine(self.model, precision_rule=precision_rule,
+        #                                          validate_fn=self.ValidateSingleEpoch,
+        #                                          validate_data=validation_loader)
+        # # while evale.step():
         #     valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
         #         validation_loader)
         #     acc = torch.tensor(float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi))
@@ -74,18 +106,18 @@ class ModelTrainer:
         #     logging.info("[ModelTrainer] %.1f-bit W, %.1f-bit x: %.2f" % (
         #         evale.wgrid[evale.idx], evale.xgrid[evale.idx], acc))
         #Wbits, xbits = evale.get_next_config(upper_threshold=0.97)
-        Wbits = 16
-        xbits = 16
-        precision_rule['0']['W_bits'] = min(Wbits, precision_rule['0']['W_bits'])
-        precision_rule['0']['x_bits'] = min(xbits, precision_rule['0']['x_bits'])
-        logging.info("[ModelTrainer] Choosing %.1f-bit W, %.1f-bit x for first step" % (
-            precision_rule['0']['W_bits'], precision_rule['0']['x_bits']))
-
-        # [NeMO] The relaxation engine can be stepped to automatically change the DNN precisions and end training if the final
-        # target has been achieved.
-        self.relax = nemo.relaxation.RelaxationEngine(self.model, optimizer, criterion=None, trainloader=None,
-                                                 precision_rule=precision_rule, reset_alpha_weights=False,
-                                                 min_prec_dict=None, evaluator=evale)
+        # Wbits = 16
+        # xbits = 16
+        # precision_rule['0']['W_bits'] = min(Wbits, precision_rule['0']['W_bits'])
+        # precision_rule['0']['x_bits'] = min(xbits, precision_rule['0']['x_bits'])
+        # logging.info("[ModelTrainer] Choosing %.1f-bit W, %.1f-bit x for first step" % (
+        #     precision_rule['0']['W_bits'], precision_rule['0']['x_bits']))
+        #
+        # # [NeMO] The relaxation engine can be stepped to automatically change the DNN precisions and end training if the final
+        # # target has been achieved.
+        # self.relax = nemo.relaxation.RelaxationEngine(self.model, optimizer, criterion=None, trainloader=None,
+        #                                          precision_rule=precision_rule, reset_alpha_weights=False,
+        #                                          min_prec_dict=None, evaluator=evale)
 
 
 
@@ -184,10 +216,10 @@ class ModelTrainer:
 
             change_prec = False
             ended = False
-            if self.args.quantize:
-                change_prec, ended = self.relax.step(loss_epoch_m1, epoch, None)
-            if ended:
-                break
+            # if self.args.quantize:
+            #     change_prec, ended = self.relax.step(loss_epoch_m1, epoch, None)
+            # if ended:
+            #     break
 
             train_loss_x, train_loss_y, train_loss_z, train_loss_phi = self.TrainSingleEpoch(training_generator)
 

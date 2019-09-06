@@ -143,8 +143,8 @@ def main():
     trainer.Predict(test_loader)
 
     if args.save_model is not None:
-        #torch.save(trainer.model.state_dict(), args.save_model)
-        ModelManager.Write(trainer.GetModel(), 100, args.save_model)
+        torch.save(trainer.model.state_dict(), args.save_model)
+        #ModelManager.Write(trainer.GetModel(), 100, args.save_model)
 
 if __name__ == '__main__':
     main()
