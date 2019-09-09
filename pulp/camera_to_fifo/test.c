@@ -25,12 +25,15 @@ static rt_event_t *		event_capture;
 static rt_camera_t *	camera;
 static int frame_id = 0;
 
+
 static void end_of_frame() 
 {
 
 	rt_cam_control(camera, CMD_PAUSE, NULL);
 
-	WriteImageToFifo("../../../image_pipe", WIDTH, HEIGHT, L2_image);
+	//WriteImageToFifo("../../../image_pipe", WIDTH, HEIGHT, L2_image);
+	WriteImageToFifo("/home/usi/Documents/Drone/FrontNetPorting/pulp/image_pipe", WIDTH, HEIGHT, L2_image);
+
 
 	imgTransferDone = 1;
 }
@@ -69,7 +72,7 @@ int main()
   rt_cam_conf_t cam_conf;
   rt_camera_conf_init(&cam_conf);
   cam_conf.id = 0;
-  cam_conf.control_id = 1;
+  cam_conf.control_id = 1; //0 for crazy
   cam_conf.type = RT_CAM_TYPE_HIMAX;
   cam_conf.resolution = QVGA;
   cam_conf.format = HIMAX_MONO_COLOR;

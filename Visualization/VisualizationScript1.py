@@ -1,35 +1,18 @@
 from __future__ import print_function
+import logging
+import numpy as np
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
+from torch.utils import data
+import sys
+sys.path.append("../PyTorch/")
+
 from FrontNet import PreActBlock
 from FrontNet import FrontNet
 from DataProcessor import DataProcessor
 from ModelTrainer import ModelTrainer
 from Dataset import Dataset
-from torch.utils import data
 from ModelManager import ModelManager
-from DataVisualization import DataVisualization
-import logging
-import numpy as np
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
-
-
-
-
-# def VizOneFrameAtATime(trainer, test_generator, viz_function):
-#
-#     for batch_samples, batch_targets in test_generator:
-#         outputs = trainer.PerdictSingleSample(batch_samples)
-#         #fig = viz_function(batch_samples[0].cpu().numpy(), batch_targets[0], outputs)
-#         # canvas = FigureCanvas(fig)
-#         # canvas.draw()
-#         #
-#         # img = np.fromstring(canvas.tostring_rgb(), dtype=np.uint8, sep='')
-#         # img = img.reshape(canvas.get_width_height()[::-1] + (3,))
-#         # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-#         #
-#         # cv2.imshow("plot", img)
-#         # cv2.waitKey(5)
-#         DataVisualization.DisplayVideoFrame(batch_samples[0].cpu().numpy())
 
 
 def Viz4PoseVariables(frames, labels, outputs):
@@ -112,7 +95,7 @@ def Viz4PoseVariables(frames, labels, outputs):
 
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    #ani.save('plot.avi', writer=writer)
+    #ani.save('plot.mp4', writer=writer)
     ani.save('viz1.gif', dpi=80, writer='imagemagick')
     plt.show()
 
@@ -131,10 +114,10 @@ def main():
     logging.getLogger('').addHandler(console)
 
     model = FrontNet(PreActBlock, [1, 1, 1])
-    ModelManager.Read('Models/FrontNetGray-096.pt', model)
+    ModelManager.Read('../PyTorch/Models/DronetGray.pt', model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    [x_test, y_test] = DataProcessor.ProcessTestDataGray(DATA_PATH + "test_gray.pickle", 60, 108)
+    [x_test, y_test] = DataProcessor.ProcessTestDataGray(DATA_PATH + "test_vignette4.pickle", 60, 108)
     #x_test = x_test[:500]
     #y_test = y_test[:500]
     test_set = Dataset(x_test, y_test)

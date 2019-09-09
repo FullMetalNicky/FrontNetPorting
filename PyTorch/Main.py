@@ -1,6 +1,8 @@
 from __future__ import print_function
-from FrontNet import PreActBlock
+from PreActBlock import PreActBlock
 from FrontNet import FrontNet
+from Dronet import Dronet
+
 from DataProcessor import DataProcessor
 from ModelTrainer import ModelTrainer
 from Dataset import Dataset
@@ -8,85 +10,51 @@ from torch.utils import data
 from ModelManager import ModelManager
 import logging
 import numpy as np
+import cv2
 import sys
+import torch
 sys.path.append("../pulp/")
-from ImageIO import ImageIO
-import sklearn.metrics
+import pandas as pd
+from torchsummary import summary
 
 
+def TestInference():
 
-
-
-def TestCamerasAgainstEachPther():
+    frame = cv2.imread("sample2.png")
+    frame = cv2.resize(frame, (108, 60))
     model = FrontNet(PreActBlock, [1, 1, 1])
-    ModelManager.Read('Models/FrontNetGray-096.pt', model)
+    ModelManager.Read("Models/FrontNetMixed.pt", model)
     trainer = ModelTrainer(model)
+    v1_pred = trainer.InferSingleSample(frame)
+    print(v1_pred)
 
 
-    images = ImageIO.ReadImagesFromFolder("../data/himax_processed/", '.jpg', 0)
-    [x_live, y_live] = DataProcessor.ProcessInferenceData(images, 60, 108)
-    live_set = Dataset(x_live, y_live)
-    params = {'batch_size': 1,
-              'shuffle': False,
-              'num_workers': 0}
-    live_generator = data.DataLoader(live_set, **params)
+def MergeDatasets():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/"
 
-    y_pred_himax = trainer.Infer(live_generator)
-    y_pred_himax = np.reshape(y_pred_himax, (-1, 4))
+    dataset = pd.read_pickle(DATA_PATH + "train.pickle").values
+    dataset2 = pd.read_pickle(DATA_PATH + "TrainNicky.pickle").values
+    x_dataset = dataset[:, 0]
+    y_dataset = dataset[:, 1]
+    x_dataset2 = dataset2[:, 0]
+    y_dataset2 = dataset2[:, 1]
+    x_dataset = np.append(x_dataset, x_dataset2)
+    y_dataset = np.append(y_dataset, y_dataset2)
 
-    images = ImageIO.ReadImagesFromFolder("../data/bebop_processed/", '.jpg', 0)
-    [x_live, y_live] = DataProcessor.ProcessInferenceData(images, 60, 108)
-    live_set = Dataset(x_live, y_live)
-    params = {'batch_size': 1,
-              'shuffle': False,
-              'num_workers': 0}
-    live_generator = data.DataLoader(live_set, **params)
-
-    y_pred_bebop = trainer.Infer(live_generator)
-    y_pred_bebop = np.reshape(y_pred_bebop, (-1, 4))
-
-    for i in range(len(y_pred_bebop)):
-        logging.info("sample {}:".format(i))
-        himax_output = y_pred_himax[i]
-        logging.info("himax prediction is {}, {}, {}, {}".format(himax_output[0], himax_output[1], himax_output[2],
-                                                          himax_output[3]))
-        bebop_output = y_pred_bebop[i]
-        logging.info("bebop prediction is {}, {}, {}, {}".format(bebop_output[0], bebop_output[1], bebop_output[2],
-                                                          bebop_output[3]))
-
-    MSE = np.mean(np.power(y_pred_bebop - y_pred_himax, 2), 0)
-    MAE = np.mean(np.fabs(y_pred_bebop - y_pred_himax), 0)
-    logging.info("MSE is {}, {}, {}, {}".format(MSE[0], MSE[1], MSE[2], MSE[3]))
-    logging.info("MAE is {}, {}, {}, {}".format(MAE[0], MAE[1], MAE[2], MAE[3]))
+    print("dataset ready x:{} y:{}".format(len(x_dataset), len(y_dataset)))
+    df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
+    print("dataframe ready")
+    df.to_pickle("TrainNickyFull.pickle")
 
 
-    x = y_pred_bebop[:, 0]
-    x_gt = y_pred_himax[:, 0]
-
-    y = y_pred_bebop[:, 1]
-    y_gt = y_pred_himax[:, 1]
-
-    z = y_pred_bebop[:, 2]
-    z_gt = y_pred_himax[:, 2]
-
-    phi = y_pred_bebop[:, 3]
-    phi_gt = y_pred_himax[:, 3]
-
-    x_r2 = sklearn.metrics.r2_score(x_gt, x)
-    y_r2 = sklearn.metrics.r2_score(y_gt, y)
-    z_r2 = sklearn.metrics.r2_score(z_gt, z)
-    phi_r2 = sklearn.metrics.r2_score(phi_gt, phi)
-
-    logging.info("r^2 score is {}, {}, {}, {}".format(x_r2, y_r2, z_r2, phi_r2))
-
-
-def TrainGray():
-    model = FrontNet(PreActBlock, [1, 1, 1])
+def Train():
+    model = FrontNet(PreActBlock, [1, 1, 1], False)
     trainer = ModelTrainer(model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    [train_mean, train_std, x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainDataGray(
-        DATA_PATH + "train_gray.pickle", 60, 108)
+
+    [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
+        DATA_PATH + "HandHead.pickle", 60, 108)
 
     training_set = Dataset(x_train, y_train, True)
     params = {'batch_size': 64,
@@ -98,6 +66,34 @@ def TrainGray():
     validation_generator = data.DataLoader(validation_set, **params)
 
     trainer.Train(training_generator, validation_generator)
+
+
+
+def TrainGray():
+    model = Dronet(PreActBlock, [1, 1, 1], True)
+    summary(model, (1, 60, 108))
+    trainer = ModelTrainer(model)
+
+    DATA_PATH = "/Users/usi/PycharmProjects/data/"
+    [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
+        DATA_PATH + "train_vignette4.pickle", 60, 108, True)
+
+    training_set = Dataset(x_train, y_train, True)
+    params = {'batch_size': 64,
+              'shuffle': True,
+              'num_workers': 0}
+    training_generator = data.DataLoader(training_set, **params)
+
+    validation_set = Dataset(x_validation, y_validation)
+    validation_generator = data.DataLoader(validation_set, **params)
+
+    trainer.Train(training_generator, validation_generator)
+
+
+def ConvertToGray():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/"
+    DataProcessor.CreateGreyPickle(DATA_PATH + "train.pickle", 60, 108, "train_vignette4.pickle")
+    DataProcessor.CreateGreyPickle(DATA_PATH + "test.pickle", 60, 108, "test_vignette4.pickle")
 
 def main():
     logging.basicConfig(level=logging.INFO,
@@ -113,9 +109,11 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    TestCamerasAgainstEachPther()
-
-
+    #TrainGray()
+    #ConvertToGray()
+    #MergeDatasets()
+    Train()
+    #TestInference()
 
 if __name__ == '__main__':
     main()

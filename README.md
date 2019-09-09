@@ -67,6 +67,37 @@ Once I had the frames synced, I transformed the images to be more alike - gamma 
 # Real-time, Real-life 
 DBD
 
+### Project Structure
+The project has the following directory structure. Change it at your own risk.
+```bash
+.
+├── config.py                                   #global information
+├── data                                        #rosbags, calibration, dump folders
+│   ├── bebop_calibration.yaml
+│   └── calibration.yaml
+├── DataProcessing                  
+│   ├── Syncing scripts
+│   ├── Dataset creation scripts
+│   └── Images augmentation scripts
+├── MasterScript.py                             #himax capture->bridge->rosnode-> display & record
+├── pulp                                        #c code for the embedded device and python ROS nodes
+│   ├── Calibrator.py
+│   ├── CameraCalibration.py                    #calibrating the himax camera
+│   ├── camera_to_fifo
+│   │   ├── ..
+│   ├── camera_to_file
+│   │   ├── ..
+│   ├── fifo_to_disk
+│   │   ├── ...
+│   ├── HimaxPublisher.py                       #publishing to rosnode images transferred from the device
+│   └── Visualizer.py                           #broadcasts bebop and himax images concatenated
+├── PyTorch                                     #everything related to the NN
+|   ├── nemo 
+|   |   └── secrets!
+│   ├── Loading scripts
+│   ├── Training scripts
+│   └── Visualization scripts
+```
 ### Installation
 This code run on Ubuntou 16.04. If it happens to run on any other OS, consider it a miracle.
 The following dependencies are needed:

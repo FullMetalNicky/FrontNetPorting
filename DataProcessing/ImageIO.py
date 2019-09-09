@@ -4,6 +4,7 @@
 import numpy as np
 import cv2
 import os
+import sys
 
 
 class ImageIO:
@@ -26,6 +27,10 @@ class ImageIO:
             for file in f:
                 if imgType in file:
                     files.append(os.path.join(r, file))
+        if sys.version_info[0] >= 3:
+            files.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
+        else:
+            files.sort(key=lambda f: int(filter(str.isdigit, f)))
         for f in files:
             img = cv2.imread(f, read_mode)
             images.append(img)

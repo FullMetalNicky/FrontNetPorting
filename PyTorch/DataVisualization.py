@@ -74,15 +74,15 @@ class DataVisualization:
         plt.plot(epochs, y, color='blue', label='y')
         z = MSE[:, 2]
         z = z.cpu().numpy()
-        plt.plot(epochs, z, color='r', marker='o', label='z')
+        plt.plot(epochs, z, color='r', label='z')
         phi = MSE[:, 3]
         phi = phi.cpu().numpy()
-        plt.plot(epochs, phi, color='m', marker='o', label='phi')
+        plt.plot(epochs, phi, color='m', label='phi')
         plt.legend()
         plt.title('Pose Variables MSE')
         plt.xlabel('Epoch')
         plt.ylabel('MSE')
-        plt.xticks(epochs)
+        plt.xticks(np.arange(0, len(MSE), step=5))
         plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'MSE.png')
 
 
@@ -102,15 +102,15 @@ class DataVisualization:
         plt.plot(epochs, y, color='blue', label='y')
         z = MAE[:, 2]
         z = z.cpu().numpy()
-        plt.plot(epochs, z, color='r', marker='o', label='z')
+        plt.plot(epochs, z, color='r', label='z')
         phi = MAE[:, 3]
         phi = phi.cpu().numpy()
-        plt.plot(epochs, phi, color='m', marker='o', label='phi')
+        plt.plot(epochs, phi, color='m', label='phi')
         plt.legend()
         plt.title('Pose Variables MAE')
         plt.xlabel('Epoch')
         plt.ylabel('MAE')
-        plt.xticks(epochs)
+        plt.xticks(np.arange(0, len(MAE), step=5))
         plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'MAE.png')
 
 
@@ -129,15 +129,15 @@ class DataVisualization:
         plt.plot(epochs, y, color='blue', label='y')
         z = r2_score[:, 2]
         z = z.cpu().numpy()
-        plt.plot(epochs, z, color='r', marker='o', label='z')
+        plt.plot(epochs, z, color='r',  label='z')
         phi = r2_score[:, 3]
         phi = phi.cpu().numpy()
-        plt.plot(epochs, phi, color='m', marker='o', label='phi')
+        plt.plot(epochs, phi, color='m', label='phi')
         plt.legend()
         plt.title('Pose Variables r2_score')
         plt.xlabel('Epoch')
         plt.ylabel('r2_score')
-        plt.xticks(epochs)
+        plt.xticks(np.arange(0, len(r2_score), step=5))
         plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'Rsq.png')
 
 
@@ -192,6 +192,58 @@ class DataVisualization:
         plt.subplots_adjust(hspace=0.3)
         plt.suptitle('Ground Truth and Predictions vs time')
         plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'GTandPredVsTime.png')
+
+    @staticmethod
+    def PlotBebopandHimaxVsTime(bebop_output, himax_output):
+        DataVisualization.figure_counter += 1
+        plt.figure(DataVisualization.figure_counter, figsize=(20, 12))
+        plt.margins(0.1)
+
+        #gt_labels = torch.stack(gt_labels, 0)
+        #predictions = torch.stack(predictions, 0)
+        #gt_labels = gt_labels.cpu().numpy()
+        #gt_labels = np.reshape(gt_labels, (-1, 4))
+        #predictions = predictions.cpu().numpy()
+        #predictions = np.reshape(predictions, (-1, 4))
+        samples = len(bebop_output[:, 0])
+        samples = range(1, samples + 1)
+
+        gs = gridspec.GridSpec(2, 2)
+        ax = plt.subplot(gs[0, 0])
+        ax.set_title('x')
+        x_gt = bebop_output[:, 0]
+        x_pred = himax_output[:, 0]
+        plt.plot(samples, x_gt, color='green', label='bebop_output')
+        plt.plot(samples, x_pred, color='black', label='himax_output')
+        plt.legend()
+
+        ax = plt.subplot(gs[0, 1])
+        ax.set_title('y')
+        y_gt = bebop_output[:, 1]
+        y_pred = himax_output[:, 1]
+        plt.plot(samples, y_gt, color='blue', label='bebop_output')
+        plt.plot(samples, y_pred, color='black', label='himax_output')
+        plt.legend()
+
+        ax = plt.subplot(gs[1, 0])
+        ax.set_title('z')
+        z_gt = bebop_output[:, 2]
+        z_pred = himax_output[:, 2]
+        plt.plot(samples, z_gt, color='r', label='bebop_output')
+        plt.plot(samples, z_pred, color='black', label='himax_output')
+        plt.legend()
+
+        ax = plt.subplot(gs[1, 1])
+        ax.set_title('phi')
+        phi_gt = bebop_output[:, 3]
+        phi_pred = himax_output[:, 3]
+        plt.plot(samples, phi_gt, color='m', label='bebop_output')
+        plt.plot(samples, phi_pred, color='black', label='himax_output')
+        plt.legend()
+
+        plt.subplots_adjust(hspace=0.3)
+        plt.suptitle('bebop output and himax output vs time')
+        plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'bebopandhimaxVsTime.png')
 
 
     @staticmethod

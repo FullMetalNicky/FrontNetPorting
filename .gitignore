@@ -134,3 +134,5 @@ nemo/
 *build/
 *.out
 *.gch
+*.yaml
+*.avi

@@ -1,6 +1,9 @@
 from __future__ import print_function
-from FrontNet import PreActBlock
+from PreActBlock import PreActBlock
 from FrontNet import FrontNet
+from Dronet import Dronet
+
+
 from DataProcessor import DataProcessor
 from ModelTrainerETH import ModelTrainer
 from Dataset import Dataset
@@ -51,6 +54,8 @@ def Parse(parser):
     # [NeMO] The training regime (in JSON) used to store all NeMO configuration.
     parser.add_argument('--regime', default=None, type=str,
                         help='for loading the model')
+    parser.add_argument('--gray', default=None, type=int,
+                        help='for choosing the model')
     args = parser.parse_args()
 
     return args
@@ -58,9 +63,9 @@ def Parse(parser):
 
 def LoadData(args):
 
-    [train_mean, train_std, x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainDataGray(
-        args.load_trainset, 60, 108)
-    [x_test, y_test] = DataProcessor.ProcessTestDataGray(args.load_testset, 60, 108)
+    [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
+        args.load_trainset, 60, 108, True)
+    [x_test, y_test] = DataProcessor.ProcessTestData(args.load_testset, 60, 108, True)
 
 
     training_set = Dataset(x_train, y_train, True)
@@ -120,8 +125,10 @@ def main():
             except ValueError:
                 regime[k] = rr[k]
 
-
-    model = FrontNet(PreActBlock, [1, 1, 1])
+    if args.gray is not None:
+        model = Dronet(PreActBlock, [1, 1, 1], True)
+    else:
+        model = Dronet(PreActBlock, [1, 1, 1], False)
 
     # [NeMO] This used to preload the model with pretrained weights.
     if args.load_model is not None:
@@ -135,7 +142,8 @@ def main():
     trainer.Predict(test_loader)
 
     if args.save_model is not None:
-        torch.save(trainer.model.state_dict(), args.save_model)
+        #torch.save(trainer.model.state_dict(), args.save_model)
+        ModelManager.Write(trainer.GetModel(), 100, args.save_model)
 
 if __name__ == '__main__':
     main()
