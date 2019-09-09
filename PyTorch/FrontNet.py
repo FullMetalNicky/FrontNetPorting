@@ -18,7 +18,7 @@ class FrontNet(nn.Module):
         if isGray ==True:
             self.name = "FrontNetGray"
         else:
-            self.name = "FrontNet"
+            self.name = "FrontNetRGB"
         self.inplanes = 32
         self.dilation = 1
         self._norm_layer = nn.BatchNorm2d

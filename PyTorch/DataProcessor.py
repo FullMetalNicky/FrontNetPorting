@@ -40,7 +40,6 @@ class DataProcessor:
         y_train = y_train[ix_tr, :]
 
         shape_ = len(x_train)
-        print(shape_)
 
         #sel_idx = random.sample(range(0, shape_), k=(size-n_val))
         sel_idx = random.sample(range(0, shape_), k=50000)

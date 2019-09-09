@@ -17,7 +17,7 @@ class Dronet(nn.Module):
         if isGray ==True:
             self.name = "DronetGray"
         else:
-            self.name = "Dronet"
+            self.name = "DronetRGB"
         self.inplanes = 32
         self.dilation = 1
         self._norm_layer = nn.BatchNorm2d
