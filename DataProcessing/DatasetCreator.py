@@ -64,6 +64,9 @@ class DatasetCreator:
 		self.body_topic = "optitrack/hand"
 
 	def FrameSelector(self):
+		"""Helps to select where to start and stop the video
+		When you wish to mark a frame for start/end, press 's', for viewing the next frame press any other key
+		"""
 
 		bridge = CvBridge()
 		bebop_msgs_count = self.ts.GetMessagesCount(self.camera_topic)
@@ -167,7 +170,7 @@ class DatasetCreator:
 		df.to_pickle(datasetName)
 
 
-	def CreateHimaxDataset(self, delay, isHand, datasetName, start = 0, end = sys.maxint):
+	def CreateHimaxDataset(self, delay, datasetName, start = 0, end = sys.maxint):
 	
 		print("unpacking...")
 		#unpack the stamps
@@ -184,7 +187,7 @@ class DatasetCreator:
 		
 		#get the sync ids 
 		otherTopics = [hand_stamps, head_stamps, drone_stamps]
-		sync_bebop_ids, sync_other_ids = self.ts.SyncStampsToMain(camera_stamps, otherTopics, delay)
+		sync_bebop_ids, sync_other_ids = self.ts.SyncStampsToMain(camera_stamps, otherTopics, 0)
 		sync_hand_ids = sync_other_ids[0]
 		sync_head_ids = sync_other_ids[1]
 		sync_drone_ids = sync_other_ids[2]	
@@ -269,6 +272,19 @@ class DatasetCreator:
 
 	@staticmethod
 	def JoinPickleFiles(fileList, datasetName, folderPath=""):
+		"""joins several pickle files into one big .pickle file
+
+	    Parameters
+	    ----------
+	    fileList : list
+	        list of the file locations of all the .pickle
+	    datasetName : str
+	        name of the new .pickle file
+	    isBebop : bool, optional
+	        True if you want RGB dataset for the bebop, False if you want Himax-tailored dataset
+	    folderPath : str, optional
+	        if all files are in the same folder, you can only specify the folder path once
+	    """
 		x_dataset = []
 		y_dataset = []
 		z_dataset = []

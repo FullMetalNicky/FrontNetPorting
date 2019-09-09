@@ -27,22 +27,34 @@ def TestCameraCalibration():
 
 def TestImageTransformer():
 
-	himaxImages = ImageIO.ReadImagesFromFolder(config.folder_path + "/data/himax/", '.jpg')
-	bebopImages = ImageIO.ReadImagesFromFolder(config.folder_path + "/data/bebop/", '.jpg')
+	#himaxImages = ImageIO.ReadImagesFromFolder(config.folder_path + "/data/himax/", '.jpg')
+	#bebopImages = ImageIO.ReadImagesFromFolder(config.folder_path + "/data/bebop/", '.jpg')
 	it = ImageTransformer()
-	himaxTransImages, bebopTransImages = it. TransformImages(config.folder_path + "/data/calibration.yaml", config.folder_path + "/data/bebop_calibration.yaml", himaxImages, bebopImages)
-	ImageIO.WriteImagesToFolder(himaxTransImages, config.folder_path + "/data/test/", '.jpg')
+	himax_fovx, himax_fovy, himax_h, himax_w = it.CalculateFOVfromCalibration(config.folder_path + "/data/calibration.yaml")
+	bebop_fovx, bebop_fovy, bebop_h, bebop_w = it.CalculateFOVfromCalibration(config.folder_path + "/data/bebop_calibration.yaml")
+	x_ratio = bebop_fovx / himax_fovx
+	y_ratio = bebop_fovy / himax_fovy
+
+	new_size, shift_x, shift_y = it.calc_crop_parameters(x_ratio, y_ratio, himax_h, himax_w)
+	print("new size:{}, shift_x:{}, shift_y:{}".format(new_size, shift_x, shift_y))
+	#new size:(306, 183), shift_x:9.0, shift_y:30.5
+	#himaxTransImages, bebopTransImages = it. TransformImages(config.folder_path + "/data/calibration.yaml", config.folder_path + "/data/bebop_calibration.yaml", himaxImages, bebopImages)
+	#ImageIO.WriteImagesToFolder(himaxTransImages, config.folder_path + "/data/test/", '.jpg')
 
 def TestDatasetCreator():
-	# subject_name = "test1"
-	# dc = DatasetCreator(config.folder_path + "/data/Nicky/" + subject_name + ".bag")
-	# start_frame, end_frame = dc.FrameSelector()
-	# dc.CreateBebopDataset(0, config.folder_path + "/data/Nicky/" + subject_name + "Hand.pickle", start_frame, end_frame)
-	folderPath = config.folder_path + "/data/Nicky/"
-	fileList = ["train1Hand.pickle", "train2Hand.pickle", "train3Hand.pickle", "train4Hand.pickle"]
-	# # fileList = ["lilithHand.pickle", "dario1Hand.pickle", "dario2Hand.pickle", "nicky1Hand.pickle", 
-	# # "nicky2Hand.pickle", "mirko1Hand.pickle", "mirko2Hand.pickle"]
-	DatasetCreator.JoinPickleFiles(fileList, config.folder_path + "/data/Nicky/TrainNicky.pickle", folderPath)
+	subject_name = "davide1"
+	dc = DatasetCreator(config.folder_path + "/data/Hand/" + subject_name + ".bag")
+	start_frame, end_frame = dc.FrameSelector()
+	dc.CreateBebopDataset(0, config.folder_path + "/data/Hand/" + subject_name + "Hand.pickle", start_frame, end_frame)
+
+	subject_name = "davide2"
+	dc2 = DatasetCreator(config.folder_path + "/data/Hand/" + subject_name + ".bag")
+	start_frame, end_frame = dc2.FrameSelector()
+	dc2.CreateBebopDataset(0, config.folder_path + "/data/Hand/" + subject_name + "Hand.pickle", start_frame, end_frame)
+
+	folderPath = config.folder_path + "/data/Hand/"
+	fileList = ["davide1Hand.pickle", "davide2Hand.pickle"]
+	DatasetCreator.JoinPickleFiles(fileList, config.folder_path + "/data/Hand/DavideHand.pickle", folderPath)
 	
 
 	
@@ -51,8 +63,8 @@ def main():
 	#TestImageIO()
 	#TestRosbagUnpacker()
 	#TestCameraSynchronizer()
-	#TestImageTransformer()
-	TestDatasetCreator()
+	TestImageTransformer()
+	#TestDatasetCreator()
 
 
 if __name__ == '__main__':
