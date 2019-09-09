@@ -147,7 +147,7 @@ def main():
     logging.getLogger('').addHandler(console)
 
     model = Dronet(PreActBlock, [1, 1, 1], True)
-    ModelManager.Read('../PyTorch/Models/DronetGray.pt', model)
+    ModelManager.Read('../PyTorch/Models/Dronet-032.pt', model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
     [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "test_vignette4.pickle", 60, 108, True)

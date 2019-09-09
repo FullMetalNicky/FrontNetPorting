@@ -9,14 +9,8 @@ import matplotlib.patches as patches
 
 import sys
 sys.path.append("../PyTorch/")
-
-from FrontNet import PreActBlock
-from FrontNet import FrontNet
 from DataProcessor import DataProcessor
-from ModelTrainer import ModelTrainer
 from Dataset import Dataset
-from torch.utils import data
-from ModelManager import ModelManager
 
 
 def VizDroneBEV(frames, hand_labels, head_labels):

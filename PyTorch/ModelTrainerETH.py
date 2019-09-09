@@ -37,6 +37,12 @@ class ModelTrainer:
         return self.model
 
     def Quantize(self, validation_loader):
+
+        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+            validation_loader)
+        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+        print("[ModelTrainer]: Before quantization process: %f" % acc)
+
         # [NeMO] This call "transforms" the model into a quantization-aware one, which is printed immediately afterwards.
         self.model = nemo.transform.quantize_pact(self.model)
         logging.info("[ModelTrainer] Model: %s", self.model)
@@ -239,7 +245,7 @@ class ModelTrainer:
             logging.info('[ModelTrainer] Validation MAE: {}'.format(MAE))
             logging.info('[ModelTrainer] Validation r_score: {}'.format(r_score))
 
-            checkpoint_filename = self.folderPath + 'Dronet-{:03d}.pt'.format(epoch)
+            checkpoint_filename = self.folderPath + self.model.name + '-{:03d}.pt'.format(epoch)
             early_stopping(valid_loss, self.model, epoch, checkpoint_filename)
             if early_stopping.early_stop:
                 logging.info("[ModelTrainer] Early stopping")

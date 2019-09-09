@@ -13,7 +13,7 @@ sys.path.append("../pulp/")
 from ImageIO import ImageIO
 
 sys.path.append("../PyTorch/")
-from FrontNet import PreActBlock
+from PreActBlock import PreActBlock
 from FrontNet import FrontNet
 from DataProcessor import DataProcessor
 from ModelTrainer import ModelTrainer

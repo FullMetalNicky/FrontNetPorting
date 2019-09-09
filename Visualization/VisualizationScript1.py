@@ -7,7 +7,7 @@ from torch.utils import data
 import sys
 sys.path.append("../PyTorch/")
 
-from FrontNet import PreActBlock
+from PreActBlock import PreActBlock
 from FrontNet import FrontNet
 from DataProcessor import DataProcessor
 from ModelTrainer import ModelTrainer
@@ -114,7 +114,7 @@ def main():
     logging.getLogger('').addHandler(console)
 
     model = FrontNet(PreActBlock, [1, 1, 1])
-    ModelManager.Read('../PyTorch/Models/DronetGray.pt', model)
+    ModelManager.Read('../PyTorch/Models/Dronet-032.pt', model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
     [x_test, y_test] = DataProcessor.ProcessTestDataGray(DATA_PATH + "test_vignette4.pickle", 60, 108)

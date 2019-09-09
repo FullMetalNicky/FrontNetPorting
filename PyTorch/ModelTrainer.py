@@ -84,7 +84,6 @@ class ModelTrainer:
         with torch.no_grad():
             for batch_samples, batch_targets in validation_generator:
                 gt_labels.extend(batch_targets.cpu().numpy())
-                # gt_labels.extend(batch_targets)
                 batch_targets = batch_targets.to(self.device)
                 batch_samples = batch_samples.to(self.device)
                 outputs = self.model(batch_samples)
@@ -142,7 +141,7 @@ class ModelTrainer:
             logging.info('Validation MAE: {}'.format(MAE))
             logging.info('Validation r_score: {}'.format(r_score))
 
-            checkpoint_filename = self.folderPath + 'FrontNet-{:03d}.pkl'.format(epoch)
+            checkpoint_filename = self.folderPath + self.model.name + '-{:03d}.pkl'.format(epoch)
             early_stopping(valid_loss, self.model, epoch, checkpoint_filename)
             if early_stopping.early_stop:
                 logging.info("Early stopping")

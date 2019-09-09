@@ -11,9 +11,6 @@ from ModelManager import ModelManager
 import logging
 import numpy as np
 import cv2
-import sys
-import torch
-sys.path.append("../pulp/")
 import pandas as pd
 from torchsummary import summary
 
@@ -45,7 +42,6 @@ def MergeDatasets():
     df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
     print("dataframe ready")
     df.to_pickle("TrainNickyFull.pickle")
-
 
 def Train():
     model = FrontNet(PreActBlock, [1, 1, 1], False)
@@ -109,10 +105,10 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    #TrainGray()
+    TrainGray()
     #ConvertToGray()
     #MergeDatasets()
-    Train()
+    #Train()
     #TestInference()
 
 if __name__ == '__main__':
