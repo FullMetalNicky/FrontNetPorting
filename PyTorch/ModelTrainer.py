@@ -84,7 +84,6 @@ class ModelTrainer:
         with torch.no_grad():
             for batch_samples, batch_targets in validation_generator:
                 gt_labels.extend(batch_targets.cpu().numpy())
-                # gt_labels.extend(batch_targets)
                 batch_targets = batch_targets.to(self.device)
                 batch_samples = batch_samples.to(self.device)
                 outputs = self.model(batch_samples)

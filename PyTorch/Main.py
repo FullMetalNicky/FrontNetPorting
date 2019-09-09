@@ -105,7 +105,7 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    #TrainGray()
+    TrainGray()
     #ConvertToGray()
     #MergeDatasets()
     #Train()

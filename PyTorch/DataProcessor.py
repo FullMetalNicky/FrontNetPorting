@@ -11,6 +11,27 @@ class DataProcessor:
 
     @staticmethod
     def ProcessTrainData(trainPath, image_height, image_width, isGray = False, isExtended=False):
+        """Reads the .pickle file and converts it into a format suitable fot training
+
+            Parameters
+            ----------
+            trainPath : str
+                The file location of the .pickle
+            image_height : int
+                Please...
+            image_width : int
+                Please...
+            isGray : bool, optional
+                True is the dataset is of 1-channel (gray) images, False if RGB
+            isExtended : bool, optional
+                True if the dataset contains both head and hand pose and you wish to retrieve both
+
+
+            Returns
+            -------
+            list
+                list of video frames and list of labels (poses)
+            """
         train_set = pd.read_pickle(trainPath).values
 
         logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
@@ -60,6 +81,27 @@ class DataProcessor:
 
     @staticmethod
     def ProcessTestData(testPath, image_height, image_width, isGray = False, isExtended=False):
+        """Reads the .pickle file and converts it into a format suitable fot testing
+
+            Parameters
+            ----------
+            testPath : str
+                The file location of the .pickle
+            image_height : int
+                Please...
+            image_width : int
+                Please...
+            isGray : bool, optional
+                True is the dataset is of 1-channel (gray) images, False if RGB
+            isExtended : bool, optional
+                True if the dataset contains both head and hand pose and you wish to retrieve both
+
+
+            Returns
+            -------
+            list
+                list of video frames and list of labels (poses)
+            """
         test_set = pd.read_pickle(testPath).values
         logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
 
@@ -85,6 +127,24 @@ class DataProcessor:
 
     @staticmethod
     def ProcessInferenceData(images, image_height, image_width, isGray=False):
+        """Converts a list of images into a format suitable fot inference
+
+            Parameters
+            ----------
+            images : list
+                list of images
+            image_height : int
+                Please...
+            image_width : int
+                Please...
+            isGray : bool, optional
+                True is the dataset is of 1-channel (gray) images, False if RGB
+
+            Returns
+            -------
+            list
+                list of video frames and list of labels (poses, which are garbage)
+            """
 
         x_test = np.stack(images, axis=0).astype(np.float32)
         if isGray == True:
@@ -101,7 +161,21 @@ class DataProcessor:
         return [x_test, y_test]
 
     @staticmethod
-    def CreateGreyPickle(trainPath, image_height, image_width, file_name="train.pickle"):
+    def CreateGreyPickle(trainPath, image_height, image_width, file_name):
+        """Converts Dario's RGB dataset to a gray + vignette dataset
+
+            Parameters
+            ----------
+            images : list
+                list of images
+            image_height : int
+                Please...
+            image_width : int
+                Please...
+            file_name : str
+                name of the new .pickle
+
+            """
         train_set = pd.read_pickle(trainPath).values
         logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
 
