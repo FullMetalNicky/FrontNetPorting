@@ -11,9 +11,6 @@ from ModelManager import ModelManager
 import logging
 import numpy as np
 import cv2
-import sys
-import torch
-sys.path.append("../pulp/")
 import pandas as pd
 from torchsummary import summary
 

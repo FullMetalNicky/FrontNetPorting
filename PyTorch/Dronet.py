@@ -1,5 +1,4 @@
 import torch.nn as nn
-from torch import functional as F
 from PreActBlock import PreActBlock
 
 

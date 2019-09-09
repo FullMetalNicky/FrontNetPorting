@@ -7,7 +7,7 @@ from torch.utils import data
 import sys
 sys.path.append("../PyTorch/")
 
-from FrontNet import PreActBlock
+from PreActBlock import PreActBlock
 from FrontNet import FrontNet
 from DataProcessor import DataProcessor
 from ModelTrainer import ModelTrainer

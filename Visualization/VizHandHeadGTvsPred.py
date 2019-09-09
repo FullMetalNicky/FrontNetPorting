@@ -5,16 +5,16 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import matplotlib.patches as patches
+from torch.utils import data
 
 import sys
 sys.path.append("../PyTorch/")
 
-from FrontNet import PreActBlock
+from PreActBlock import PreActBlock
 from FrontNet import FrontNet
 from DataProcessor import DataProcessor
 from ModelTrainer import ModelTrainer
 from Dataset import Dataset
-from torch.utils import data
 from ModelManager import ModelManager
 
 
