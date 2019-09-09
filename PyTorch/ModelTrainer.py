@@ -142,7 +142,7 @@ class ModelTrainer:
             logging.info('Validation MAE: {}'.format(MAE))
             logging.info('Validation r_score: {}'.format(r_score))
 
-            checkpoint_filename = self.folderPath + 'FrontNet-{:03d}.pkl'.format(epoch)
+            checkpoint_filename = self.folderPath + self.model.name + '-{:03d}.pkl'.format(epoch)
             early_stopping(valid_loss, self.model, epoch, checkpoint_filename)
             if early_stopping.early_stop:
                 logging.info("Early stopping")

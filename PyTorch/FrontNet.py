@@ -15,6 +15,10 @@ class FrontNet(nn.Module):
     def __init__(self, block, layers, isGray=False):
         super(FrontNet, self).__init__()
 
+        if isGray ==True:
+            self.name = "FrontNetGray"
+        else:
+            self.name = "FrontNet"
         self.inplanes = 32
         self.dilation = 1
         self._norm_layer = nn.BatchNorm2d

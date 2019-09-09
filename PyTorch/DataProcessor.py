@@ -15,7 +15,8 @@ class DataProcessor:
 
         logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
         size = len(train_set[:, 0])
-        n_val = int(float(size) * 0.2)
+        #n_val = int(float(size) * 0.2)
+        n_val = 13000
 
         np.random.seed()
         # split between train and test sets:
@@ -32,16 +33,21 @@ class DataProcessor:
         y_train = train_set[:, 1]
         y_train = np.vstack(y_train[:]).astype(np.float32)
 
-        ix_val, ix_tr = np.split(np.random.permutation(x_train.shape[0]), [n_val])
+        ix_val, ix_tr = np.split(np.random.permutation(train_set.shape[0]), [n_val])
         x_validation = x_train[ix_val, :]
         x_train = x_train[ix_tr, :]
         y_validation = y_train[ix_val, :]
         y_train = y_train[ix_tr, :]
 
-        shape_ = x_train.shape[0]
-        sel_idx = random.sample(range(0, shape_), k=(size-n_val))
+        shape_ = len(x_train)
+        print(shape_)
+
+        #sel_idx = random.sample(range(0, shape_), k=(size-n_val))
+        sel_idx = random.sample(range(0, shape_), k=50000)
         x_train = x_train[sel_idx, :]
         y_train = y_train[sel_idx, :]
+
+
 
         if isExtended == True:
             z_train = train_set[:, 2]

@@ -14,6 +14,10 @@ class Dronet(nn.Module):
     def __init__(self, block, layers, isGray=False):
         super(Dronet, self).__init__()
 
+        if isGray ==True:
+            self.name = "DronetGray"
+        else:
+            self.name = "Dronet"
         self.inplanes = 32
         self.dilation = 1
         self._norm_layer = nn.BatchNorm2d
