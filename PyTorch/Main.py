@@ -1,7 +1,6 @@
 from __future__ import print_function
 from PreActBlock import PreActBlock
 from FrontNet import FrontNet
-from GrayFrontNet import GrayFrontNet
 from Dronet import Dronet
 
 from DataProcessor import DataProcessor
@@ -49,7 +48,7 @@ def MergeDatasets():
 
 
 def Train():
-    model = FrontNet(PreActBlock, [1, 1, 1])
+    model = FrontNet(PreActBlock, [1, 1, 1], False)
     trainer = ModelTrainer(model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
@@ -110,10 +109,10 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    TrainGray()
+    #TrainGray()
     #ConvertToGray()
     #MergeDatasets()
-    #Train()
+    Train()
     #TestInference()
 
 if __name__ == '__main__':

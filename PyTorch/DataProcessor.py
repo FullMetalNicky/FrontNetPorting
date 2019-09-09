@@ -10,11 +10,8 @@ from ImageTransformer import ImageTransformer
 class DataProcessor:
 
     @staticmethod
-    def ProcessTrainData(trainPath, image_height, image_width, isGray = False):
+    def ProcessTrainData(trainPath, image_height, image_width, isGray = False, isExtended=False):
         train_set = pd.read_pickle(trainPath).values
-        isExtended = False
-        #if (train_set.shape[1] == 3):
-            #isExtended = True
 
         logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
         size = len(train_set[:, 0])
@@ -57,7 +54,7 @@ class DataProcessor:
         return [x_train, x_validation, y_train, y_validation]
 
     @staticmethod
-    def ProcessTestData(testPath, image_height, image_width, isGray = False):
+    def ProcessTestData(testPath, image_height, image_width, isGray = False, isExtended=False):
         test_set = pd.read_pickle(testPath).values
         logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
 
@@ -72,14 +69,14 @@ class DataProcessor:
         y_test = test_set[:, 1]
         y_test = np.vstack(y_test[:]).astype(np.float32)
 
-        return [x_test, y_test]
 
-        # if(test_set.shape[1] == 2):
-        #     return [x_test, y_test]
-        # elif (test_set.shape[1] == 3):
-        #     z_test = test_set[:, 2]
-        #     z_test = np.vstack(z_test[:]).astype(np.float32)
-        #     return [x_test, y_test, z_test]
+        if isExtended ==True:
+            z_test = test_set[:, 2]
+            z_test = np.vstack(z_test[:]).astype(np.float32)
+            return [x_test, y_test, z_test]
+
+
+        return [x_test, y_test]
 
     @staticmethod
     def ProcessInferenceData(images, image_height, image_width, isGray=False):
@@ -120,8 +117,6 @@ class DataProcessor:
             gray_image = gray_image.astype(np.uint8)
             x_train_grey.append(gray_image)
 
-        #x_train_grey = np.array(x_train_grey)
-        #x_train_grey = x_train_grey.flatten().reshape(len(x_train), -1)
         y_train = train_set[:, 1]
 
         df = pd.DataFrame(data={'x': x_train_grey, 'y': y_train})

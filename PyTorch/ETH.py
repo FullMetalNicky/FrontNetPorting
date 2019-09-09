@@ -1,7 +1,6 @@
 from __future__ import print_function
 from PreActBlock import PreActBlock
 from FrontNet import FrontNet
-from GrayFrontNet import GrayFrontNet
 from Dronet import Dronet
 
 
