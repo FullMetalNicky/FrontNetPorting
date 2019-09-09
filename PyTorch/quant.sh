@@ -8,5 +8,5 @@
 
 CUDA_VISIBLE_DEVICES=1
 
-python3 ETH.py --regime regime.json --epochs 10 --load-trainset "/home/nickyz/data/train.pickle" --load-testset "/home/nickyz/data/test.pickle" --load-model "Models/FrontNet-097.pkl" --quantiz
+python3 ETH.py --regime regime.json --epochs 10 --gray 1 --load-trainset "/home/nickyz/data/train_vignette4.pickle" --load-testset "/home/nickyz/data/test_vignette4.pickle" --load-model "Models/DronetGray.pt" --quantiz --save-model "DronetGrayQ.pt"
 
