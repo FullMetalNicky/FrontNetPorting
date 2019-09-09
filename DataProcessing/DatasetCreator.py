@@ -245,6 +245,7 @@ class DatasetCreator:
 
 		for i in range(len(himax_msgs)):
 			cv_image = bridge.imgmsg_to_cv2(himax_msgs[i])
+			#need to crop too?
 			cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
 			x_dataset.append(cv_image)		
 
