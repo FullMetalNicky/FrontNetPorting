@@ -15,8 +15,8 @@ class DataProcessor:
 
         logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
         size = len(train_set[:, 0])
-        #n_val = int(float(size) * 0.2)
-        n_val = 13000
+        n_val = int(float(size) * 0.2)
+        #n_val = 13000
 
         np.random.seed()
         # split between train and test sets:
@@ -41,8 +41,8 @@ class DataProcessor:
 
         shape_ = len(x_train)
 
-        #sel_idx = random.sample(range(0, shape_), k=(size-n_val))
-        sel_idx = random.sample(range(0, shape_), k=50000)
+        sel_idx = random.sample(range(0, shape_), k=(size-n_val))
+        #sel_idx = random.sample(range(0, shape_), k=50000)
         x_train = x_train[sel_idx, :]
         y_train = y_train[sel_idx, :]
 

@@ -43,7 +43,6 @@ def MergeDatasets():
     print("dataframe ready")
     df.to_pickle("TrainNickyFull.pickle")
 
-
 def Train():
     model = FrontNet(PreActBlock, [1, 1, 1], False)
     trainer = ModelTrainer(model)
@@ -109,7 +108,7 @@ def main():
     #TrainGray()
     #ConvertToGray()
     #MergeDatasets()
-    Train()
+    #Train()
     #TestInference()
 
 if __name__ == '__main__':
