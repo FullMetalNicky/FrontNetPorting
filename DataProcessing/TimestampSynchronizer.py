@@ -144,6 +144,22 @@ class TimestampSynchronizer:
 
 
 	def GetMessages(self, topic1, startNum = 1, stopNum=np.inf):
+		"""Returns a list of messages for the specified topic
+
+        Parameters
+        ----------
+        topic1 : str
+			the name of the topic whose messages you want to retrieve
+        startNum : int, optional
+            numbre of frame to start from
+        stopNum : int, optional 
+        	numbre of the last wanted frame
+        
+        Returns
+        -------
+        list
+            list of ROS messages
+        """
 		bag = rosbag.Bag(self.bagName)
 		topic_msgs = []
 		topic_cnt = 1
@@ -162,6 +178,18 @@ class TimestampSynchronizer:
 		return topic_msgs
 
 	def GetMessagesCount(self, topic1):
+		"""Returns a count of messages for the specified topic
+
+        Parameters
+        ----------
+        topic1 : str
+			the name of the topic whose messages you want to retrieve
+       
+        Returns
+        -------
+        int
+            number of ROS messages of that topic
+        """
 		bag = rosbag.Bag(self.bagName)
 		topic_cnt = 0
 
