@@ -106,6 +106,21 @@ class DatasetCreator:
 
 
 	def CreateBebopDataset(self, delay, datasetName, start = 0, end = sys.maxint):
+		"""Converts rosbag to format suitable for training/testing. 
+		if start_frame, end_frame are unknown, FrameSelector will help you choose how to trim the video
+		the output .pickle is organized as 'x': video frames, 'y': hand poses, 'z' : head poses
+
+	    Parameters
+	    ----------
+	    delay : int
+	        The delay between the camera and the optitrack 
+	    datasetName : str
+	        name of the new .pickle file
+	    start_frame : int, optional
+	        if known, the timestamp in ns of the frame you wish to start from 
+	    end_frame : int, optional
+	        if known, the timestamp in ns of the frame you wish to finish at
+	    """
 	
 		print("unpacking...")
 		#unpack the stamps
@@ -171,6 +186,21 @@ class DatasetCreator:
 
 
 	def CreateHimaxDataset(self, delay, datasetName, start = 0, end = sys.maxint):
+		"""Converts rosbag to format suitable for training/testing. 
+		if start_frame, end_frame are unknown, FrameSelector will help you choose how to trim the video
+		the output .pickle is organized as 'x': video frames, 'y': hand poses, 'z' : head poses
+
+	    Parameters
+	    ----------
+	    delay : int
+	        The delay between the himax camera and the optitrack or bebop camera
+	    datasetName : str
+	        name of the new .pickle file
+	    start_frame : int, optional
+	        if known, the timestamp in ns of the frame you wish to start from 
+	    end_frame : int, optional
+	        if known, the timestamp in ns of the frame you wish to finish at
+	    """
 	
 		print("unpacking...")
 		#unpack the stamps
