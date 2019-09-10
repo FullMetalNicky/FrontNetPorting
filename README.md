@@ -108,6 +108,12 @@ The following dependencies are needed:
 
 Following the installation instruction on the [PULP-dronet](https://github.com/pulp-platform/pulp-dronet) would be the easiest, as they cover all the PULP-related dependencies.
 
+### How-To Guide
+* Recording - In order to redcord, you may use the MasterScript.py. This will run the c code needed to transfer images from the device to the pipe, the ROS node that reads from the pipe and broadcasts the topic and viewers that allow you to see the streams. 
+* Creating Dataset from Rosbags - Once you have rosbags recorded, you can converted it to a .pickle, with the proper format for training, using DataProcessing/Main.py. 
+* Training, Testing, Infering - Examples for how to execute tasks related to PyTorch can be found in PyTorch/Main.py
+
+
 ### Datasets
 
 ### Development
