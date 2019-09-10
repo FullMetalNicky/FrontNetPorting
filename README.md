@@ -36,7 +36,7 @@ The performance was evaluated in several ways:
 * R2 score
 
 <p align="center">
-<img src="/resources/train.gif" alt="drawing"/>
+<img src="/resources/stats.gif" alt="drawing"/>
 </p>
 
 Two visualization tools are implemented:
