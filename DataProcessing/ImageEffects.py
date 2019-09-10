@@ -11,7 +11,20 @@ class ImageEffects:
 
 	@staticmethod
 	def ConcatImages(img1, img2):
+	"""Writes a list of images to folder
 
+        Parameters
+        ----------
+        img1 : OpenCV image type
+            First image to be concatenated
+        img2 : OpenCV image type
+            second image to be concatenated
+        
+        Returns
+        -------
+        OpenCV image type
+            concatenated image
+        """
 		if len(img1.shape) < 3:
 			img1 = cv2.cvtColor(img1, cv2.COLOR_GRAY2RGB)
 		if len(img2.shape) < 3:
@@ -41,6 +54,22 @@ class ImageEffects:
 
 	@staticmethod
 	def GetVignetteMask(rows, cols, sigma=150):
+		"""Generates a vignette mask
+
+        Parameters
+        ----------
+        rows : int
+            height of the mask
+        cols : int
+            width of the mask
+        sigma : int, optional 
+        	the sigma of the Gaussian kernel
+        
+        Returns
+        -------
+        OpenCV image type
+            vignette mask
+        """
 
 		kernel_x = cv2.getGaussianKernel(cols,sigma)
 		kernel_y = cv2.getGaussianKernel(rows,sigma)

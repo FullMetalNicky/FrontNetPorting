@@ -11,6 +11,17 @@ class ImageIO:
 
     @staticmethod
     def WriteImagesToFolder(images, folderName, imgType='.jpg'):
+         """Writes a list of images to folder
+
+            Parameters
+            ----------
+            images : list
+                list of images
+            folderName : str
+                location for the images to be saved
+            imgType : str, optional
+                type of image format)
+            """
         frame_id = 1
 
         for img in images:
@@ -20,6 +31,22 @@ class ImageIO:
 
     @staticmethod
     def ReadImagesFromFolder(folderName, imgType='.jpg', read_mode=1):
+        """Writes a list of images to folder
+
+            Parameters
+            ----------
+            folderName : str
+                location for the images to be saved
+            imgType : str, optional
+                type of image format
+            read_mode: int, optional
+                OpenCV reading mode 
+            
+            Returns
+            -------
+            list
+                list of images found in the folder
+            """
 
         files = []
         images = []
