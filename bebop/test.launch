@@ -1,0 +1,21 @@
+<launch>
+  <node name="test" type="controller_node.py" pkg="test_dario" ns="bebop" output="screen">
+    <remap from="video" to="image_raw/compressed"/>
+    <remap from="mocap_odom_drone" to="mocap_odom"/>
+    <remap from="mocap_odom_head" to="/head/mocap_odom"/>
+    <remap from="vo_odom_drone" to="odom"/>
+    <!-- <remap from="cmd_vel" to="cmd_vel_input"/> -->
+    <param name="v1_model_path" value="$(find test_dario)/models/FrontNetMixed.pt"/>
+    <param name="v2_model_path" value="$(find test_dario)/models/FrontNet.pkl"/>
+    <param name="v3_model_path" value=""/>
+    <param name="enable_debug_pubs" value="false"/>
+    <param name="controller" value="0"/>
+    <param name="start_x" value="1.2"/>
+    <param name="start_y" value="1.2"/>
+    <param name="start_z" value="1.8"/>
+    <param name="start_yaw" value="-1.57"/>
+    <param name="use_mocap" value="false"/>
+    <param name="cmd_topic" value="cmd_vel_input"/>
+  </node>
+  <!-- <node name='bag' pkg="rosbag" type="record" args='-o $(find test_dario)/bags/test -j -a -x "/bebop/image_raw /bebop/image_raw/theora"'/> -->
+</launch>
