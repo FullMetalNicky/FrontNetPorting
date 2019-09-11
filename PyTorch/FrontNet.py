@@ -1,5 +1,6 @@
 
 import torch.nn as nn
+from PreActBlock import PreActBlock
 
 
 
@@ -35,11 +36,11 @@ class FrontNet(nn.Module):
 
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(block, 32, layers[0])
-        self.layer2 = self._make_layer(block, 64, layers[1], stride=2,
-                                       dilate=replace_stride_with_dilation[0])
-        self.layer3 = self._make_layer(block, 128, layers[2], stride=2,
-                                       dilate=replace_stride_with_dilation[1])
+
+        self.layer1 = PreActBlock(32, 32, stride=1)
+        self.layer2 = PreActBlock(32, 64, stride=2)
+        self.layer3 = PreActBlock(64, 128, stride=2)
+
         self.avg_pool = nn.AvgPool2d(kernel_size=(4, 7), stride=(1, 1))
         self.fc1 = nn.Linear(128 * block.expansion, 128)
         self.fc2 = nn.Linear(128, 64)
@@ -48,31 +49,6 @@ class FrontNet(nn.Module):
         self.fc_y = nn.Linear(64, 1)
         self.fc_z = nn.Linear(64, 1)
         self.fc_phi = nn.Linear(64, 1)
-
-
-    def _make_layer(self, block, planes, blocks, stride=1, dilate=False):
-        norm_layer = self._norm_layer
-        downsample = None
-        previous_dilation = self.dilation
-        if dilate:
-            self.dilation *= stride
-            stride = 1
-        if stride != 1 or self.inplanes != planes * block.expansion:
-            downsample = nn.Sequential(
-                conv1x1(self.inplanes, planes * block.expansion, stride),
-                norm_layer(planes * block.expansion),
-            )
-
-        layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample, self.groups,
-                            self.base_width, previous_dilation, norm_layer))
-        self.inplanes = planes * block.expansion
-        for _ in range(1, blocks):
-            layers.append(block(self.inplanes, planes, groups=self.groups,
-                                base_width=self.base_width, dilation=self.dilation,
-                                norm_layer=norm_layer))
-
-        return nn.Sequential(*layers)
 
 
     def forward(self, x):
