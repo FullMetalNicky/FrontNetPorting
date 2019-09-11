@@ -77,8 +77,8 @@
 #define UNMOUNT			0			// Cluster unmount command
 #define CID				0			// Cluster ID
 #define FLASH_BUFF_SIZE	128 		// Safe to keep this <= 256 Bytes
-#define NLAYERS			18			// Overall number of layers (ReLu, Add, Conv, Dense)
-#define NWEIGTHS		12			// Number of Conv Weights
+#define NLAYERS			20			// Overall number of layers (ReLu, Add, Conv, Dense)
+#define NWEIGTHS		14			// Number of Conv Weights
 #define SPIM_BUFFER		4			// SPI master buffer size [Bytes]
 #define NORM_BIAS_DENSE	NORM_ACT	// Normalization Factor for the Biases of dense layers
 #define NUM_L2_BUFF		2			// Number of L2 buffers
@@ -238,7 +238,9 @@ const int			outCh[] = {
 	128,						// 15	1x1Conv_10
 	128,						// 16	AddReLU_3
 	1,							// 17	Dense_1
-	1							// 18	Dense_2
+	1,							// 18	Dense_2
+	1,							// 19	Dense_3
+	1							// 20	Dense_4
 };
 
 /* ------------------------ Output Feature Map Sizes ------------------------ */
@@ -283,7 +285,9 @@ const int			outHeight[] = {
 	2,							// 15	1x1Conv_10
 	2,							// 16	AddReLU_3
 	1,							// 17	Dense_1
-	1							// 18	Dense_2
+	1,							// 18	Dense_2
+	1,							// 19	Dense_3
+	1							// 20	Dense_4
 };
 
 /* ------------------------- L3 Weights File Names -------------------------- */
@@ -318,8 +322,8 @@ const char *		L3_bias_files[] = {
 	"bias_conv2d_10.hex",		// 15	1x1Conv_10		256		Bytes
 	"bias_dense_1.hex",			// 17	Dense_1			2		Bytes
 	"bias_dense_2.hex",			// 18	Dense_2			2		Bytes
-	"bias_dense_1.hex",			// 19	Dense_3			2		Bytes
-	"bias_dense_2.hex"			// 20	Dense_4			2		Bytes
+	"bias_dense_3.hex",			// 19	Dense_3			2		Bytes
+	"bias_dense_4.hex"			// 20	Dense_4			2		Bytes
 };
 
 /* ----------------------- Weights Ground Truth (GT) ------------------------ */
@@ -335,9 +339,9 @@ const unsigned int	L3_weights_GT[NWEIGTHS] = {
 	194687313,					// 14	3x3Conv_9
 	281798119,					// 15	1x1Conv_10
 	204663510,					// 17	Dense_1
-	244332381,					// 18	Dense_2
+	204663510,					// 18	Dense_2
 	204663510,					// 19	Dense_3
-	244332381					// 20	Dense_4
+	204663510					// 20	Dense_4
 };
 
 /* ------------------------ Biases Ground Truth (GT) ------------------------ */
@@ -353,9 +357,9 @@ const unsigned int	L3_biases_GT[NWEIGTHS] = {
 	8031559,					// 14	3x3Conv_9
 	7469135,					// 15	1x1Conv_10
 	0,							// 17	Dense_1
-	944,						// 18	Dense_2
+	0,							// 18	Dense_2
 	0,							// 19	Dense_3
-	944							// 20	Dense_4
+	0							// 20	Dense_4
 };
 
 /* --------------------- Quantization Factor per layer ---------------------- */

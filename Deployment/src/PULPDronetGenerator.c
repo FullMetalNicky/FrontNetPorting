@@ -75,7 +75,7 @@ void PULPDronetGenerator() {
 		inCh[1],								// InFeat:		Number Input Channels
 		outCh[1],								// OutFeat:		Number Output Channels
 		inWidth[1],								// Width:		Feature Map Width
-		inSize[1]);								// Height:		Feature Map Height
+		inHeight[1]);							// Height:		Feature Map Height
 
 	/* 3x3 Convolution Stride 2, followed by ReLU. Pure SW.
 	* 32 input planes [50x50], 32 output planes [25x25] */
