@@ -61,14 +61,44 @@ class ModelTrainer:
         # "layer1.conv2": "layer1.bn2",
         # "layer2.conv2": "layer2.bn2"}
         # self.model.fold_bn(OrderedDict(dict))
-        dict = {"layer1.conv1": "layer1.bn2",
+        # dict = {"layer1.conv1": "layer1.bn2",
+        #     "layer1.conv2": "layer2.bn1",
+        #     "layer1.shortcut": "layer2.bn1",
+        #     "layer2.conv1": "layer2.bn2",
+        #     "layer2.conv2": "layer3.bn1",
+        #     "layer2.shortcut": "layer3.bn1",
+        #     "layer3.conv1": "layer3.bn2"}
+        # self.model.fold_bn(OrderedDict(dict))
+
+        # first block folding
+
+        self.model.fold_bn_withinv(bn_dict={
+            "conv": "layer1.bn1",
+            "layer1.conv1": "layer1.bn2",
+        },
+            bn_inv_dict={
+                "layer1.shortcut": "layer1.bn1",
+            })
+
+        # second block folding
+        self.model.fold_bn_withinv(bn_dict={
             "layer1.conv2": "layer2.bn1",
             "layer1.shortcut": "layer2.bn1",
             "layer2.conv1": "layer2.bn2",
+        },
+            bn_inv_dict={
+                "layer2.shortcut": "layer2.bn1",
+            })
+
+        # third block folding
+        self.model.fold_bn_withinv(bn_dict={
             "layer2.conv2": "layer3.bn1",
             "layer2.shortcut": "layer3.bn1",
-            "layer3.conv1": "layer3.bn2"}
-        self.model.fold_bn(OrderedDict(dict))
+            "layer3.conv1": "layer3.bn2",
+        },
+            bn_inv_dict={
+                "layer3.shortcut": "layer3.bn1",
+            })
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
