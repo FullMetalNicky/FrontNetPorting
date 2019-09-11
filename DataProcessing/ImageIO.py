@@ -11,17 +11,17 @@ class ImageIO:
 
     @staticmethod
     def WriteImagesToFolder(images, folderName, imgType='.jpg'):
-         """Writes a list of images to folder
+        """Writes a list of images to folder
 
-            Parameters
-            ----------
-            images : list
-                list of images
-            folderName : str
-                location for the images to be saved
-            imgType : str, optional
-                type of image format)
-            """
+        Parameters
+        ----------
+        images : list
+            list of images
+        folderName : str
+            location for the images to be saved
+        imgType : str, optional
+            type of image format)
+        """
         frame_id = 1
 
         for img in images:

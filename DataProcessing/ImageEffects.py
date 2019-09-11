@@ -11,20 +11,20 @@ class ImageEffects:
 
 	@staticmethod
 	def ConcatImages(img1, img2):
-	"""Writes a list of images to folder
+		"""Writes a list of images to folder
 
-        Parameters
-        ----------
-        img1 : OpenCV image type
-            First image to be concatenated
-        img2 : OpenCV image type
-            second image to be concatenated
-        
-        Returns
-        -------
-        OpenCV image type
-            concatenated image
-        """
+	    Parameters
+	    ----------
+	    img1 : OpenCV image type
+	        First image to be concatenated
+	    img2 : OpenCV image type
+	        second image to be concatenated
+	    
+	    Returns
+	    -------
+	    OpenCV image type
+	        concatenated image
+	    """
 		if len(img1.shape) < 3:
 			img1 = cv2.cvtColor(img1, cv2.COLOR_GRAY2RGB)
 		if len(img2.shape) < 3:
