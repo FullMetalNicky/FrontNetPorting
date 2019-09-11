@@ -45,7 +45,7 @@ static short int *		L3_weights[NWEIGTHS];
 static int				L3_sizes[NWEIGTHS]; 
 static unsigned int		L2_bias_sizes[NWEIGTHS]; 
 static int 				Norm_Factor[NWEIGTHS];
-static short int		SPIM_tx[2];
+static short int		SPIM_tx[4];
 static short int		SPIM_rx[2];
 
 
@@ -722,7 +722,78 @@ __rt_cluster_push_fc_event(event_capture);
 	meta_free(0, outputSizesB[9]);
 
 
+
+/* --------------------------------- DENSE 3 -------------------------------- */
+	L2_input = L2_output[15];
+	memId_O = 1;
+	memId_W = 1;
+
+#ifdef PROFILE_CL
+	perf_start = rt_perf_read(RT_PERF_CYCLES);
+#endif
+
+	L2_output[18] = (short int *) meta_alloc(memId_O, outputSizesB[18]+2);
+	L2_weights = (short int *) meta_alloc(memId_W, L3_sizes[11]);
+
+	L3toL2(L3_weights[11], L2_weights, L3_sizes[11]);
+
+#ifdef PROFILE_CL
+	perf_mem_cum_cl[18] = rt_perf_read(RT_PERF_CYCLES) - perf_start;
+	perf_start = rt_perf_read(RT_PERF_CYCLES);
+#endif
+
+	LinearLayer_SW_3(L2_input, L2_weights, Norm_Factor[11], L2_bias[11], NORM_BIAS_DENSE, L2_output[18], 0, 0);
+
+#ifdef PROFILE_CL
+	perf_exe_cum_cl[18] = rt_perf_read(RT_PERF_CYCLES) - perf_start;
+#endif
+
+#ifdef CHECKSUM
+	check_layer(L2_output[18], 18);
+#endif
+
+	meta_free(memId_W, L3_sizes[11]);
+	SPIM_tx[2] = L2_output[18][0];
+	meta_free(memId_O, outputSizesB[18]+2);
+
+/* --------------------------------- DENSE 4 -------------------------------- */
+	L2_input = L2_output[15];
+	memId_O = 1;
+	memId_W = 1;
+
+#ifdef PROFILE_CL
+	perf_start = rt_perf_read(RT_PERF_CYCLES);
+#endif
+
+	L2_output[19] = (short int *) meta_alloc(memId_O, outputSizesB[19]+2);
+	L2_weights = (short int *) meta_alloc(memId_W, L3_sizes[11]);
+
+	L3toL2(L3_weights[11], L2_weights, L3_sizes[11]);
+
+#ifdef PROFILE_CL
+	perf_mem_cum_cl[19] = rt_perf_read(RT_PERF_CYCLES) - perf_start;
+	perf_start = rt_perf_read(RT_PERF_CYCLES);
+#endif
+
+	LinearLayer_SW_4(L2_input, L2_weights, Norm_Factor[11], L2_bias[11], NORM_BIAS_DENSE, L2_output[19], 0, 0);
+
+#ifdef PROFILE_CL
+	perf_exe_cum_cl[19] = rt_perf_read(RT_PERF_CYCLES) - perf_start;
+#endif
+
+#ifdef CHECKSUM
+	check_layer(L2_output[19], 19);
+#endif
+
+	meta_free(memId_W, L3_sizes[11]);
+	SPIM_tx[3] = L2_output[19][0];
+	meta_free(memId_O, outputSizesB[19]+2);
+
+
 /* -------------------------------------------------------------------------- */
+
+
+
 
 
 #ifdef PROFILE_CL
@@ -1130,7 +1201,7 @@ int main() {
 #endif
 
 #ifdef VERBOSE
-		printf("Result[steer][coll]:\t%d\t%d\n", SPIM_tx[0], SPIM_tx[1]);
+		printf("Result[steer][coll]:\t%d\t%dt\t%d\t%d\n", SPIM_tx[0], SPIM_tx[1], SPIM_tx[2], SPIM_tx[3] );
 #endif
 
 		iter++;
