@@ -333,31 +333,29 @@ void PULPDronetGenerator() {
 		1,										// ModeSize:	
 		0,										// ReLu:		ReLu after Convolution (yes=1, no=0)
 		0);										// CoeffInL3:
-}
 
 /* --------------------------------- DENSE 3 -------------------------------- */
 	/* Linear Layer. Pure SW.
 	 * 128 input planes [7x7], Output 1 */
 	CNN_TiledLinearLayer(
 		"LinearLayer_SW_3",						// Name: 		Name
-		inCh[17],								// InFeat:		Number Input Channels
-		outCh[17],								// OutFeat:		Number Output Channels
-		inWidth[17],			    			// Width:		Feature Map Width
-		inHeight[17],							// Height:		Feature Map Height
+		inCh[18],								// InFeat:		Number Input Channels
+		outCh[18],								// OutFeat:		Number Output Channels
+		inWidth[18],			    			// Width:		Feature Map Width
+		inHeight[18],							// Height:		Feature Map Height
 		1,										// ModeSize:
 		0,										// ReLu:		ReLu after Convolution (yes=1, no=0)
 		0);										// CoeffInL3:
-}
 
 /* --------------------------------- DENSE 4 -------------------------------- */
 	/* Linear Layer. Pure SW.
 	 * 128 input planes [7x7], Output 1 */
 	CNN_TiledLinearLayer(
 		"LinearLayer_SW_4",						// Name: 		Name
-		inCh[17],								// InFeat:		Number Input Channels
-		outCh[17],								// OutFeat:		Number Output Channels
-		inWidth[17],			    			// Width:		Feature Map Width
-		inHeight[17],							// Height:		Feature Map Height
+		inCh[19],								// InFeat:		Number Input Channels
+		outCh[19],								// OutFeat:		Number Output Channels
+		inWidth[19],			    			// Width:		Feature Map Width
+		inHeight[19],							// Height:		Feature Map Height
 		1,										// ModeSize:
 		0,										// ReLu:		ReLu after Convolution (yes=1, no=0)
 		0);										// CoeffInL3:

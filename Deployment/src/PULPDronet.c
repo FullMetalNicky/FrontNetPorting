@@ -1010,7 +1010,7 @@ int main() {
 /* --------------------------- MEMORY ALLOCATION ---------------------------- */
 
 	for(int i=0; i<NLAYERS; i++)
-		outputSizesB[i] = outCh[i] * outSize[i] * outSize[i] * sizeof(short int);
+		outputSizesB[i] = outCh[i] * outWidth[i] * outHeight[i] * sizeof(short int);
 
 	Norm_Factor[0] = Q_Factor[0]+NORM_INPUT-NORM_ACT;
 	Norm_Factor[1] = Q_Factor[1];
