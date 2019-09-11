@@ -49,7 +49,7 @@ Two visualization tools are implemented:
 Working on the GAPuino introduced many challenges. The Himax camera accompanying the board is a grey-scale, low-resolution device, chosen for its ability to maintain a reasonable fps while consuming very little power. We were hoping to re-use the lovely dataset collected by Dario, for which he used the Parrot 2. But the images from the Himax camera differed greatly from the ones captured by the high-resolution, RGB camera of the Parrot 2. 
 So in order to still re-use the dataset, it was decided to adapt the original images to look more like those of the target camera. For that I hacked a setup where the Himax camera was attached to the drone, close to its camera, and image streams of both cameras was recorded into a rosbag. 
 <p align="center">
-<img src="/resources/hack.jpg" alt="drawing" width="500"/>
+<img src="/resources/setup.png" alt="drawing" width="500"/>
 <p/>
 I attached a time-stamp to each stamped image, so I can sync between the two streams. The Parrot 2 delivered images at roughly 30 fps, while capturing from the Himax was dramatically slower at around 0.4 fps. This is due to the fact that images from the Himax camera were written to the board's memory, and then had to be transferred through a bridge to my PC. The bridge is intended mainly for debugging purposes and not for image streaming, so it was expected that the performance would be lacking. 
 To orchestrate this recording setup, I wrote c code to run on the embedded device, which captures the images from the Himax camera and writes them into a named pipe on the host (using the bridge). There is also a ROS node running on my PC, that reads from that pipe, and publishes it as ROS image messages that can be recorded. 
