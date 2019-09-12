@@ -162,7 +162,7 @@ class DatasetViewer:
 			ani.save(videoName, writer=writer)
 		plt.show()
 
-	
+
 
 def main():
 	dsv = DatasetViewer()
