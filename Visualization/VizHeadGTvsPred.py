@@ -19,6 +19,10 @@ from DataProcessor import DataProcessor
 from ModelTrainer import ModelTrainer
 from Dataset import Dataset
 
+sys.path.append("../DataProcessing/")
+from ImageEffects import ImageEffects
+from ImageIO import ImageIO
+
 
 def VizDroneBEV(frames, labels, outputs, isGray=False):
 
@@ -132,6 +136,40 @@ def VizDroneBEV(frames, labels, outputs, isGray=False):
     ani.save('dronetGray.mp4', writer=writer)
     #ani.save('viz2.gif', dpi=80, writer='imagemagick')
     plt.show()
+
+
+def InferenceData(trainer):
+    images = ImageIO.ReadImagesFromFolder("../data/monster/himax_processed/", '.jpg', 0)
+    [x_live, y_live] = DataProcessor.ProcessInferenceData(images, 60, 108)
+    live_set = Dataset(x_live, y_live)
+    params = {'batch_size': 1,
+              'shuffle': False,
+              'num_workers': 0}
+    live_generator = data.DataLoader(live_set, **params)
+
+    y_pred_himax = trainer.Infer(live_generator)
+    y_pred_himax = np.reshape(y_pred_himax, (-1, 4))
+    h_images = images
+
+    images = ImageIO.ReadImagesFromFolder("../data/monster/bebop_processed/", '.jpg', 0)
+    [x_live, y_live] = DataProcessor.ProcessInferenceData(images, 60, 108)
+    live_set = Dataset(x_live, y_live)
+    params = {'batch_size': 1,
+              'shuffle': False,
+              'num_workers': 0}
+    live_generator = data.DataLoader(live_set, **params)
+
+    y_pred_bebop = trainer.Infer(live_generator)
+    y_pred_bebop = np.reshape(y_pred_bebop, (-1, 4))
+
+    combinedImages = []
+    for i in range(len(images)):
+        img = ImageEffects.ConcatImages(images[i], h_images[i])
+        combinedImages.append(img)
+
+    VizDroneBEV(combinedImages, y_pred_bebop, y_pred_himax)
+
+
 
 def main():
     logging.basicConfig(level=logging.INFO,

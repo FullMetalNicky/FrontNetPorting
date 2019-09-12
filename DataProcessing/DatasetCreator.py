@@ -9,6 +9,7 @@ import tf
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Image
+from sensor_msgs.msg import CompressedImage
 from cv_bridge import CvBridge
 from TimestampSynchronizer import TimestampSynchronizer
 from ImageEffects import ImageEffects
@@ -63,11 +64,15 @@ class DatasetCreator:
 		self.camera_topic = "bebop/image_raw"
 		self.body_topic = "optitrack/hand"
 
-	def FrameSelector(self):
+	def FrameSelector(self, isDarioBag=False):
 		"""Helps to select where to start and stop the video
 		When you wish to mark a frame for start/end, press 's', for viewing the next frame press any other key
 		"""
 
+		if isDarioBag==True:
+			self.camera_topic = "/bebop/image_raw/compressed"
+		else:
+			self.camera_topic = "bebop/image_raw"
 		bridge = CvBridge()
 		bebop_msgs_count = self.ts.GetMessagesCount(self.camera_topic)
 		chunk_size = 1000
@@ -78,7 +83,10 @@ class DatasetCreator:
 			bebop_msgs = self.ts.GetMessages(self.camera_topic, chunk * chunk_size + 1, (chunk+1) * chunk_size)
 
 			for i in range(len(bebop_msgs)):
-				cv_image = bridge.imgmsg_to_cv2(bebop_msgs[i])
+				if isDarioBag==True:
+					cv_image = bridge.compressed_imgmsg_to_cv2(bebop_msgs[i])
+				else:
+					cv_image = bridge.imgmsg_to_cv2(bebop_msgs[i])
 				bebop_id = chunk * chunk_size + i
 				t = bebop_msgs[i].header.stamp.to_nsec()
 				if  start_frame is None:
@@ -122,6 +130,8 @@ class DatasetCreator:
 	        if known, the timestamp in ns of the frame you wish to finish at
 	    """
 	
+		self.camera_topic = "bebop/image_raw"
+		self.drone_topic = "optitrack/drone"
 		print("unpacking...")
 		#unpack the stamps
 		camera_stamps = self.ts.ExtractStampsFromHeader(self.camera_topic)
@@ -202,6 +212,8 @@ class DatasetCreator:
 	        if known, the timestamp in ns of the frame you wish to finish at
 	    """
 	
+		self.camera_topic = "bebop/image_raw"
+		self.drone_topic = "optitrack/drone"
 		print("unpacking...")
 		#unpack the stamps
 		camera_stamps = self.ts.ExtractStampsFromHeader(self.camera_topic)
@@ -296,6 +308,80 @@ class DatasetCreator:
 
 		print("dataset ready x:{} hand:{} head:{}".format(len(x_dataset), len(hand_dataset), len(head_dataset)))
 		df = pd.DataFrame(data={'x': x_dataset, 'y': hand_dataset, 'z' : head_dataset})
+		print("dataframe ready")
+		df.to_pickle(datasetName)
+
+
+	def CreateBebopDarioDataset(self, delay, datasetName, start = 0, end = sys.maxint):
+		"""Converts rosbag to format suitable for training/testing. 
+		if start_frame, end_frame are unknown, FrameSelector will help you choose how to trim the video
+		the output .pickle is organized as 'x': video frames, 'y': hand poses, 'z' : head poses
+
+	    Parameters
+	    ----------
+	    delay : int
+	        The delay between the camera and the optitrack 
+	    datasetName : str
+	        name of the new .pickle file
+	    start_frame : int, optional
+	        if known, the timestamp in ns of the frame you wish to start from 
+	    end_frame : int, optional
+	        if known, the timestamp in ns of the frame you wish to finish at
+	    """
+		self.camera_topic = "/bebop/image_raw/compressed"
+		self.drone_topic = "/optitrack/bebop"
+		print("unpacking...")
+		#unpack the stamps
+		camera_stamps = self.ts.ExtractStampsFromHeader(self.camera_topic)
+		head_stamps = self.ts.ExtractStampsFromRosbag("/optitrack/head")
+		drone_stamps = self.ts.ExtractStampsFromRosbag(self.drone_topic)
+
+		if((len(drone_stamps) < len(camera_stamps)) or (len(head_stamps) < len(camera_stamps))):
+			print("Error:recording data corrupted. not enough MoCap stamps.") 
+			return
+
+		print("unpacked stamps")
+		
+		#get the sync ids 
+		otherTopics = [head_stamps, drone_stamps]
+		sync_bebop_ids, sync_other_ids = self.ts.SyncStampsToMain(camera_stamps, otherTopics, delay)
+		sync_head_ids = sync_other_ids[0]
+		sync_drone_ids = sync_other_ids[1]	
+
+		print("synced ids")
+
+		head_msgs = self.ts.GetMessages("/optitrack/head")
+		drone_msgs = self.ts.GetMessages(self.drone_topic)
+		bridge = CvBridge()
+		
+		x_dataset = []
+		head_dataset = []
+
+		#read in chunks because memory is low
+		bebop_msgs_count = self.ts.GetMessagesCount(self.camera_topic)
+		chunk_size = 1000
+		chunks = (bebop_msgs_count/chunk_size) + 1
+		for chunk in tqdm(range(chunks)):
+			bebop_msgs = self.ts.GetMessages(self.camera_topic, chunk * chunk_size + 1, (chunk+1) * chunk_size)
+
+			for i in tqdm(range(len(bebop_msgs))):
+				t = bebop_msgs[i].header.stamp.to_nsec()
+				if (t >= start) and (t <=end):
+					cv_image = bridge.compressed_imgmsg_to_cv2(bebop_msgs[i])
+					cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
+					cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
+					x_dataset.append(cv_image)		
+		
+					head_id = sync_head_ids[chunk * chunk_size + i]		
+					drone_id = sync_drone_ids[chunk * chunk_size + i]
+					bebop_id = sync_bebop_ids[chunk * chunk_size + i]
+					#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
+
+					x, y, z, yaw = relative_pose(head_msgs[head_id], drone_msgs[drone_id])
+					head_dataset.append([x, y, z, yaw])
+
+		print("dataset ready x:{} head:{}".format(len(x_dataset), len(head_dataset)))
+		df = pd.DataFrame(data={'x': x_dataset, 'y': head_dataset})
 		print("dataframe ready")
 		df.to_pickle(datasetName)
 

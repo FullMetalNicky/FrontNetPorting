@@ -23,6 +23,35 @@ class Dataset(data.Dataset):
         'Denotes the total number of samples'
         return len(self.list_IDs)
 
+  def augmentGamma(self, X):
+      X = X.cpu().numpy()
+      h, w = X.shape[1:3]
+      X = np.reshape(X, (h, w)).astype("uint8")
+      # gamma correction augmentation
+      gamma = np.random.uniform(0.6, 1.4)
+      table = self.it.adjust_gamma(gamma)
+      X = cv2.LUT(X, table)
+      X = np.reshape(X, (1, h, w))
+      X = torch.from_numpy(X).float()
+
+      return X
+
+  def augmentDR(self, X):
+      X = X.cpu().numpy()
+      h, w = X.shape[1:3]
+      X = np.reshape(X, (h, w)).astype("uint8")
+      # dynamic range augmentation
+      dr = np.random.uniform(0.4, 0.8)  # dynamic range
+      lo = np.random.uniform(0, 0.3)
+      hi = min(1.0, lo + dr)
+      X = np.interp(X/255.0, [0, lo, hi, 1], [0, 0, 1, 1])
+      X = 255 * X
+      X = np.reshape(X, (1, h, w))
+      X = torch.from_numpy(X).float()
+
+      return X
+
+
   def __getitem__(self, index):
         'Generates one sample of data'
         ID = index
@@ -36,22 +65,10 @@ class Dataset(data.Dataset):
                 y[1] = -y[1]  # Y
                 y[3] = -y[3]  # Relative YAW
 
-            X = X.cpu().numpy()
-            h, w = X.shape[1:3]
-            X = np.reshape(X, (h, w)).astype("uint8")
-            # gamma correction augmentation
-            #if np.random.choice([True, False]):
-            #    gamma = np.random.uniform(0.6, 1.4)
-            #    table = self.it.adjust_gamma(gamma)
-            #    X = cv2.LUT(X, table)
-            # dynamic range augmentation
-            if np.random.choice([True, False]):
-                dr = np.random.uniform(0.4, 0.8)  # dynamic range
-                lo = np.random.uniform(0, 0.3)
-                hi = min(1.0, lo + dr)
-                X = np.interp(X/255.0, [0, lo, hi, 1], [0, 0, 1, 1])
-                X = 255 * X
-            X = np.reshape(X, (1, h, w))
-            X = torch.from_numpy(X).float()
+            if X.shape[0] == 1:
+               # if np.random.choice([True, False]):
+                #    X = self.augmentGamma(X)
+                if np.random.choice([True, False]):
+                    X = self.augmentDR(X)
 
         return X, y
