@@ -133,7 +133,7 @@ class DatasetViewer:
 
 		    str1 = "x_gt={:05.3f}, y_gt={:05.3f}, z_gt={:05.3f}, phi_gt={:05.3f} {}".format(x_gt, y_gt, z_gt, phi_gt, "\n")
 
-		    phi_gt = phi_gt + np.pi / 2
+		    phi_gt = - phi_gt - np.pi/2
 
 		    annotation.set_text(str1)
 
@@ -162,94 +162,7 @@ class DatasetViewer:
 			ani.save(videoName, writer=writer)
 		plt.show()
 
-	def PlotTrackingAndDisplayVideoExtended(self, isGray, isVideo=False, videoName="test.avi"):
-
-		self.fig = plt.figure(888, figsize=(15, 5))
-		self.h = 9
-		self.w = 16
-
-		annotation, ax0 = self.PosePrintSubPlot()
-
-		ax1 = plt.subplot2grid((self.h, self.w), (2, 0), colspan=8, rowspan=7)
-		ax1.set_title('Relative Pose (x,y)')
-		ax1.yaxis.set_ticks([0, 1.5, 3])  # set y-ticks
-		ax1.xaxis.set_ticks([-3.0, -1.5, 0, 1.5, 3.0])  # set y-ticks
-		ax1.xaxis.tick_top()  # and move the X-Axis
-		ax1.yaxis.tick_left()  # remove right y-Ticks
-		ax1.spines['right'].set_visible(False)
-		ax1.spines['bottom'].set_visible(False)
-		ax1.invert_xaxis()
-		trianglex = [2, 0, -2, 2]
-		triangley = [3, 0, 3, 3]
-		collection = plt.fill(trianglex, triangley, facecolor='lightskyblue')
-
-		plot1gthead, = plt.plot([], [], color='green', label='Head GT', linestyle='None', marker='o', markersize=10)
-		arr1gthead = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='green',
-						   animated=True)
-
-		plot1gthand, = plt.plot([], [], color='blue', label='Hand GT', linestyle='None', marker='o', markersize=10)
-		arr1gthand = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='blue',
-						   animated=True)
-
-		plot1pr, = plt.plot([], [], color='red', label='Prediction', linestyle='None', marker='o', markersize=10)
-		arr1pr = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='red',
-							   animated=True)
-		plt.legend(loc='lower right', bbox_to_anchor=(0.8, 0.2, 0.25, 0.25))
-
-		scatter2gthead, scatter2gthand, scatter2pr, ax2 = self.RelativeZSubPlotExtended()
-
-		imgplot, ax3 = self.VideoSubPlot(isGray)
-
-		annotation2, ax4 = self.FramePrintSubPlot()
-
-		plt.subplots_adjust(wspace=1.5)
-		newax = self.DroneIconSubPlot()
-
-		Writer = animation.writers['ffmpeg']
-		writer = Writer(fps=20, metadata=dict(artist='FullMetalNicky'))
-
-		def animate(id):
-			head_label = self.head_labels[id]
-			hand_label = self.hand_labels[id]
-
-
-			x_head, y_head, z_head, phi_head = head_label[0], head_label[1], head_label[2], head_label[3]
-			x_hand, y_hand, z_hand, phi_hand = hand_label[0], hand_label[1], hand_label[2], hand_label[3]
-
-			str1 = "x_head={:05.3f}, y_head={:05.3f}, z_head={:05.3f}, phi_head={:05.3f} {}".format(x_head, y_head, z_head, phi_head, "\n")
-			str1 = str1 + "x_hand={:05.3f}, y_hand={:05.3f}, z_hand={:05.3f}, phi_hand={:05.3f} {}".format(x_hand, y_hand, z_hand, phi_hand, "\n")
-
-			#phi_gt = phi_gt + np.pi / 2
-
-			annotation.set_text(str1)
-
-			plot1gthead.set_data(np.array([x_head, y_head]))
-			plot1gthand.set_data(np.array([x_hand, y_hand]))
-			plot1pr.set_data(np.array([x_head, y_head]))
-
-			if (len(ax1.patches) > 1):
-				ax1.patches.pop()
-
-			patch1 = patches.FancyArrow(y_gt, x_gt, 0.5 * np.cos(phi_gt), 0.5 * np.sin(phi_gt), head_width=0.05,
-										head_length=0.05, color='green')
-			ax1.add_patch(patch1)
-
-			scatter2gt.set_offsets(np.array([-0.05, z_gt]))
-
-			frame = self.frames[id].astype(np.uint8)
-			imgplot.set_array(frame)
-
-			annotation2.set_text('Frame {}'.format(id))
-
-			# use the first one for viz on screen and second one for video recording
-			# return plot1gt, scatter2gt, imgplot, annotation, annotation2
-			return plot1gt, patch1, scatter2gt, imgplot, annotation, annotation2
-
-		ani = animation.FuncAnimation(self.fig, animate, frames=len(self.frames), interval=1, blit=True)
-		if isVideo == True:
-			ani.save(videoName, writer=writer)
-		plt.show()
-
+	
 
 def main():
 	dsv = DatasetViewer()
