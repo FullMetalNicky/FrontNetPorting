@@ -115,6 +115,8 @@ Following the installation instruction on the [PULP-dronet](https://github.com/p
 * Visualization - To visualize a standard dataset, tou can use the DatasetVisualizer class. For displaying the prediction along with the GT, you can use another script, the purpose of the script will be indicated by its name. Don't use scripts that include "Hand" in their names, they are specifically for a side quest called Scarlet Witch, where I also recorded the poses of the hand. 
 
 ### Datasets
+Beware that there are two different types of rosbags, Dario's rosbags, which can be found [here](https://drive.switch.ch/index.php/s/1Q0zN0XDzyRxug4), and my rosbags that I shall upload once the lame-ass OneDrive will stop malfunctioning. Each rosbag type needs to be handled differently, so choose the right method from the DatasetCreator class.
+An example for a test.pickle after processing can be downloaded from [here](https://usi365-my.sharepoint.com/:u:/g/personal/zimmen_usi_ch/Ea4eoe34Y_JKot_Mzbh8ZCgBLA_9lWrycZwdCeGwKfpE0A?e=w4rNSr).
 
 ### Development
 
