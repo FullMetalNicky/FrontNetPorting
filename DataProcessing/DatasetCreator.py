@@ -426,6 +426,28 @@ class DatasetCreator:
 
 
 	def CreateBebopDataset(self, delay, datasetName, camera_topic, drone_topic, tracking_topic_list, start = None, end = None):
+		"""Converts rosbag to format suitable for training/testing. 
+		if start_frame, end_frame are unknown, FrameSelector will help you choose how to trim the video
+		the output.
+		Additionally to .pickle, this function also creates a .txt file with the topics (in the correct order) contained in the dataset
+
+	    Parameters
+	    ----------
+	    delay : int
+	        The delay between the himax camera and the optitrack or bebop camera
+	    datasetName : str
+	        name of the new .pickle file
+	    camera_topic : str
+	        name of the camera (video) topic
+	    drone_topic : str
+	        name of the optitrack msg of the dron's pose
+	    tracking_topic_list : list
+	        list of names, specifying all the tracked marker topics (hand, head, etc)
+	    start_frame : int, optional
+	        if known, the timestamp in ns of the frame you wish to start from 
+	    end_frame : int, optional
+	        if known, the timestamp in ns of the frame you wish to finish at
+	    """
 
 		self.camera_topic = camera_topic
 		self.other_topic_list = tracking_topic_list
@@ -433,6 +455,12 @@ class DatasetCreator:
 
 		if (start is None) or (end is None):
 			start, end  = self.FrameSelector()
+
+
+		if self.camera_topic.find("compressed"):
+			isCompressed = True
+		else:
+			isCompressed = False
 
 		print("unpacking...")
 		#unpack the stamps
@@ -453,8 +481,6 @@ class DatasetCreator:
 		#get the sync ids 
 		sync_camera_ids, sync_other_ids = self.ts.SyncStampsToMain(camera_stamps, other_stamps_list, delay)
 		sync_drone_ids = sync_other_ids.pop()
-		print(len(sync_drone_ids))
-		print(len(sync_camera_ids))
 
 		print("synced ids")
 
@@ -481,7 +507,10 @@ class DatasetCreator:
 			for i in tqdm(range(len(camera_msgs))):
 				t = camera_msgs[i].header.stamp.to_nsec()
 				if (t >= start) and (t <=end):
-					cv_image = bridge.compressed_imgmsg_to_cv2(camera_msgs[i])
+					if isCompressed==True:
+						cv_image = bridge.compressed_imgmsg_to_cv2(camera_msgs[i])
+					else:
+						cv_image = bridge.imgmsg_to_cv2(camera_msgs[i])
 					cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
 					cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
 					x_dataset.append(cv_image)	
@@ -506,12 +535,43 @@ class DatasetCreator:
 
 	def CreateHimaxDataset(self, delay, datasetName, camera_topic_himax, camera_topic_bebop, drone_topic, tracking_topic_list, start = None, end = None):
 
+		"""Converts rosbag to format suitable for training/testing. 
+		if start_frame, end_frame are unknown, FrameSelector will help you choose how to trim the video
+		the output.
+		Additionally to .pickle, this function also creates a .txt file with the topics (in the correct order) contained in the dataset
+
+	    Parameters
+	    ----------
+	    delay : int
+	        The delay between the himax camera and the optitrack or bebop camera
+	    datasetName : str
+	        name of the new .pickle file
+	    camera_topic_himax : str
+	        name of the himax (video) topic
+	    camera_topic_bebop : str
+	        name of the bebop (video) topic
+	    drone_topic : str
+	        name of the optitrack msg of the dron's pose
+	    tracking_topic_list : list
+	        list of names, specifying all the tracked marker topics (hand, head, etc)
+	    start_frame : int, optional
+	        if known, the timestamp in ns of the frame you wish to start from 
+	    end_frame : int, optional
+	        if known, the timestamp in ns of the frame you wish to finish at
+	    """
+
 		self.camera_topic = camera_topic_bebop
 		self.other_topic_list = tracking_topic_list
 		self.drone_topic = drone_topic
 
 		if (start is None) or (end is None):
 			start, end  = self.FrameSelector()
+
+
+		if self.camera_topic.find("compressed"):
+			isCompressed = True
+		else:
+			isCompressed = False
 
 		print("unpacking...")
 		#unpack the stamps
@@ -563,7 +623,10 @@ class DatasetCreator:
 			for i in tqdm(range(len(camera_msgs))):
 				t = camera_msgs[i].header.stamp.to_nsec()
 				if (t >= start) and (t <=end):
-					cv_image = bridge.compressed_imgmsg_to_cv2(camera_msgs[i])
+					if isCompressed==True:
+						cv_image = bridge.compressed_imgmsg_to_cv2(camera_msgs[i])
+					else:
+						cv_image = bridge.imgmsg_to_cv2(camera_msgs[i])
 					# image transform
 					cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
 					cv_image = cv2.LUT(cv_image, gammaLUT)
