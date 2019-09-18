@@ -49,6 +49,7 @@ static short int		SPIM_tx[4];
 static short int		SPIM_rx[2];
 
 
+
 unsigned int PMU_set_voltage(unsigned int Voltage, unsigned int CheckFrequencies);
 
 
@@ -1201,7 +1202,7 @@ int main() {
 #endif
 
 #ifdef VERBOSE
-		printf("Result[steer][coll]:\t%d\t%dt\t%d\t%d\n", SPIM_tx[0], SPIM_tx[1], SPIM_tx[2], SPIM_tx[3] );
+		printf("Result[x][y][z][phi]:\t%d\t%d\t%d\t%d\n", SPIM_tx[0], SPIM_tx[1], SPIM_tx[2], SPIM_tx[3] );
 #endif
 
 		iter++;

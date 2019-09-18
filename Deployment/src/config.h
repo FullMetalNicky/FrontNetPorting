@@ -26,7 +26,7 @@
 
 /****************************** USER PARAMETERS *******************************/
 // #define DATASET_TEST				// Enable if you test the Dataset (single iteration)
-// #define VERBOSE					// Enables additional information
+#define VERBOSE					// Enables additional information
 // #define CHECKSUM					// Enables correctness check per layer
 // #define PROFILE_CL				// Profiling execution from the Cluster
 // #define PROFILE_FC				// Profiling execution from the Fabric Ctrl
@@ -292,74 +292,76 @@ const int			outHeight[] = {
 
 /* ------------------------- L3 Weights File Names -------------------------- */
 const char *		L3_weights_files[] = {
-	"weights_conv2d_1.hex",		// 1	5x5ConvMax_1	1600	Bytes
-	"weights_conv2d_2.hex",		// 3	3x3ConvReLU_2	18432	Bytes
-	"weights_conv2d_3.hex",		// 4	3x3Conv_3		18432	Bytes
-	"weights_conv2d_4.hex",		// 5	1x1Conv_4		2048	Bytes
-	"weights_conv2d_5.hex",		// 8	3x3ConvReLU_5	36864	Bytes
-	"weights_conv2d_6.hex",		// 9	3x3Conv_6		73728	Bytes
-	"weights_conv2d_7.hex",		// 10	1x1Conv_7		4096	Bytes
-	"weights_conv2d_8.hex",		// 13	3x3ConvReLU_8	147456	Bytes
-	"weights_conv2d_9.hex",		// 14	3x3Conv_9		294912	Bytes
-	"weights_conv2d_10.hex",	// 15	1x1Conv_10		16384	Bytes
-	"weights_dense_1.hex",		// 17	Dense_1			12544	Bytes
-	"weights_dense_2.hex",		// 18	Dense_2			12544	Bytes
-	"weights_dense_3.hex",		// 19	Dense_3			12544	Bytes
-	"weights_dense_4.hex"		// 20	Dense_4			12544	Bytes
+	"weights_conv.hex",				// 1	5x5ConvMax_1	1600	Bytes
+	"weights_layer1_conv1.hex",		// 3	3x3ConvReLU_2	18432	Bytes
+	"weights_layer1_conv2.hex",		// 4	3x3Conv_3		18432	Bytes
+	"weights_layer1_shortcut.hex",	// 5	1x1Conv_4		2048	Bytes
+	"weights_layer2_conv1.hex",		// 8	3x3ConvReLU_5	36864	Bytes
+	"weights_layer2_conv2.hex",		// 9	3x3Conv_6		73728	Bytes
+	"weights_layer2_shortcut.hex",	// 10	1x1Conv_7		4096	Bytes
+	"weights_layer3_conv1.hex",		// 13	3x3ConvReLU_8	147456	Bytes
+	"weights_layer3_conv2.hex",		// 14	3x3Conv_9		294912	Bytes
+	"weights_layer3_shortcut.hex",	// 15	1x1Conv_10		16384	Bytes
+	"weights_fc_x.hex",				// 17	Dense_1			12544	Bytes
+	"weights_fc_y.hex",				// 18	Dense_2			12544	Bytes
+	"weights_fc_z.hex",				// 19	Dense_3			12544	Bytes
+	"weights_fc_phi.hex"			// 20	Dense_4			12544	Bytes
 };
 
 /* -------------------------- L3 Biases File Names -------------------------- */
+
+
 const char *		L3_bias_files[] = {
-	"bias_conv2d_1.hex",		// 1	5x5ConvMax_1	64		Bytes
-	"bias_conv2d_2.hex",		// 3	3x3ConvReLU_2	64		Bytes
-	"bias_conv2d_3.hex",		// 4	3x3Conv_3		64		Bytes
-	"bias_conv2d_4.hex",		// 5	1x1Conv_4		64		Bytes
-	"bias_conv2d_5.hex",		// 8	3x3ConvReLU_5	128		Bytes
-	"bias_conv2d_6.hex",		// 9	3x3Conv_6		128		Bytes
-	"bias_conv2d_7.hex",		// 10	1x1Conv_7		128		Bytes
-	"bias_conv2d_8.hex",		// 13	3x3ConvReLU_8	256		Bytes
-	"bias_conv2d_9.hex",		// 14	3x3Conv_9		256		Bytes
-	"bias_conv2d_10.hex",		// 15	1x1Conv_10		256		Bytes
-	"bias_dense_1.hex",			// 17	Dense_1			2		Bytes
-	"bias_dense_2.hex",			// 18	Dense_2			2		Bytes
-	"bias_dense_3.hex",			// 19	Dense_3			2		Bytes
-	"bias_dense_4.hex"			// 20	Dense_4			2		Bytes
+	"bias_conv.hex",				// 1	5x5ConvMax_1	64		Bytes
+	"bias_layer1_conv1.hex",		// 3	3x3ConvReLU_2	64		Bytes
+	"bias_layer1_conv2.hex",		// 4	3x3Conv_3		64		Bytes
+	"bias_layer1_shortcut.hex",		// 5	1x1Conv_4		64		Bytes
+	"bias_layer2_conv1.hex",		// 8	3x3ConvReLU_5	128		Bytes
+	"bias_layer2_conv2.hex",		// 9	3x3Conv_6		128		Bytes
+	"bias_layer2_shortcut.hex",		// 10	1x1Conv_7		128		Bytes
+	"bias_layer3_conv1.hex",		// 13	3x3ConvReLU_8	256		Bytes
+	"bias_layer3_conv2.hex",		// 14	3x3Conv_9		256		Bytes
+	"bias_layer3_shortcut.hex",		// 15	1x1Conv_10		256		Bytes
+	"bias_fc_x.hex",				// 17	Dense_1			2		Bytes
+	"bias_fc_y.hex",				// 18	Dense_2			2		Bytes
+	"bias_fc_z.hex",				// 19	Dense_3			2		Bytes
+	"bias_fc_phi.hex"				// 20	Dense_4			2		Bytes
 };
 
 /* ----------------------- Weights Ground Truth (GT) ------------------------ */
 const unsigned int	L3_weights_GT[NWEIGTHS] = {
-	25985189,					// 1	5x5ConvMax_1
-	171247369,					// 3	3x3ConvReLU_2
-	215325794,					// 4	3x3Conv_3
-	31883544,					// 5	1x1Conv_4
-	198666713,					// 8	3x3ConvReLU_5
-	401025883,					// 9	3x3Conv_6
-	63738646,					// 10	1x1Conv_7
-	264630086,					// 13	3x3ConvReLU_8
-	194687313,					// 14	3x3Conv_9
-	281798119,					// 15	1x1Conv_10
-	204663510,					// 17	Dense_1
-	204663510,					// 18	Dense_2
-	204663510,					// 19	Dense_3
-	204663510					// 20	Dense_4
+	26210557,					// 1	5x5ConvMax_1
+	317935783,					// 3	3x3ConvReLU_2
+	315850819,					// 4	3x3Conv_3
+	36647058,					// 5	1x1Conv_4
+	646193316,					// 8	3x3ConvReLU_5
+	1234576685,					// 9	3x3Conv_6
+	72329195,					// 10	1x1Conv_7
+	2566870546,					// 13	3x3ConvReLU_8
+	5320251907,					// 14	3x3Conv_9
+	252426854,					// 15	1x1Conv_10
+	32456913,					// 17	Dense_1
+	32654030,					// 18	Dense_2
+	34901714,					// 19	Dense_3
+	31362521					// 20	Dense_4
 };
 
 /* ------------------------ Biases Ground Truth (GT) ------------------------ */
 const unsigned int	L3_biases_GT[NWEIGTHS] = {
-	1484287,					// 1	5x5ConvMax_1
-	1364354,					// 3	3x3ConvReLU_2
-	1369951,					// 4	3x3Conv_3
-	1045420,					// 5	1x1Conv_4
-	3869389,					// 8	3x3ConvReLU_5
-	3442234,					// 9	3x3Conv_6
-	3245463,					// 10	1x1Conv_7
-	7635667,					// 13	3x3ConvReLU_8
-	8031559,					// 14	3x3Conv_9
-	7469135,					// 15	1x1Conv_10
-	0,							// 17	Dense_1
-	0,							// 18	Dense_2
-	0,							// 19	Dense_3
-	0							// 20	Dense_4
+	920999,						// 1	5x5ConvMax_1
+	678958,					// 3	3x3ConvReLU_2
+	150449,					// 4	3x3Conv_3
+	150449,					// 5	1x1Conv_4
+	733386,					// 8	3x3ConvReLU_5
+	2292504,					// 9	3x3Conv_6
+	2292504,					// 10	1x1Conv_7
+	6466140,					// 13	3x3ConvReLU_8
+	0,					// 14	3x3Conv_9
+	0,					// 15	1x1Conv_10
+	5753,					// 17	Dense_1
+	65531,							// 18	Dense_2
+	8,							// 19	Dense_3
+	65515							// 20	Dense_4
 };
 
 /* --------------------- Quantization Factor per layer ---------------------- */
@@ -385,14 +387,14 @@ const int			Q_Factor[NWEIGTHS] = {
  * for:	pulp-dronet/dataset/Himax_Dataset/test_2/frame_22.pgm						  *
  * -------------------------------------------------------------------------- */
 const unsigned int	Layer_GT[NLAYERS] = {
-	3583346007,					// 1	5x5ConvMax_1
-	33640519,					// 2	ReLU_1
-	3054757,					// 3	3x3ConvReLU_2
-	969723858,					// 4	3x3Conv_3
-	733574305,					// 5	1x1Conv_4
-	961234035,					// 6	Add_1
-	5702624,					// 7	ReLU_2
-	800684,						// 8	3x3ConvReLU_5
+	26210557,					// 1	5x5ConvMax_1
+	317935783,					// 2	ReLU_1
+	315850819,					// 3	3x3ConvReLU_2
+	36647058,					// 4	3x3Conv_3
+	646193316,					// 5	1x1Conv_4
+	1234576685,					// 6	Add_1
+	72329195,					// 7	ReLU_2
+	2566870546,					// 8	3x3ConvReLU_5
 	568751660,					// 9	3x3Conv_6
 	536587146,					// 10	1x1Conv_7
 	562176438,					// 11	Add_2
@@ -401,10 +403,10 @@ const unsigned int	Layer_GT[NLAYERS] = {
 	400248723,					// 14	3x3Conv_9
 	382744684,					// 15	1x1Conv_10
 	34510,						// 16	AddReLU_3
-	193,						// 17	Dense_1
-	59518,						// 18	Dense_2
-	193,						// 19	Dense_3
-	59518						// 20	Dense_4
+	32456913,						// 17	Dense_1
+	32654030,						// 18	Dense_2
+	34901714,						// 19	Dense_3
+	31362521						// 20	Dense_4
 };
 #endif // CHECKSUM
 
