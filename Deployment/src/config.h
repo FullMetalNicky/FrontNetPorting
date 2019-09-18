@@ -366,20 +366,20 @@ const unsigned int	L3_biases_GT[NWEIGTHS] = {
 
 /* --------------------- Quantization Factor per layer ---------------------- */
 const int			Q_Factor[NWEIGTHS] = {
-	12,							// 1	5x5ConvMax_1
-	14,							// 3	3x3ConvReLU_2
-	14,							// 4	3x3Conv_3
-	7,							// 5	1x1Conv_4
-	14,							// 8	3x3ConvReLU_5
-	14,							// 9	3x3Conv_6
-	14,							// 10	1x1Conv_7
-	14,							// 13	3x3ConvReLU_8
-	14,							// 14	3x3Conv_9
-	12,							// 15	1x1Conv_10
-	11,							// 17	Dense_1
-	11,							// 18	Dense_2
-	11,							// 19	Dense_3
-	11 							// 20	Dense_4
+	22,							// 1	5x5ConvMax_1
+	16,							// 3	3x3ConvReLU_2
+	17,							// 4	3x3Conv_3
+	17,							// 5	1x1Conv_4
+	16,							// 8	3x3ConvReLU_5
+	18,							// 9	3x3Conv_6
+	18,							// 10	1x1Conv_7
+	16,							// 13	3x3ConvReLU_8
+	15,							// 14	3x3Conv_9
+	16,							// 15	1x1Conv_10
+	16,							// 17	Dense_1
+	16,							// 18	Dense_2
+	17,							// 19	Dense_3
+	16 							// 20	Dense_4
 };
 
 #ifdef CHECKSUM

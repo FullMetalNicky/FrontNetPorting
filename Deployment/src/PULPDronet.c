@@ -734,16 +734,16 @@ __rt_cluster_push_fc_event(event_capture);
 #endif
 
 	L2_output[18] = (short int *) meta_alloc(memId_O, outputSizesB[18]+2);
-	L2_weights = (short int *) meta_alloc(memId_W, L3_sizes[11]);
+	L2_weights = (short int *) meta_alloc(memId_W, L3_sizes[12]);
 
-	L3toL2(L3_weights[11], L2_weights, L3_sizes[11]);
+	L3toL2(L3_weights[12], L2_weights, L3_sizes[12]);
 
 #ifdef PROFILE_CL
 	perf_mem_cum_cl[18] = rt_perf_read(RT_PERF_CYCLES) - perf_start;
 	perf_start = rt_perf_read(RT_PERF_CYCLES);
 #endif
 
-	LinearLayer_SW_3(L2_input, L2_weights, Norm_Factor[11], L2_bias[11], NORM_BIAS_DENSE, L2_output[18], 0, 0);
+	LinearLayer_SW_3(L2_input, L2_weights, Norm_Factor[12], L2_bias[12], NORM_BIAS_DENSE, L2_output[18], 0, 0);
 
 #ifdef PROFILE_CL
 	perf_exe_cum_cl[18] = rt_perf_read(RT_PERF_CYCLES) - perf_start;
@@ -753,7 +753,7 @@ __rt_cluster_push_fc_event(event_capture);
 	check_layer(L2_output[18], 18);
 #endif
 
-	meta_free(memId_W, L3_sizes[11]);
+	meta_free(memId_W, L3_sizes[12]);
 	SPIM_tx[2] = L2_output[18][0];
 	meta_free(memId_O, outputSizesB[18]+2);
 
@@ -767,16 +767,16 @@ __rt_cluster_push_fc_event(event_capture);
 #endif
 
 	L2_output[19] = (short int *) meta_alloc(memId_O, outputSizesB[19]+2);
-	L2_weights = (short int *) meta_alloc(memId_W, L3_sizes[11]);
+	L2_weights = (short int *) meta_alloc(memId_W, L3_sizes[13]);
 
-	L3toL2(L3_weights[11], L2_weights, L3_sizes[11]);
+	L3toL2(L3_weights[13], L2_weights, L3_sizes[13]);
 
 #ifdef PROFILE_CL
 	perf_mem_cum_cl[19] = rt_perf_read(RT_PERF_CYCLES) - perf_start;
 	perf_start = rt_perf_read(RT_PERF_CYCLES);
 #endif
 
-	LinearLayer_SW_4(L2_input, L2_weights, Norm_Factor[11], L2_bias[11], NORM_BIAS_DENSE, L2_output[19], 0, 0);
+	LinearLayer_SW_4(L2_input, L2_weights, Norm_Factor[13], L2_bias[13], NORM_BIAS_DENSE, L2_output[19], 0, 0);
 
 #ifdef PROFILE_CL
 	perf_exe_cum_cl[19] = rt_perf_read(RT_PERF_CYCLES) - perf_start;
@@ -786,7 +786,7 @@ __rt_cluster_push_fc_event(event_capture);
 	check_layer(L2_output[19], 19);
 #endif
 
-	meta_free(memId_W, L3_sizes[11]);
+	meta_free(memId_W, L3_sizes[13]);
 	SPIM_tx[3] = L2_output[19][0];
 	meta_free(memId_O, outputSizesB[19]+2);
 
@@ -1202,7 +1202,12 @@ int main() {
 #endif
 
 #ifdef VERBOSE
-		printf("Result[x][y][z][phi]:\t%d\t%d\t%d\t%d\n", SPIM_tx[0], SPIM_tx[1], SPIM_tx[2], SPIM_tx[3] );
+		float x = 0.000244140625 * (float)(SPIM_tx[0]);
+		float y = 0.000244140625 * (float)(SPIM_tx[1]);
+		float z = 0.000244140625 * (float)(SPIM_tx[2]);
+		float phi = 0.000244140625 * (float)(SPIM_tx[3]);
+
+		printf("Result[x][y][z][phi]:\t%f\t%f\t%f\t%f\n", x,y,z, phi );
 #endif
 
 		iter++;
