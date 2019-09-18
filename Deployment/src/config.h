@@ -349,19 +349,19 @@ const unsigned int	L3_weights_GT[NWEIGTHS] = {
 /* ------------------------ Biases Ground Truth (GT) ------------------------ */
 const unsigned int	L3_biases_GT[NWEIGTHS] = {
 	920999,						// 1	5x5ConvMax_1
-	678958,					// 3	3x3ConvReLU_2
-	150449,					// 4	3x3Conv_3
-	150449,					// 5	1x1Conv_4
-	733386,					// 8	3x3ConvReLU_5
+	678958,						// 3	3x3ConvReLU_2
+	150449,						// 4	3x3Conv_3
+	150449,						// 5	1x1Conv_4
+	733386,						// 8	3x3ConvReLU_5
 	2292504,					// 9	3x3Conv_6
 	2292504,					// 10	1x1Conv_7
 	6466140,					// 13	3x3ConvReLU_8
-	0,					// 14	3x3Conv_9
-	0,					// 15	1x1Conv_10
-	5753,					// 17	Dense_1
-	65531,							// 18	Dense_2
+	0,							// 14	3x3Conv_9
+	0,							// 15	1x1Conv_10
+	5753,						// 17	Dense_1
+	65531,						// 18	Dense_2
 	8,							// 19	Dense_3
-	65515							// 20	Dense_4
+	65515						// 20	Dense_4
 };
 
 /* --------------------- Quantization Factor per layer ---------------------- */

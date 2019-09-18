@@ -1207,7 +1207,7 @@ int main() {
 		float z = 0.000244140625 * (float)(SPIM_tx[2]);
 		float phi = 0.000244140625 * (float)(SPIM_tx[3]);
 
-		printf("Result[x][y][z][phi]:\t%f\t%f\t%f\t%f\n", x,y,z, phi );
+		printf("Result[x][y][z][phi]:\t%f\t%f\t%f\t%f\n", x,y,z,phi);
 #endif
 
 		iter++;
