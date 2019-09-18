@@ -46,7 +46,7 @@ static int				L3_sizes[NWEIGTHS];
 static unsigned int		L2_bias_sizes[NWEIGTHS]; 
 static int 				Norm_Factor[NWEIGTHS];
 static short int		SPIM_tx[4];
-static short int		SPIM_rx[2];
+static short int		SPIM_rx[4];
 
 
 
@@ -1025,6 +1025,9 @@ int main() {
 	Norm_Factor[9] = Q_Factor[9];
 	Norm_Factor[10] = Q_Factor[10];
 	Norm_Factor[11] = Q_Factor[11];
+	Norm_Factor[12] = Q_Factor[12];
+	Norm_Factor[13] = Q_Factor[13];
+
 
 	for(int i=0; i<NUM_L2_BUFF; i++) {
 		L2_base[i] = rt_alloc(RT_ALLOC_L2_CL_DATA, L2_buffers_size[i]);
