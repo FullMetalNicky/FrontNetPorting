@@ -330,54 +330,54 @@ const char *		L3_bias_files[] = {
 
 /* ----------------------- Weights Ground Truth (GT) ------------------------ */
 const unsigned int	L3_weights_GT[NWEIGTHS] = {
-	26210557,					// 1	5x5ConvMax_1
-	317935783,					// 3	3x3ConvReLU_2
-	315850819,					// 4	3x3Conv_3
-	36647058,					// 5	1x1Conv_4
-	646193316,					// 8	3x3ConvReLU_5
-	1234576685,					// 9	3x3Conv_6
-	72329195,					// 10	1x1Conv_7
-	2566870546,					// 13	3x3ConvReLU_8
-	5320251907,					// 14	3x3Conv_9
-	252426854,					// 15	1x1Conv_10
-	32456913,					// 17	Dense_1
-	32654030,					// 18	Dense_2
-	34901714,					// 19	Dense_3
-	31362521					// 20	Dense_4
+	27270386,					// 1	5x5ConvMax_1
+	315738775,					// 3	3x3ConvReLU_2
+	310043212,					// 4	3x3Conv_3
+	36580961,					// 5	1x1Conv_4
+	636206234,					// 8	3x3ConvReLU_5
+	1224372749,					// 9	3x3Conv_6
+	62402361,					// 10	1x1Conv_7
+	2487894081,					// 13	3x3ConvReLU_8
+	6797471930,					// 14	3x3Conv_9
+	209729488,					// 15	1x1Conv_10
+	34530679,					// 17	Dense_1
+	32618630,					// 18	Dense_2
+	32525920,					// 19	Dense_3
+	34098273					// 20	Dense_4
 };
 
 /* ------------------------ Biases Ground Truth (GT) ------------------------ */
 const unsigned int	L3_biases_GT[NWEIGTHS] = {
-	920999,						// 1	5x5ConvMax_1
-	678958,						// 3	3x3ConvReLU_2
-	150449,						// 4	3x3Conv_3
-	150449,						// 5	1x1Conv_4
-	733386,						// 8	3x3ConvReLU_5
-	2292504,					// 9	3x3Conv_6
-	2292504,					// 10	1x1Conv_7
-	6466140,					// 13	3x3ConvReLU_8
+	1504237,					// 1	5x5ConvMax_1
+	670448,						// 3	3x3ConvReLU_2
+	595272,						// 4	3x3Conv_3
+	859099,						// 5	1x1Conv_4
+	1010829,					// 8	3x3ConvReLU_5
+	2945358,					// 9	3x3Conv_6
+	2410798,					// 10	1x1Conv_7
+	5164349,					// 13	3x3ConvReLU_8
 	0,							// 14	3x3Conv_9
-	0,							// 15	1x1Conv_10
-	5753,						// 17	Dense_1
-	65531,						// 18	Dense_2
-	8,							// 19	Dense_3
-	65515						// 20	Dense_4
+	2947548,					// 15	1x1Conv_10
+	2985,						// 17	Dense_1
+	11,							// 18	Dense_2
+	2,							// 19	Dense_3
+	14							// 20	Dense_4
 };
 
 /* --------------------- Quantization Factor per layer ---------------------- */
 const int			Q_Factor[NWEIGTHS] = {
-	22,							// 1	5x5ConvMax_1
+	21,							// 1	5x5ConvMax_1
 	16,							// 3	3x3ConvReLU_2
-	17,							// 4	3x3Conv_3
-	17,							// 5	1x1Conv_4
-	16,							// 8	3x3ConvReLU_5
-	18,							// 9	3x3Conv_6
-	18,							// 10	1x1Conv_7
-	16,							// 13	3x3ConvReLU_8
+	16,							// 4	3x3Conv_3
+	16,							// 5	1x1Conv_4
+	17,							// 8	3x3ConvReLU_5
+	16,							// 9	3x3Conv_6
+	10,							// 10	1x1Conv_7
+	17,							// 13	3x3ConvReLU_8
 	15,							// 14	3x3Conv_9
-	16,							// 15	1x1Conv_10
-	16,							// 17	Dense_1
-	16,							// 18	Dense_2
+	8,							// 15	1x1Conv_10
+	17,							// 17	Dense_1
+	17,							// 18	Dense_2
 	17,							// 19	Dense_3
 	16 							// 20	Dense_4
 };
@@ -386,6 +386,7 @@ const int			Q_Factor[NWEIGTHS] = {
 /* --------------------- Layer output Ground Truth (GT) --------------------- *
  * for:	pulp-dronet/dataset/Himax_Dataset/test_2/frame_22.pgm						  *
  * -------------------------------------------------------------------------- */
+// this is garbage, I didn't calculate these numbers
 const unsigned int	Layer_GT[NLAYERS] = {
 	26210557,					// 1	5x5ConvMax_1
 	317935783,					// 2	ReLU_1

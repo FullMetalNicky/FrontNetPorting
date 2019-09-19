@@ -1205,10 +1205,10 @@ int main() {
 #endif
 
 #ifdef VERBOSE
-		float x = 0.000244140625 * (float)(SPIM_tx[0]);
-		float y = 0.000244140625 * (float)(SPIM_tx[1]);
-		float z = 0.000244140625 * (float)(SPIM_tx[2]);
-		float phi = 0.000244140625 * (float)(SPIM_tx[3]);
+		float x = 0.000244140625 * (SPIM_tx[0]);
+		float y = 0.000244140625 * (SPIM_tx[1]);
+		float z = 0.000244140625 * (SPIM_tx[2]);
+		float phi = 0.000244140625 * (SPIM_tx[3]);
 
 		printf("Result[x][y][z][phi]:\t%f\t%f\t%f\t%f\n", x,y,z,phi);
 #endif

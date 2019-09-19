@@ -93,7 +93,8 @@ override CONFIG_OPT +=	flash/fs/files=$(WEIGHTS_DIR)/binary/bias_conv.hex \
 ################################# CAMERA IMGS ##################################
 
 # Use this if you want to test a single image
-override CONFIG_OPT += camera/image-stream=$(CURDIR)/../dataset/Himax_Dataset/test_2/frame_22.pgm
+#override CONFIG_OPT += camera/image-stream=$(CURDIR)/../dataset/Himax_Dataset/test_2/frame_23.pgm
+override CONFIG_OPT += camera/image-stream=$(CURDIR)/../dataset/8.pgm
 
 # Use this if you want to test the dataset
 # override CONFIG_OPT += camera/image-stream=$(EXT_INPUT)
