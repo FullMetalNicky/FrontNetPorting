@@ -193,6 +193,22 @@ static void RunPULPDronet() {
 
 /* --------------------------------- LAYER 1 -------------------------------- */
 	L2_input = L2_image;
+
+	/*short int * myLayer = NULL;
+	int myLayerLocation = 0;
+
+	myLayer = L2_input;
+	myLayerLocation = inCh[0] * inWidth[0] * inHeight[0] / 2;
+	myLayer = myLayer + myLayerLocation;
+	printf("location in layer %d\n", myLayerLocation);
+	printf("layer values\n");
+	for (int w = 0; w < inWidth[0]; ++w)
+	{
+		short int myVal = myLayer[w];
+		printf("%d ", myVal);		
+	}*/
+
+
 	memId_O = 0;
 	memId_W = 0;
 
@@ -222,6 +238,16 @@ static void RunPULPDronet() {
 #endif
 
 	meta_free(memId_W, L3_sizes[0]);
+
+	/*myLayer = L2_output[0];
+	myLayerLocation = outCh[0] * outWidth[0] * outHeight[0] / 2;
+	printf("location in layer %d\n", myLayerLocation);
+	printf("layer values\n");
+	for (int w = 0; w < outWidth[0]; ++w)
+	{
+		short int myVal = myLayer[myLayerLocation + w];
+		printf("%f ", (float)myVal * 0.000244140625);		
+	}*/
 
 
 /* -------------------- TRIGGER A NEW IMG TRANSFER ON FC -------------------- */
@@ -280,7 +306,6 @@ __rt_cluster_push_fc_event(event_capture);
 
 	meta_free(memId_W, L3_sizes[1]);
 	meta_free(0, outputSizesB[1]);
-
 
 /* --------------------------------- LAYER 3 -------------------------------- */
 	L2_input = L2_output[2];
@@ -1211,6 +1236,7 @@ int main() {
 		float phi = 0.000244140625 * (SPIM_tx[3]);
 
 		printf("Result[x][y][z][phi]:\t%f\t%f\t%f\t%f\n", x,y,z,phi);
+		//printf("Result[x][y][z][phi]:\t%x\t%x\t%x\t%x\n", SPIM_tx[0], SPIM_tx[1], SPIM_tx[2], SPIM_tx[3]);
 #endif
 
 		iter++;
