@@ -17,10 +17,12 @@ from torchsummary import summary
 
 def TestInference():
 
-    frame = cv2.imread("sample2.png")
-    frame = cv2.resize(frame, (108, 60))
-    model = FrontNet(PreActBlock, [1, 1, 1])
-    ModelManager.Read("Models/FrontNetMixed.pt", model)
+    frame = cv2.imread("13.jpg", 0)
+    frame = np.reshape(frame, (60, 108, 1))
+    #cv2.imshow("", frame)
+    #cv2.waitKey()
+    model = Dronet(PreActBlock, [1, 1, 1], True)
+    ModelManager.Read("Models/DronetGray.pt", model)
     trainer = ModelTrainer(model)
     v1_pred = trainer.InferSingleSample(frame)
     print(v1_pred)
@@ -105,11 +107,11 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    TrainGray()
+    #TrainGray()
     #ConvertToGray()
     #MergeDatasets()
     #Train()
-    #TestInference()
+    TestInference()
 
 if __name__ == '__main__':
     main()

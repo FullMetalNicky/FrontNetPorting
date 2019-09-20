@@ -41,6 +41,10 @@ class Dronet(nn.Module):
 
 
     def forward(self, x):
+        # n, c, h, w = x.shape
+        # location = int((c * w * h) / 2)
+        # tmp = x.reshape(-1)
+        # print("input: val {} at {}".format(tmp[location:location + w], location))
         out = self.conv(x)
         out = self.maxpool(out)
         out = self.layer1(out)

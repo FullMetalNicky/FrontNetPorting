@@ -57,16 +57,39 @@ class ModelTrainer:
         # activations are already statistically bounded in terms of dynamic range.
         # logging.info("[ModelTrainer] Gather statistics for non batch-normed activations")
     
+        # this is with original-Dronet non-fixed PreActBlock
         self.model.fold_bn({
-            'conv':            'layer1.bn1',
-            'layer1.conv1':    'layer1.bn2',
-            'layer1.shortcut': 'layer2.bn1',
-            'layer1.conv2':    'layer2.bn1',
-            'layer2.conv1':    'layer2.bn2',
-            'layer2.shortcut': 'layer3.bn1',
-            'layer2.conv2':    'layer3.bn1',
-            'layer3.conv1':    'layer3.bn2',
+             'conv':            'layer1.bn1',
+             'layer1.conv1':    'layer1.bn2',
+        }, {
+             'layer1.bn1':      'layer1.shortcut',
         })
+        self.model.fold_bn({
+             'layer1.shortcut': 'layer2.bn1',
+             'layer1.conv2':    'layer2.bn1',
+             'layer2.conv1':    'layer2.bn2',
+        }, {
+             'layer2.bn1':      'layer2.shortcut',
+        })
+        self.model.fold_bn({
+             'layer2.shortcut': 'layer3.bn1',
+             'layer2.conv2':    'layer3.bn1',
+             'layer3.conv1':    'layer3.bn2',
+        }, {
+             'layer3.bn1':      'layer3.shortcut',
+        })
+
+        # # this is with fixed PreActBlock
+        # self.model.fold_bn({
+        #     'conv':            'layer1.bn1',
+        #     'layer1.conv1':    'layer1.bn2',
+        #     'layer1.shortcut': 'layer2.bn1',
+        #     'layer1.conv2':    'layer2.bn1',
+        #     'layer2.conv1':    'layer2.bn2',
+        #     'layer2.shortcut': 'layer3.bn1',
+        #     'layer2.conv2':    'layer3.bn1',
+        #     'layer3.conv1':    'layer3.bn2',
+        # })
 
 
         self.model.reset_alpha_weights()
