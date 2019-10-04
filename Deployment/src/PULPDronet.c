@@ -139,6 +139,17 @@ static void end_of_frame() {
 	}
 #endif
 
+	
+	unsigned char * myLayer = L2_image;
+	//myLayer = myLayer + myLayerLocation;
+	printf("location in layer %d\n", 666);
+	printf("layer values\n");
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = myLayer[w];
+		printf("%d ", myVal);		
+	}
+
 	unsigned char * ptr = (unsigned char *) L2_image;
 
 	for(int i=CAM_CROP_H-1; i>=0; i--) {
@@ -194,15 +205,15 @@ static void RunPULPDronet() {
 /* --------------------------------- LAYER 1 -------------------------------- */
 	L2_input = L2_image;
 
-	/*short int * myLayer = NULL;
+	short int * myLayer = NULL;
 	int myLayerLocation = 0;
 
-	myLayer = L2_input;
+	/*myLayer = L2_input;
 	myLayerLocation = inCh[0] * inWidth[0] * inHeight[0] / 2;
-	myLayer = myLayer + myLayerLocation;
+	//myLayer = myLayer + myLayerLocation;
 	printf("location in layer %d\n", myLayerLocation);
 	printf("layer values\n");
-	for (int w = 0; w < inWidth[0]; ++w)
+	for (int w = 0; w < 10; ++w)
 	{
 		short int myVal = myLayer[w];
 		printf("%d ", myVal);		
@@ -246,8 +257,27 @@ static void RunPULPDronet() {
 	for (int w = 0; w < outWidth[0]; ++w)
 	{
 		short int myVal = myLayer[myLayerLocation + w];
-		printf("%f ", (float)myVal * 0.000244140625);		
+		printf("%f ", (float)myVal * 0.00048828125 / 2);		
 	}*/
+
+	/*short int * myWeights = L2_weights;
+	printf("weight values\n");
+	float wFactor = 0.000000476837158203125;
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = myWeights[w];
+		printf("%f ", (float)myVal * wFactor);		
+	}*/
+
+	/*short int * mybiases = L2_bias[0];
+	printf("bias values\n");
+	float bFactor = 0.00048828125;
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = mybiases[w];
+		printf("%f ", (float)myVal * bFactor);		
+	}*/
+
 
 
 /* -------------------- TRIGGER A NEW IMG TRANSFER ON FC -------------------- */
@@ -1230,12 +1260,13 @@ int main() {
 #endif
 
 #ifdef VERBOSE
-		float x = 0.000244140625 * (SPIM_tx[0]);
-		float y = 0.000244140625 * (SPIM_tx[1]);
-		float z = 0.000244140625 * (SPIM_tx[2]);
-		float phi = 0.000244140625 * (SPIM_tx[3]);
+		float factor = 1.0f; // 0.00048828125;
+		float x = factor * (float)(SPIM_tx[0]);
+		float y = factor * (float)(SPIM_tx[1]);
+		float z = factor * (float)(SPIM_tx[2]);
+		float phi = factor * (float)(SPIM_tx[3]);
 
-		printf("Result[x][y][z][phi]:\t%f\t%f\t%f\t%f\n", x,y,z,phi);
+		//printf("Result[x][y][z][phi]:\t%f\t%f\t%f\t%f\n", x,y,z,phi);
 		//printf("Result[x][y][z][phi]:\t%x\t%x\t%x\t%x\n", SPIM_tx[0], SPIM_tx[1], SPIM_tx[2], SPIM_tx[3]);
 #endif
 

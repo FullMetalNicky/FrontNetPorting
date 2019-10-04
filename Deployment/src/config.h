@@ -38,7 +38,7 @@
 #define CAM_CROP_W		108			// Cropped camera width
 #define CAM_CROP_H		60			// Cropped camera height
 #define	NORM_INPUT	 	0			// Input image Norm Factor [Default Q8.8]
-#define NORM_ACT		12			// Activations Norm Factor [Default Q5.11]
+#define NORM_ACT		11			// Activations Norm Factor [Default Q5.11]
 
 /* ---------------------- PULP-DroNet Operative Points ---------------------- *
  * 	Most energy-efficient:	VDD@1.0V	FC 50MHz	CL 100MHz	(6fps@64mW)	  *
@@ -79,7 +79,7 @@
 #define FLASH_BUFF_SIZE	128 		// Safe to keep this <= 256 Bytes
 #define NLAYERS			20			// Overall number of layers (ReLu, Add, Conv, Dense)
 #define NWEIGTHS		14			// Number of Conv Weights
-#define SPIM_BUFFER		4			// SPI master buffer size [Bytes]
+#define SPIM_BUFFER		8			// SPI master buffer size [Bytes]
 #define NORM_BIAS_DENSE	NORM_ACT	// Normalization Factor for the Biases of dense layers
 #define NUM_L2_BUFF		2			// Number of L2 buffers
 #define	CROPPING_X		1			// Cropping area X (Horizontal/Width): 0=Left, 1=Central, 2=Right
