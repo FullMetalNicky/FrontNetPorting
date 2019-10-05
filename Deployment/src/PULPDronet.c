@@ -139,17 +139,6 @@ static void end_of_frame() {
 	}
 #endif
 
-	
-	unsigned char * myLayer = L2_image;
-	//myLayer = myLayer + myLayerLocation;
-	printf("location in layer %d\n", 666);
-	printf("layer values\n");
-	for (int w = 0; w < 10; ++w)
-	{
-		short int myVal = myLayer[w];
-		printf("%d ", myVal);		
-	}
-
 	unsigned char * ptr = (unsigned char *) L2_image;
 
 	for(int i=CAM_CROP_H-1; i>=0; i--) {
@@ -219,6 +208,7 @@ static void RunPULPDronet() {
 		printf("%d ", myVal);		
 	}*/
 
+//memset(L2_bias[0], 0, L2_bias_sizes[0]);
 
 	memId_O = 0;
 	memId_W = 0;
@@ -251,13 +241,12 @@ static void RunPULPDronet() {
 	meta_free(memId_W, L3_sizes[0]);
 
 	/*myLayer = L2_output[0];
-	myLayerLocation = outCh[0] * outWidth[0] * outHeight[0] / 2;
-	printf("location in layer %d\n", myLayerLocation);
 	printf("layer values\n");
-	for (int w = 0; w < outWidth[0]; ++w)
+	for (int w = 0; w < 10; ++w)
 	{
 		short int myVal = myLayer[myLayerLocation + w];
-		printf("%f ", (float)myVal * 0.00048828125 / 2);		
+		printf("%f ", (float)myVal * 0.00048828125);	
+		//printf("%d ", myVal);		
 	}*/
 
 	/*short int * myWeights = L2_weights;
@@ -266,7 +255,8 @@ static void RunPULPDronet() {
 	for (int w = 0; w < 10; ++w)
 	{
 		short int myVal = myWeights[w];
-		printf("%f ", (float)myVal * wFactor);		
+		//printf("%f ", (float)myVal * wFactor);	
+		printf("%d ", myVal);	
 	}*/
 
 	/*short int * mybiases = L2_bias[0];
@@ -275,7 +265,8 @@ static void RunPULPDronet() {
 	for (int w = 0; w < 10; ++w)
 	{
 		short int myVal = mybiases[w];
-		printf("%f ", (float)myVal * bFactor);		
+		printf("%f ", (float)myVal * bFactor);
+		printf("%d ", myVal);			
 	}*/
 
 
@@ -336,6 +327,15 @@ __rt_cluster_push_fc_event(event_capture);
 
 	meta_free(memId_W, L3_sizes[1]);
 	meta_free(0, outputSizesB[1]);
+
+	/*myLayer = L2_output[2];
+	printf("layer conv1\n");
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = myLayer[w];
+		printf("%f ", (float)myVal * 0.00048828125);	
+	}*/
+	
 
 /* --------------------------------- LAYER 3 -------------------------------- */
 	L2_input = L2_output[2];
@@ -400,6 +400,14 @@ __rt_cluster_push_fc_event(event_capture);
 #endif
 
 	meta_free(memId_W, L3_sizes[3]);
+
+	/*myLayer = L2_output[4];
+	printf("layer add1\n");
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = myLayer[w];
+		printf("%f, ", (float)myVal * 0.00048828125);	
+	}*/
 	
 
 /* -------------------------------- ADD RES 1 -------------------------------- */
@@ -423,7 +431,7 @@ __rt_cluster_push_fc_event(event_capture);
 
 	meta_free(0, outputSizesB[3]);
 	meta_free(0, outputSizesB[0]);
-	
+
 
 /* --------------------------------- LAYER 5 -------------------------------- */
 	L2_input = L2_output[5];
@@ -1260,14 +1268,14 @@ int main() {
 #endif
 
 #ifdef VERBOSE
-		float factor = 1.0f; // 0.00048828125;
+		float factor = 0.00048828125;
 		float x = factor * (float)(SPIM_tx[0]);
 		float y = factor * (float)(SPIM_tx[1]);
 		float z = factor * (float)(SPIM_tx[2]);
 		float phi = factor * (float)(SPIM_tx[3]);
 
 		//printf("Result[x][y][z][phi]:\t%f\t%f\t%f\t%f\n", x,y,z,phi);
-		//printf("Result[x][y][z][phi]:\t%x\t%x\t%x\t%x\n", SPIM_tx[0], SPIM_tx[1], SPIM_tx[2], SPIM_tx[3]);
+		//printf("Result[x][y][z][phi]:\t%d\t%d\t%d\t%d\n", SPIM_tx[0], SPIM_tx[1], SPIM_tx[2], SPIM_tx[3]);
 #endif
 
 		iter++;
