@@ -24,8 +24,11 @@
 #ifndef PULP_DRONET_CONFIG
 #define PULP_DRONET_CONFIG
 
+#define DUMP_OUT_FM 0
+#define DUMP_TYPE 1
+
 /****************************** USER PARAMETERS *******************************/
-// #define DATASET_TEST				// Enable if you test the Dataset (single iteration)
+//#define DATASET_TEST				// Enable if you test the Dataset (single iteration)
 #define VERBOSE					// Enables additional information
 // #define CHECKSUM					// Enables correctness check per layer
 // #define PROFILE_CL				// Profiling execution from the Cluster
@@ -376,10 +379,10 @@ const int			Q_Factor[NWEIGTHS] = {
 	17,							// 13	3x3ConvReLU_8
 	15,							// 14	3x3Conv_9
 	8,							// 15	1x1Conv_10
-	17,							// 17	Dense_1
-	17,							// 18	Dense_2
-	17,							// 19	Dense_3
-	16 							// 20	Dense_4
+	12,							// 17	Dense_1 
+	12,							// 18	Dense_2
+	12,							// 19	Dense_3
+	12 							// 20	Dense_4
 };
 
 #ifdef CHECKSUM

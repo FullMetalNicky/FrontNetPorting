@@ -47,7 +47,121 @@ static unsigned int		L2_bias_sizes[NWEIGTHS];
 static int 				Norm_Factor[NWEIGTHS];
 static short int		SPIM_tx[4];
 static short int		SPIM_rx[4];
+ 
 
+#define ABS(x)   ( (x<0) ? (-x) : x ) 
+#define MAX(x,y) ( (x>y) ? x : y )
+#define MIN(x,y) ( (x<y) ? x : y )
+
+// static inline char* 
+static void fixed2string(signed short int x, unsigned int qf, unsigned int nb_frac_digits) {
+
+    int i,j;
+    unsigned int nb_integer_digits;
+    unsigned int nb_fractional_digits;
+    char *s;
+    unsigned int sign  = 0;
+    unsigned int integer    = 0;
+    float fractional = 0.0;
+    unsigned int integer_bcd[15]; // max precision of 15 digits
+    unsigned int fractional_bcd[16]; // max precision of 16 digits
+    // 0) consider sign
+    sign = (x<0) ? 1 : 0;
+    // 1) integer part is just x shifted by qf bits
+    integer = ABS(x) >> qf;
+    // 2) fractional part is the rest
+    fractional = ((float) (ABS(x) - (integer << qf))) / (1 << qf);
+    // printf("%d %d %d\n", ABS(x), integer, ABS(x)-(integer << qf));
+    // 3) convert integer to BCD
+    for(i=0; i<15; i++) {
+        integer_bcd[i] = integer % 10;
+        // printf("int=%d, int_bcd[%d]=%d\n", integer, i, integer_bcd[i]);
+        integer = integer / 10;
+        if(integer == 0) {
+            nb_integer_digits = i+1;
+            break;
+        }
+    }
+   // 4) convert fractional to BCD
+    for(i=0; i<16; i++) {
+        fractional_bcd[i] = (unsigned) (fractional * 10);
+        // printf("    frac_bcd[%d]=%d, %d\n", i, fractional_bcd[i], (unsigned) (fractional));
+        fractional = (fractional * 10) - fractional_bcd[i];
+        if (fractional == 0) {
+            nb_fractional_digits = i+1;
+            break;
+        }
+    }
+   // printf("nb_fractional_digits=%d, nb_integer_digits=%d\n", nb_fractional_digits, nb_integer_digits);
+   // 5) print to char
+    s = (char *) rt_alloc(RT_ALLOC_CL_DATA, sizeof(char)*32);
+    if(sign)
+        s[0] = '-';
+    else
+        s[0] = '+';
+    for(j=nb_integer_digits-1,i=1; j>=0; j--,i++) {
+        s[i] = ((char) integer_bcd[j]) + 48;
+        // printf("  j:%d, i:%d, s[i]: %c\n", j, i, s[i]);
+    }
+    s[nb_integer_digits+1] = '.';
+    for(j=0,i=(int)nb_integer_digits+2; j<(int)MIN(nb_fractional_digits, nb_frac_digits); j++,i++) {
+        s[i] = ((char) fractional_bcd[j]) + 48;
+        // printf("  j:%d, i:%d, s[i]: %c\n", j, i, s[i]);
+    }
+    s[nb_integer_digits+1+MIN(nb_fractional_digits, nb_frac_digits)+1] = '\0';
+
+    printf("%s ", s);
+    rt_free(RT_ALLOC_CL_DATA, s, sizeof(char)*32);
+    // return s;
+}
+
+ /* Dump Feature Maps function.
+ * id: layer id to be dumped
+ * FM: pointer to the feature maps
+ * in_out: select to dump input FMs (0) or output FMs (1)
+ * type: select to print as fixed-point (0) or float (1) */
+static void dumpFMs(int id, short int *FM, int in_out, int type) {
+
+	int channels = 0;
+	int size = 0;
+	int Norm = NORM_ACT;
+	int width = 0;
+	int height = 0;
+
+	if(in_out==0) { // Input
+		channels    = inCh[id];
+		//size        = inSize[id];
+		width 		= inWidth[id];
+		height 		= inHeight[id];
+		// We always use Q12 for FMs except for the Input Q8
+		if(id==0) Norm = NORM_INPUT;
+	} else {		// Output
+		channels    = outCh[id];
+		//size        = outSize[id];
+		width 		= outWidth[id];
+		height 		= outHeight[id];
+	}
+
+	printf("Layer %d\n", id);
+	printf("[");
+	for(int i=0; i<channels; i++) {
+		for(int j=0; j<height; j++) {
+			for(int k=0; k<width; k++) {
+				if(type==0)
+					//printf("0x%04x\n", FM[i*size*size+j*size+k]);
+					printf("0x%04x\n", FM[i*width*height+j*width+k]);
+				else
+					//fixed2string(FM[i*size*size+j*size+k], Norm, 4);
+					fixed2string(FM[i*width*height+j*width+k], Norm, 4);
+				//printf("\n");
+				printf(", ");
+			}
+			// printf("\n");
+		}
+		// printf("\n");
+	}
+	printf("]\n");
+}
 
 
 unsigned int PMU_set_voltage(unsigned int Voltage, unsigned int CheckFrequencies);
@@ -196,19 +310,9 @@ static void RunPULPDronet() {
 
 	short int * myLayer = NULL;
 	int myLayerLocation = 0;
+	int sum = 0;
 
-	/*myLayer = L2_input;
-	myLayerLocation = inCh[0] * inWidth[0] * inHeight[0] / 2;
-	//myLayer = myLayer + myLayerLocation;
-	printf("location in layer %d\n", myLayerLocation);
-	printf("layer values\n");
-	for (int w = 0; w < 10; ++w)
-	{
-		short int myVal = myLayer[w];
-		printf("%d ", myVal);		
-	}*/
-
-//memset(L2_bias[0], 0, L2_bias_sizes[0]);
+	
 
 	memId_O = 0;
 	memId_W = 0;
@@ -238,16 +342,15 @@ static void RunPULPDronet() {
 	check_layer(L2_output[0], 0);
 #endif
 
+printf("new frame\n");
+
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(0, L2_output[0], 1, DUMP_TYPE);
+#endif
+
 	meta_free(memId_W, L3_sizes[0]);
 
-	/*myLayer = L2_output[0];
-	printf("layer values\n");
-	for (int w = 0; w < 10; ++w)
-	{
-		short int myVal = myLayer[myLayerLocation + w];
-		printf("%f ", (float)myVal * 0.00048828125);	
-		//printf("%d ", myVal);		
-	}*/
+
 
 	/*short int * myWeights = L2_weights;
 	printf("weight values\n");
@@ -292,14 +395,17 @@ __rt_cluster_push_fc_event(event_capture);
 	perf_exe_cum_cl[1] = rt_perf_read(RT_PERF_CYCLES) - perf_start;
 #endif
 
-#ifdef CHECKSUM
-	check_layer(L2_output[1], 1);
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(1, L2_output[1], 1, DUMP_TYPE);
 #endif
 
+	//here L2_output[0] is not zero
 
 	L2_input = L2_output[1];
 	memId_O = 1;
 	memId_W = 1;
+
+
 
 #ifdef PROFILE_CL
 	perf_start = rt_perf_read(RT_PERF_CYCLES);
@@ -328,6 +434,21 @@ __rt_cluster_push_fc_event(event_capture);
 	meta_free(memId_W, L3_sizes[1]);
 	meta_free(0, outputSizesB[1]);
 
+
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(2, L2_output[2], 1, DUMP_TYPE);
+#endif
+
+	//here L2_output[0] is 0
+
+	/*myLayer = L2_output[0];
+	printf("conv1 1\n");
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = myLayer[w];
+		printf("%f, ", (float)myVal * 0.00048828125);	
+	}*/
+
 	/*myLayer = L2_output[2];
 	printf("layer conv1\n");
 	for (int w = 0; w < 10; ++w)
@@ -335,6 +456,8 @@ __rt_cluster_push_fc_event(event_capture);
 		short int myVal = myLayer[w];
 		printf("%f ", (float)myVal * 0.00048828125);	
 	}*/
+
+
 	
 
 /* --------------------------------- LAYER 3 -------------------------------- */
@@ -368,6 +491,18 @@ __rt_cluster_push_fc_event(event_capture);
 
 	meta_free(memId_W, L3_sizes[2]);
 	meta_free(1, outputSizesB[2]);
+
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(3, L2_output[3], 1, DUMP_TYPE);
+#endif
+
+	/*myLayer = L2_output[3];
+	printf("block 1 conv3x3 2\n");
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = myLayer[w];
+		printf("%f, ", (float)myVal * 0.00048828125);	
+	}*/
 	
 
 /* --------------------------------- LAYER 4 -------------------------------- */
@@ -389,6 +524,18 @@ __rt_cluster_push_fc_event(event_capture);
 	perf_start = rt_perf_read(RT_PERF_CYCLES);
 #endif
 
+
+
+	/*myLayer = L2_output[0];
+	printf("layer before shortcut\n");
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = myLayer[w];
+		printf("%f, ", (float)myVal * 0.00048828125);	
+		//printf("%d, ", myVal);	
+	}*/
+
+
 	MedParConv_1x1_S2_4(L2_input, L2_weights, L2_output[4], Norm_Factor[3], L2_bias[3], 0);
 
 #ifdef PROFILE_CL
@@ -401,8 +548,13 @@ __rt_cluster_push_fc_event(event_capture);
 
 	meta_free(memId_W, L3_sizes[3]);
 
+
+	#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(4, L2_output[4], 1, DUMP_TYPE);
+#endif
+
 	/*myLayer = L2_output[4];
-	printf("layer add1\n");
+	printf("shortcut 1\n");
 	for (int w = 0; w < 10; ++w)
 	{
 		short int myVal = myLayer[w];
@@ -433,6 +585,18 @@ __rt_cluster_push_fc_event(event_capture);
 	meta_free(0, outputSizesB[0]);
 
 
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(5, L2_output[5], 1, DUMP_TYPE);
+#endif
+	/*myLayer = L2_output[5];
+	printf("add 1\n");
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = myLayer[w];
+		printf("%f, ", (float)myVal * 0.00048828125);	
+	}*/
+
+
 /* --------------------------------- LAYER 5 -------------------------------- */
 	L2_input = L2_output[5];
 	memId_O = 0;
@@ -454,6 +618,9 @@ __rt_cluster_push_fc_event(event_capture);
 	check_layer(L2_output[6], 6);
 #endif
 	
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(6, L2_output[6], 1, DUMP_TYPE);
+#endif	
 
 	L2_input = L2_output[6];
 	memId_O = 0;
@@ -484,6 +651,18 @@ __rt_cluster_push_fc_event(event_capture);
 #endif
 
 	meta_free(memId_W, L3_sizes[4]);
+
+
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(7, L2_output[7], 1, DUMP_TYPE);
+#endif
+	/*myLayer = L2_output[7];
+	printf("block 2 conv3x3 1\n");
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = myLayer[w];
+		printf("%f, ", (float)myVal * 0.00048828125);	
+	}*/
 	
 
 /* --------------------------------- LAYER 6 -------------------------------- */
@@ -519,6 +698,17 @@ __rt_cluster_push_fc_event(event_capture);
 	meta_free(0, outputSizesB[7]);
 	meta_free(0, outputSizesB[6]);
 	
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(8, L2_output[8], 1, DUMP_TYPE);
+#endif
+
+	/*myLayer = L2_output[8];
+	printf("block 2 conv3x3 2\n");
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = myLayer[w];
+		printf("%f, ", (float)myVal * 0.00048828125);	
+	}*/
 
 /* --------------------------------- LAYER 7 -------------------------------- */
 	L2_input = L2_output[4];
@@ -550,11 +740,25 @@ __rt_cluster_push_fc_event(event_capture);
 #endif
 
 	meta_free(memId_W, L3_sizes[6]);
+
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(9, L2_output[9], 1, DUMP_TYPE);
+#endif
+
+	/*myLayer = L2_output[9];
+	printf("block 2 shortcut\n");
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = myLayer[w];
+		printf("%f, ", (float)myVal * 0.00048828125);	
+	}*/
 	
 
 /* -------------------------------- ADD RES 2 -------------------------------- */
 	L2_input = L2_output[8];
 	L2_output[10] = L2_output[9];
+
+
 
 #ifdef PROFILE_CL
 	perf_mem_cum_cl[10] = 0;
@@ -574,6 +778,18 @@ __rt_cluster_push_fc_event(event_capture);
 	meta_free(1, outputSizesB[8]);
 	meta_free(1, outputSizesB[4]);
 	
+
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(10, L2_output[10], 1, DUMP_TYPE);
+#endif
+
+	/*myLayer = L2_output[10];
+	printf("block 2 add\n");
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = myLayer[w];
+		printf("%f, ", (float)myVal * 0.00048828125);	
+	}*/
 
 /* --------------------------------- LAYER 8 -------------------------------- */
 	L2_input = L2_output[10];
@@ -596,6 +812,10 @@ __rt_cluster_push_fc_event(event_capture);
 	check_layer(L2_output[11], 11);
 #endif
 	
+
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(11, L2_output[11], 1, DUMP_TYPE);
+#endif
 
 	L2_input = L2_output[11];
 	memId_O = 1;
@@ -628,6 +848,16 @@ __rt_cluster_push_fc_event(event_capture);
 	meta_free(memId_W, L3_sizes[7]);
 	meta_free(0, outputSizesB[11]);
 	
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(12, L2_output[12], 1, DUMP_TYPE);
+#endif
+	/*myLayer = L2_output[12];
+	printf("block 3 conv3x3 1\n");
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = myLayer[w];
+		printf("%f, ", (float)myVal * 0.00048828125);	
+	}*/
 
 /* --------------------------------- LAYER 9 -------------------------------- */
 	L2_input = L2_output[12];
@@ -660,6 +890,17 @@ __rt_cluster_push_fc_event(event_capture);
 
 	meta_free(memId_W, L3_sizes[8]);
 	
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(13, L2_output[13], 1, DUMP_TYPE);
+#endif
+
+	/*myLayer = L2_output[13];
+	printf("block 3 conv3x3 2\n");
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = myLayer[w];
+		printf("%f, ", (float)myVal * 0.00048828125);	
+	}*/
 
 /* --------------------------------- LAYER 10 ------------------------------- */
 	L2_input = L2_output[9];
@@ -693,9 +934,22 @@ __rt_cluster_push_fc_event(event_capture);
 	meta_free(memId_W, L3_sizes[9]);
 
 
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(14, L2_output[14], 1, DUMP_TYPE);
+#endif
+	/*myLayer = L2_output[14];
+	printf("block 3 shortcut\n");
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = myLayer[w];
+		printf("%f, ", (float)myVal * 0.00048828125);	
+	}*/
+
+
 /* -------------------------------- ADD RES 3 -------------------------------- */
 	L2_input = L2_output[13];
 	L2_output[15] = L2_output[14];
+
 
 #ifdef PROFILE_CL
 	perf_mem_cum_cl[15] = 0;
@@ -715,6 +969,24 @@ __rt_cluster_push_fc_event(event_capture);
 	meta_free(1, outputSizesB[13]);
 	meta_free(1, outputSizesB[12]);
 
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(15, L2_output[15], 1, DUMP_TYPE);
+#endif
+
+	/*myLayer = L2_output[15];
+	for (int w = 0; w < outputSizesB[14]/2; ++w)
+	{
+		//myLayer[w] = 1;
+		short int myVal = myLayer[w];
+		printf("%f, ", (float)myVal * 0.00048828125);	
+	}*/
+
+	/*printf("block 3 add\n");
+	for (int w = 0; w < 10; ++w)
+	{
+		short int myVal = myLayer[w];
+		printf("%d, ", myVal);	
+	}*/
 
 /* --------------------------------- DENSE 1 -------------------------------- */
 	L2_input = L2_output[15];
@@ -745,10 +1017,13 @@ __rt_cluster_push_fc_event(event_capture);
 	check_layer(L2_output[16], 16);
 #endif
 
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(16, L2_output[16], 1, DUMP_TYPE);
+#endif
+
 	meta_free(memId_W, L3_sizes[10]);
 	SPIM_tx[0] = L2_output[16][0];
 	meta_free(memId_O, outputSizesB[16]+2);
-
 
 /* --------------------------------- DENSE 2 -------------------------------- */
 	L2_input = L2_output[15];
@@ -779,11 +1054,15 @@ __rt_cluster_push_fc_event(event_capture);
 	check_layer(L2_output[17], 17);
 #endif
 
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(17, L2_output[17], 1, DUMP_TYPE);
+#endif
+
 	meta_free(memId_W, L3_sizes[11]);
 	SPIM_tx[1] = L2_output[17][0];
 	meta_free(memId_O, outputSizesB[17]+2);
-	meta_free(0, outputSizesB[14]);
-	meta_free(0, outputSizesB[9]);
+	//meta_free(0, outputSizesB[14]);
+	//meta_free(0, outputSizesB[9]);
 
 
 
@@ -814,6 +1093,10 @@ __rt_cluster_push_fc_event(event_capture);
 
 #ifdef CHECKSUM
 	check_layer(L2_output[18], 18);
+#endif
+
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(18, L2_output[18], 1, DUMP_TYPE);
 #endif
 
 	meta_free(memId_W, L3_sizes[12]);
@@ -849,9 +1132,15 @@ __rt_cluster_push_fc_event(event_capture);
 	check_layer(L2_output[19], 19);
 #endif
 
+#if DUMP_OUT_FM==1 || (defined(DUMP_OUT_FM) && defined(TEST))
+	dumpFMs(19, L2_output[19], 1, DUMP_TYPE);
+#endif
+
 	meta_free(memId_W, L3_sizes[13]);
 	SPIM_tx[3] = L2_output[19][0];
 	meta_free(memId_O, outputSizesB[19]+2);
+	meta_free(0, outputSizesB[14]);
+	meta_free(0, outputSizesB[9]);
 
 
 /* -------------------------------------------------------------------------- */
@@ -1103,7 +1392,8 @@ int main() {
 	}
 
 	// allocate the memory of L2 for the image buffer
-	L2_image = rt_alloc(RT_ALLOC_L2_CL_DATA, CAM_CROP_W*CAM_CROP_H*sizeof(short int));
+	//L2_image = rt_alloc(RT_ALLOC_L2_CL_DATA, CAM_CROP_W*CAM_CROP_H*sizeof(short int));
+	L2_image = rt_alloc(RT_ALLOC_L2_CL_DATA, 200*200*sizeof(short int));
 #ifdef VERBOSE
 	printf("L2 Image alloc\t%dB\t@ 0x%08x:\t%s\n", CAM_CROP_W*CAM_CROP_H*sizeof(short int), (unsigned int) L2_image, L2_image?"Ok":"Failed");
 #endif
@@ -1274,11 +1564,13 @@ int main() {
 		float z = factor * (float)(SPIM_tx[2]);
 		float phi = factor * (float)(SPIM_tx[3]);
 
-		//printf("Result[x][y][z][phi]:\t%f\t%f\t%f\t%f\n", x,y,z,phi);
+		printf("Result[x][y][z][phi]:\t%f\t%f\t%f\t%f\n", x,y,z,phi);
 		//printf("Result[x][y][z][phi]:\t%d\t%d\t%d\t%d\n", SPIM_tx[0], SPIM_tx[1], SPIM_tx[2], SPIM_tx[3]);
 #endif
 
 		iter++;
+		//if (1 == iter) break;
+
 #ifndef DATASET_TEST
 	}
 #endif
