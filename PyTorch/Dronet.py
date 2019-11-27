@@ -1,5 +1,10 @@
 import torch.nn as nn
 from PreActBlock import PreActBlock
+from PreActBlock import printRes
+import numpy as np
+import logging
+
+np.set_printoptions(threshold=np.inf)
 
 
 def conv1x1(in_planes, out_planes, stride=1):
@@ -41,21 +46,29 @@ class Dronet(nn.Module):
 
 
     def forward(self, x):
-        # n, c, h, w = x.shape
-        # location = int((c * w * h) / 2)
-        # tmp = x.reshape(-1)
-        # print("input: val {} at {}".format(tmp[location:location + w], location))
+
         out = self.conv(x)
         out = self.maxpool(out)
+        printRes(out, "5x5ConvMax_1")
         out = self.layer1(out)
+        printRes(out, "Add_1")
         out = self.layer2(out)
+        printRes(out, "Add_2")
         out = self.layer3(out)
         out = out.view(out.size(0), -1)
         out = self.relu(out)
+        logging.info("AddReLU_3")
+        logging.info(list(out.numpy()))
         out = self.dropout(out)
         x = self.fc_x(out)
+        logging.info("Dense1={}".format(x.numpy()))
         y = self.fc_y(out)
+        logging.info("Dense2={}".format(y.numpy()))
         z = self.fc_z(out)
+        logging.info("Dense3={}".format(z.numpy()))
         phi = self.fc_phi(out)
+        logging.info("Dense4={}".format(phi.numpy()))
 
         return [x, y, z, phi]
+
+

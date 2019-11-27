@@ -38,8 +38,10 @@ class ModelTrainer:
 
     def Quantize(self, validation_loader):
 
+
+
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-            validation_loader)
+             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
         print("[ModelTrainer]: Before quantization process: %f" % acc)
 
@@ -94,7 +96,7 @@ class ModelTrainer:
 
         self.model.reset_alpha_weights()
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-            validation_loader)
+             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
         print("[ModelTrainer]: After BN folding: %f" % acc)
 
@@ -116,7 +118,7 @@ class ModelTrainer:
         self.model.export_weights_legacy_int16(save_binary=True)
         # [NeMO] Re-check validation accuracy
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-            validation_loader)
+             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
         print("[ModelTrainer]: After export: %f" % acc)
 
@@ -302,8 +304,8 @@ class ModelTrainer:
 
         outputs = torch.stack(outputs, 0)
         outputs = torch.squeeze(outputs)
-        outputs = torch.t(outputs)
-        outputs = outputs.cpu().numpy()
+        #outputs = torch.t(outputs)
+        #outputs = outputs.cpu().numpy()
         return outputs
 
     def Predict(self, test_generator):

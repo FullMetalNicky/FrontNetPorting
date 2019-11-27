@@ -2,7 +2,7 @@ from __future__ import print_function
 from PreActBlock import PreActBlock
 from FrontNet import FrontNet
 from Dronet import Dronet
-
+import numpy as np
 
 from DataProcessor import DataProcessor
 from ModelTrainerETH import ModelTrainer
@@ -10,6 +10,7 @@ from Dataset import Dataset
 from torch.utils import data
 from ModelManager import ModelManager
 import torch
+import cv2
 
 import argparse
 import json
@@ -141,10 +142,21 @@ def main():
 
     trainer = ModelTrainer(model, args, regime)
     if args.quantize:
+        logging.disable(logging.INFO)
         trainer.Quantize(validation_loader)
+        logging.disable(logging.NOTSET)
 
-    trainer.Train(train_loader, validation_loader)
-    trainer.Predict(test_loader)
+        # print("test start")
+        # frame = cv2.imread("test5000.pgm", 0)
+        # frame = frame[92:152, 108:216]
+        # frame = np.reshape(frame, (60, 108, 1))
+        # v1_pred = trainer.InferSingleSample(frame)
+        # print("output")
+        # print(v1_pred)
+
+    #if args.epochs > 0:
+     #   trainer.Train(train_loader, validation_loader)
+    #trainer.Predict(test_loader)
 
     if args.save_model is not None:
         #torch.save(trainer.model.state_dict(), args.save_model)
