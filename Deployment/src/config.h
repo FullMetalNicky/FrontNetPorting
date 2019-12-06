@@ -147,7 +147,8 @@
 /******************************************************************************/
 
 /* ----------------------------- L2 Buffer Sizes ---------------------------- */
-const int			L2_buffers_size[NUM_L2_BUFF] = {320000, 61632};
+//const int			L2_buffers_size[NUM_L2_BUFF] = {320000, 61632};
+const int			L2_buffers_size[NUM_L2_BUFF] = {300000, 40000};
 
 /* --------------------------- Input Channel Sizes -------------------------- */
 const int			inCh[] = {
@@ -333,20 +334,20 @@ const char *		L3_bias_files[] = {
 
 /* ----------------------- Weights Ground Truth (GT) ------------------------ */
 const unsigned int	L3_weights_GT[NWEIGTHS] = {
-	27270386,					// 1	5x5ConvMax_1
-	315738775,					// 3	3x3ConvReLU_2
-	310043212,					// 4	3x3Conv_3
-	36580961,					// 5	1x1Conv_4
-	636206234,					// 8	3x3ConvReLU_5
-	1224372749,					// 9	3x3Conv_6
-	62402361,					// 10	1x1Conv_7
-	2487894081,					// 13	3x3ConvReLU_8
-	6797471930,					// 14	3x3Conv_9
-	209729488,					// 15	1x1Conv_10
-	34530679,					// 17	Dense_1
-	32618630,					// 18	Dense_2
-	32525920,					// 19	Dense_3
-	34098273					// 20	Dense_4
+	27270384,					// 1	5x5ConvMax_1
+	317311429,					// 3	3x3ConvReLU_2
+	311091664,					// 4	3x3Conv_3
+	36580896,					// 5	1x1Conv_4
+	636538343,					// 8	3x3ConvReLU_5
+	1224571106,					// 9	3x3Conv_6
+	62730065,					// 10	1x1Conv_7
+	2488023927,					// 13	3x3ConvReLU_8
+	6798224116,					// 14	3x3Conv_9
+	217070237,					// 15	1x1Conv_10
+	34530659,					// 17	Dense_1
+	32618647,					// 18	Dense_2
+	32529124,					// 19	Dense_3
+	34098266					// 20	Dense_4
 };
 
 /* ------------------------ Biases Ground Truth (GT) ------------------------ */
@@ -379,10 +380,10 @@ const int			Q_Factor[NWEIGTHS] = {
 	17,							// 13	3x3ConvReLU_8
 	15,							// 14	3x3Conv_9
 	8,							// 15	1x1Conv_10
-	12,							// 17	Dense_1 
-	12,							// 18	Dense_2
-	12,							// 19	Dense_3
-	12 							// 20	Dense_4
+	17,							// 17	Dense_1 
+	17,							// 18	Dense_2
+	17,							// 19	Dense_3
+	16 							// 20	Dense_4
 };
 
 #ifdef CHECKSUM
