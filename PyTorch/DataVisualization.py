@@ -134,10 +134,10 @@ class DataVisualization:
         phi = phi.cpu().numpy()
         plt.plot(epochs, phi, color='m', label='phi')
         plt.legend()
-        plt.title('Pose Variables r2_score')
+        plt.title('Pose Variables ')
         plt.xlabel('Epoch')
-        plt.ylabel('r2_score')
-        plt.xticks(np.arange(0, len(r2_score), step=5))
+        plt.ylabel('')
+        plt.xticks(np.arange(0, len(), step=5))
         plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'Rsq.png')
 
 

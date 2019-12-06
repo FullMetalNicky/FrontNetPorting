@@ -8,6 +8,7 @@ from EarlyStopping import EarlyStopping
 from ValidationUtils import Metrics
 import nemo
 import logging
+from ModelManager import ModelManager
 from collections import OrderedDict
 
 class ModelTrainer:
@@ -37,8 +38,6 @@ class ModelTrainer:
         return self.model
 
     def Quantize(self, validation_loader):
-
-
 
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
              validation_loader)
@@ -114,6 +113,7 @@ class ModelTrainer:
         # [NeMO] Change precision and reset weight clipping parameters
         self.model.change_precision(bits=16)
         self.model.reset_alpha_weights()
+
         # [NeMO] Export legacy-style INT-16 weights. Clipping parameters are changed!
         self.model.export_weights_legacy_int16(save_binary=True)
         # [NeMO] Re-check validation accuracy
@@ -233,13 +233,13 @@ class ModelTrainer:
 
             gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
             y_pred = torch.tensor(y_pred, dtype=torch.float32)
-            MSE, MAE, r_score = metrics.Update(y_pred, gt_labels,
+            MSE, MAE, r2_score = metrics.Update(y_pred, gt_labels,
                                                [train_loss_x, train_loss_y, train_loss_z, train_loss_phi],
                                                [valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi])
 
             logging.info('[ModelTrainer] Validation MSE: {}'.format(MSE))
             logging.info('[ModelTrainer] Validation MAE: {}'.format(MAE))
-            logging.info('[ModelTrainer] Validation r_score: {}'.format(r_score))
+            logging.info('[ModelTrainer] Validation r2_score: {}'.format(r2_score))
 
             checkpoint_filename = self.folderPath + self.model.name + '-{:03d}.pt'.format(epoch)
             early_stopping(valid_loss, self.model, epoch, checkpoint_filename)
@@ -249,7 +249,7 @@ class ModelTrainer:
 
         MSEs = metrics.GetMSE()
         MAEs = metrics.GetMAE()
-        r_score = metrics.Getr2_score()
+        r2_score = metrics.Get()
         y_pred_viz = metrics.GetPred()
         gt_labels_viz = metrics.GetLabels()
         train_losses_x, train_losses_y, train_losses_z, train_losses_phi, valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi = metrics.GetLosses()
@@ -258,7 +258,7 @@ class ModelTrainer:
         DataVisualization.PlotLoss(train_losses_x, train_losses_y, train_losses_z, train_losses_phi , valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi)
         DataVisualization.PlotMSE(MSEs)
         DataVisualization.PlotMAE(MAEs)
-        DataVisualization.PlotR2Score(r_score)
+        DataVisualization.PlotR2Score(r2_score)
 
         DataVisualization.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
         DataVisualization.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
@@ -317,7 +317,7 @@ class ModelTrainer:
 
         gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
         y_pred = torch.tensor(y_pred, dtype=torch.float32)
-        MSE, MAE, r_score = metrics.Update(y_pred, gt_labels,
+        MSE, MAE, r2_score = metrics.Update(y_pred, gt_labels,
                                            [0, 0, 0, 0],
                                            [valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi])
 
@@ -330,7 +330,7 @@ class ModelTrainer:
         DataVisualization.DisplayPlots()
         logging.info('[ModelTrainer] Test MSE: {}'.format(MSE))
         logging.info('[ModelTrainer] Test MAE: {}'.format(MAE))
-        logging.info('[ModelTrainer] Test r_score: {}'.format(r_score))
+        logging.info('[ModelTrainer] Test r2_score: {}'.format(r2_score))
 
     def Infer(self, live_generator):
 

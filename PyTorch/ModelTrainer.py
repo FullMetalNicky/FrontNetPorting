@@ -149,7 +149,7 @@ class ModelTrainer:
 
         MSEs = metrics.GetMSE()
         MAEs = metrics.GetMAE()
-        r_score = metrics.Getr2_score()
+        r2_score = metrics.Get()
         y_pred_viz = metrics.GetPred()
         gt_labels_viz = metrics.GetLabels()
         train_losses_x, train_losses_y, train_losses_z, train_losses_phi, valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi = metrics.GetLosses()
@@ -158,7 +158,7 @@ class ModelTrainer:
         DataVisualization.PlotLoss(train_losses_x, train_losses_y, train_losses_z, train_losses_phi , valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi)
         DataVisualization.PlotMSE(MSEs)
         DataVisualization.PlotMAE(MAEs)
-        DataVisualization.PlotR2Score(r_score)
+        DataVisualization.PlotR2Score(r2_score)
 
         DataVisualization.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
         DataVisualization.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
@@ -212,7 +212,7 @@ class ModelTrainer:
 
         gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
         y_pred = torch.tensor(y_pred, dtype=torch.float32)
-        MSE, MAE, r_score = metrics.Update(y_pred, gt_labels,
+        MSE, MAE, r2_score = metrics.Update(y_pred, gt_labels,
                                            [0, 0, 0, 0],
                                            [valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi])
 
@@ -225,7 +225,7 @@ class ModelTrainer:
         DataVisualization.DisplayPlots()
         logging.info('Test MSE: {}'.format(MSE))
         logging.info('Test MAE: {}'.format(MAE))
-        logging.info('Test r_score: {}'.format(r_score))
+        logging.info('Test r2_score: {}'.format(r2_score))
 
         return y_pred
 
