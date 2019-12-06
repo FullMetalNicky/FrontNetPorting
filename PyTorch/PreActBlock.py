@@ -1,4 +1,8 @@
 import torch.nn as nn
+import numpy as np
+import logging
+np.set_printoptions(threshold=np.inf)
+np.set_printoptions(suppress=True)
 
 class PreActBlock(nn.Module):
     '''Pre-activation version of the BasicBlock.'''
@@ -20,28 +24,22 @@ class PreActBlock(nn.Module):
             self.shortcut = nn.Conv2d(in_planes, self.expansion*planes, kernel_size=1, stride=stride, bias=False)
 
     def forward(self, x):
-        # n, c, h, w = x.shape
-        # location = int((c * w * h) / 2)
-        # tmp = x.reshape(-1)
-        # print("entering resnet block: val {} at {}".format(tmp[location:location+w], location))
+
         out = self.bn1(x)
         out = self.relu1(out)
+        printRes(out, "ReLU")
         shortcut = self.shortcut(x) if hasattr(self, 'shortcut') else x
         out = self.conv1(out)
-        # n, c, h, w = out.shape
-        # location = int((c * w * h ) / 2)
-        # tmp = out.reshape(-1)
-        # print("After resnet conv 1: val {} at {}".format(tmp[location:location+w], location))
         out = self.bn2(out)
         out = self.relu2(out)
+        printRes(out, "3x3ConvReLU")
         out = self.conv2(out)
-        # n, c, h, w = out.shape
-        # location = int((c * w * h ) / 2)
-        # tmp = out.reshape(-1)
-        # print("After resnet conv 2: val {} at {}".format(tmp[location:location+w], location))
-        # n, c, h, w = shortcut.shape
-        # location = int((c * w * h ) / 2)
-        # tmp = shortcut.reshape(-1)
-        # print("After resnet shortcut: val {} at {}".format(tmp[location:location+w], location))
+        printRes(out, "3x3Conv")
+        printRes(shortcut, "1x1Conv")
         out += shortcut
         return out
+
+def printRes(layer, name):
+    n, c, h, w = layer.shape
+    tmp = layer.reshape(-1)
+    logging.info("{}={}".format(name, list(tmp.numpy())))

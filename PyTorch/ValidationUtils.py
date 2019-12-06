@@ -57,7 +57,7 @@ class Metrics:
     def __init__(self):
         self.MSE = []
         self.MAE = []
-        self.r_score = []
+        self.r2_score = []
 
         self.train_losses_x = []
         self.train_losses_y = []
@@ -112,18 +112,18 @@ class Metrics:
         y_r2 = sklearn.metrics.r2_score(y_gt, y)
         z_r2 = sklearn.metrics.r2_score(z_gt, z)
         phi_r2 = sklearn.metrics.r2_score(phi_gt, phi)
-        r_score = torch.FloatTensor([x_r2, y_r2, z_r2, phi_r2])
+        r2_score = torch.FloatTensor([x_r2, y_r2, z_r2, phi_r2])
 
         self.MSE.append(MSE)
         self.MAE.append(MAE)
-        self.r_score.append(r_score)
+        self.r2_score.append(r2_score)
 
-        return MSE, MAE, r_score
+        return MSE, MAE, r2_score
 
     def Reset(self):
         self.MSE.clear()
         self.MAE.clear()
-        self.r_score.clear()
+        self.r2_score.clear()
 
     def GetPred(self):
         return self.y_pred
@@ -141,5 +141,5 @@ class Metrics:
     def GetMAE(self):
         return self.MAE
 
-    def Getr2_score(self):
-        return self.r_score
+    def Get(self):
+        return self.r2_score

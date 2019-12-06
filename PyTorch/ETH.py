@@ -2,7 +2,7 @@ from __future__ import print_function
 from PreActBlock import PreActBlock
 from FrontNet import FrontNet
 from Dronet import Dronet
-
+import numpy as np
 
 from DataProcessor import DataProcessor
 from ModelTrainerETH import ModelTrainer
@@ -10,6 +10,7 @@ from Dataset import Dataset
 from torch.utils import data
 from ModelManager import ModelManager
 import torch
+import cv2
 
 import argparse
 import json
@@ -141,6 +142,7 @@ def main():
 
     trainer = ModelTrainer(model, args, regime)
     if args.quantize:
+        logging.disable(logging.INFO)
         trainer.Quantize(validation_loader)
         trainer.Predict(test_loader)
         import sys; sys.exit(0)
