@@ -137,3 +137,7 @@ build/
 *.gch
 *.yaml
 *.avi
+Results/
+frontnet_weights/
+frontnet_golden/
+

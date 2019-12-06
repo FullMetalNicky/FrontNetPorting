@@ -27,15 +27,15 @@ class PreActBlock(nn.Module):
 
         out = self.bn1(x)
         out = self.relu1(out)
-        printRes(out, "ReLU")
+        #printRes(out, "ReLU")
         shortcut = self.shortcut(x) if hasattr(self, 'shortcut') else x
         out = self.conv1(out)
         out = self.bn2(out)
         out = self.relu2(out)
-        printRes(out, "3x3ConvReLU")
+        #printRes(out, "3x3ConvReLU")
         out = self.conv2(out)
-        printRes(out, "3x3Conv")
-        printRes(shortcut, "1x1Conv")
+        #printRes(out, "3x3Conv")
+        #printRes(shortcut, "1x1Conv")
         out += shortcut
         return out
 
