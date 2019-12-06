@@ -142,6 +142,8 @@ def main():
     trainer = ModelTrainer(model, args, regime)
     if args.quantize:
         trainer.Quantize(validation_loader)
+        trainer.Predict(test_loader)
+        import sys; sys.exit(0)
 
     trainer.Train(train_loader, validation_loader)
     trainer.Predict(test_loader)

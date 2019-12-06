@@ -25,13 +25,13 @@ class Dronet(nn.Module):
         else:
             self.conv = nn.Conv2d(3, self.inplanes, kernel_size=5, stride=2, padding=2, bias=False)
 
-        self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
 
         self.layer1 = PreActBlock(32, 32, stride=2)
         self.layer2 = PreActBlock(32, 64, stride=2)
         self.layer3 = PreActBlock(64, 128, stride=2)
 
+        self.relu = nn.ReLU()
         self.dropout = nn.Dropout()
         finalSize = 128*2*4
         self.fc_x = nn.Linear(finalSize, 1)

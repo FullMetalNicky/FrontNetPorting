@@ -130,7 +130,6 @@ dmypy.json
 
 autotiler/
 build/
-nemo/
 *.DS_Store
 *log.txt
 *build/

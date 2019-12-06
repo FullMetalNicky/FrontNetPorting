@@ -44,7 +44,7 @@ class ModelTrainer:
         print("[ModelTrainer]: Before quantization process: %f" % acc)
 
         # [NeMO] This call "transforms" the model into a quantization-aware one, which is printed immediately afterwards.
-        self.model = nemo.transform.quantize_pact(self.model)
+        self.model = nemo.transform.quantize_pact(self.model, dummy_input=torch.randn(1, 1, 60, 108))
         logging.info("[ModelTrainer] Model: %s", self.model)
         # [NeMO] NeMO re-training usually converges better using an Adam optimizer, and a smaller learning rate
         # optimizer = torch.optim.Adam(self.model.parameters(), lr=float(self.regime['lr']),
@@ -91,6 +91,7 @@ class ModelTrainer:
         #     'layer3.conv1':    'layer3.bn2',
         # })
 
+        # import IPython; IPython.embed()
 
         self.model.reset_alpha_weights()
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
@@ -112,14 +113,61 @@ class ModelTrainer:
         # [NeMO] Change precision and reset weight clipping parameters
         self.model.change_precision(bits=16)
         self.model.reset_alpha_weights()
+
+        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+            validation_loader)
+        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+        print("[ModelTrainer]: Before export: %f" % acc)
+
+        # import IPython; IPython.embed()
         # [NeMO] Export legacy-style INT-16 weights. Clipping parameters are changed!
-        self.model.export_weights_legacy_int16(save_binary=True)
+        self.model.export_weights_legacy_int16(save_binary=True, folder_name="frontnet_weights", x_alpha_safety_factor=1)
         # [NeMO] Re-check validation accuracy
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
         print("[ModelTrainer]: After export: %f" % acc)
+        
+        import cv2 
+        frame = cv2.imread("../Deployment/dataset/test0.pgm", 0) 
+        frame = frame[92:152, 108:216] 
+        frame = np.reshape(frame, (60, 108, 1)) 
+        act = nemo.utils.get_intermediate_activations(self.model, self.InferSingleSample, frame)
 
+        # golden model
+        try:
+            os.makedirs("frontnet_golden")
+        except Exception:
+            pass
+        bidx = 0
+
+        name_map = {
+            'maxpool'         : '5x5ConvMax_1'  ,
+            'layer1.relu1'    : 'ReLU_1'        ,
+            'layer1.relu2'    : '3x3ConvReLU_2' ,
+            'layer1.conv2'    : '3x3Conv_3'     ,
+            'layer1.shortcut' : '1x1Conv_4'     ,
+            'layer1'          : 'Add_1'         ,
+            'layer2.relu1'    : 'ReLU_2'        ,
+            'layer2.relu2'    : '3x3ConvReLU_5' ,
+            'layer2.conv2'    : '3x3Conv_6'     ,
+            'layer2.shortcut' : '1x1Conv_7'     ,
+            'layer2'          : 'Add_2'         ,
+            'layer3.relu1'    : 'ReLU_3'        ,
+            'layer3.relu2'    : '3x3ConvReLU_8' ,
+            'layer3.conv2'    : '3x3Conv_9'     ,
+            'layer3.shortcut' : '1x1Conv_10'    ,
+            'relu'            : 'AddReLU_3'     ,
+            'fc_x'            : 'Dense_1'       ,
+            'fc_y'            : 'Dense_2'       ,
+            'fc_z'            : 'Dense_3'       ,
+            'fc_phi'          : 'Dense_4'       ,
+        }
+
+        np.savetxt("frontnet_golden/golden_Input.txt", act[0]['conv'][0][bidx].numpy().flatten(), fmt="%f", newline='\n')
+        for n in name_map.keys():
+            actbuf = act[1][n][bidx]
+            np.savetxt("frontnet_golden/golden_%s.txt" % name_map[n], actbuf.numpy().flatten(), fmt="%f", newline='\n')
 
     def TrainSingleEpoch(self, training_generator):
 
