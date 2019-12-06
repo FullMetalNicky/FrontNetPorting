@@ -144,19 +144,11 @@ def main():
     if args.quantize:
         logging.disable(logging.INFO)
         trainer.Quantize(validation_loader)
-        logging.disable(logging.NOTSET)
+        trainer.Predict(test_loader)
+        import sys; sys.exit(0)
 
-        # print("test start")
-        # frame = cv2.imread("test5000.pgm", 0)
-        # frame = frame[92:152, 108:216]
-        # frame = np.reshape(frame, (60, 108, 1))
-        # v1_pred = trainer.InferSingleSample(frame)
-        # print("output")
-        # print(v1_pred)
-
-    #if args.epochs > 0:
-     #   trainer.Train(train_loader, validation_loader)
-    #trainer.Predict(test_loader)
+    trainer.Train(train_loader, validation_loader)
+    trainer.Predict(test_loader)
 
     if args.save_model is not None:
         #torch.save(trainer.model.state_dict(), args.save_model)
