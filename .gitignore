@@ -143,4 +143,10 @@ frontnet_golden/
 *.ods
 data/
 Visualization/*.mp4
+PyTorch/*.jpg
+PyTorch/*.pgm
+PyTorch/report
+PyTorch/test
+PyTorch/validation
+
 
