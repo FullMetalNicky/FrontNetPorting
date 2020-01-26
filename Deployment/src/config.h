@@ -38,8 +38,8 @@
 #define SPI_COMM					// Enables SPI communication
 #define CAM_FULLRES_W	324			// HiMax full width 324
 #define CAM_FULLRES_H	244			// HiMax full height 244
-#define CAM_CROP_W		108			// Cropped camera width
-#define CAM_CROP_H		60			// Cropped camera height
+#define CAM_CROP_W		324			// Cropped camera width
+#define CAM_CROP_H		180			// Cropped camera height
 #define	NORM_INPUT	 	0			// Input image Norm Factor [Default Q8.8]
 #define NORM_ACT		11			// Activations Norm Factor [Default Q5.11]
 
@@ -117,6 +117,9 @@
 #define LL_Y			(CAM_FULLRES_H-CAM_CROP_H)		// up y coordinate 44
 #endif
 
+#define DSMPL_RATIO		3
+#define CAM_DSMPL_W		108 							//it's  on you to calculate the final size after cropping and downsampling 
+#define CAM_DSMPL_H		60 								//it's  on you to calculate the final size after cropping and downsampling 
 #define UR_X			CAM_CROP_W+LL_X					// right x coordinate
 #define UR_Y			CAM_CROP_H+LL_Y 				// bottom y coordinate
 

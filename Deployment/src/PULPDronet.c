@@ -243,24 +243,37 @@ static void end_of_frame() {
 	int 			init_offset = CAM_FULLRES_W * LL_Y + LL_X; 
 	int 			outid 		= 0;
 	
-	for(int i=0; i<CAM_CROP_H; i++) {	
+	for(int i=0; i<CAM_CROP_H; i+= DSMPL_RATIO) {	
 		rt_event_execute(NULL, 0);
 		unsigned char * line = ptr_crop + init_offset + CAM_FULLRES_W * i;
-		for(int j=0; j<CAM_CROP_W; j++) {
+		for(int j=0; j<CAM_CROP_W; j+= DSMPL_RATIO) {
 			origin[outid] = line[j];
 			outid++;
 		}
 	}
 #endif
 
-	unsigned char * ptr = (unsigned char *) L2_image;
+unsigned char * ptr = (unsigned char *) L2_image;
 
-	for(int i=CAM_CROP_H-1; i>=0; i--) {
+#if DSMPL_RATIO > 1
+
+	for(int i=(CAM_DSMPL_H-1); i>=0; i--) {
 		rt_event_execute(NULL, 0);
-		for(int j=CAM_CROP_W-1; j>=0; j--) {
+		for(int j=(CAM_DSMPL_W-1); j>=0; j--) {
+			L2_image[i*CAM_DSMPL_W+j] = (short int) ptr[i*CAM_DSMPL_W+j];
+		}
+	}
+
+#else
+	
+	for(int i=(CAM_CROP_H-1); i>=0; i--) {
+		rt_event_execute(NULL, 0);
+		for(int j=(CAM_CROP_W-1); j>=0; j--) {
 			L2_image[i*CAM_CROP_W+j] = (short int) ptr[i*CAM_CROP_W+j];
 		}
 	}
+
+#endif
 
 	imgTransferDone = 1;
 }
