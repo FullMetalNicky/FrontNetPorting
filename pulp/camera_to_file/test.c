@@ -11,6 +11,16 @@
 // This strange resolution comes from the himax camera
 #define WIDTH     324
 #define HEIGHT    244
+#define CAM_FULLRES_W 324     // HiMax full width 324
+#define CAM_FULLRES_H 244     // HiMax full height 244
+#define CAM_CROP_W    324     // Cropped camera width
+#define CAM_CROP_H    180     // Cropped camera height
+
+#define LL_X      ((CAM_FULLRES_W-CAM_CROP_W)/2)  // left x coordinate 62
+#define LL_Y      ((CAM_FULLRES_H-CAM_CROP_H)/2)  // up y coordinate 22
+#define DSMPL_RATIO 3
+#define CAM_DSMPL_W   108               //it's  on you to calculate the final size after cropping and downsampling 
+#define CAM_DSMPL_H   60                //it's  on you to calculate the final size after cropping and downsampling 
 
 #ifdef USE_RAW
 #define FB_FORMAT RT_FB_FORMAT_RAW
@@ -30,10 +40,24 @@ static void end_of_frame()
 
 	rt_cam_control(camera, CMD_PAUSE, NULL);
 
+  unsigned char * origin    = (unsigned char *) L2_image;
+  unsigned char * ptr_crop  = (unsigned char *) L2_image;
+  int       init_offset = CAM_FULLRES_W * LL_Y + LL_X; 
+  int       outid     = 0;
+  
+  for(int i=0; i<CAM_CROP_H; i+= DSMPL_RATIO) { 
+    rt_event_execute(NULL, 0);
+    unsigned char * line = ptr_crop + init_offset + CAM_FULLRES_W * i;
+    for(int j=0; j<CAM_CROP_W; j+= DSMPL_RATIO) {
+      origin[outid] = line[j];
+      outid++;
+    }
+  }
+
 	++frame_id;
 	char ImageName[15]; //size of the number
   sprintf(ImageName, "../../%d.ppm", frame_id);
-	WriteImageToFile(ImageName, WIDTH, HEIGHT, L2_image);
+	WriteImageToFile(ImageName, CAM_DSMPL_W, CAM_DSMPL_H, L2_image);
 
 	imgTransferDone = 1;
 }
@@ -72,7 +96,7 @@ int main()
   rt_cam_conf_t cam_conf;
   rt_camera_conf_init(&cam_conf);
   cam_conf.id = 0;
-  cam_conf.control_id = 1;
+  cam_conf.control_id = 0;
   cam_conf.type = RT_CAM_TYPE_HIMAX;
   cam_conf.resolution = QVGA;
   cam_conf.format = HIMAX_MONO_COLOR;
