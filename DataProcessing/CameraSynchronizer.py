@@ -16,12 +16,13 @@ class CameraSynchronizer:
 		himax_images = []
 		bebop_images = []
 		bridge = CvBridge()
-		for i in range(len(himax_msgs)):
+		for i in range(min(len(himax_msgs), len(bebop_msgs))):
 			himax_image = bridge.imgmsg_to_cv2(himax_msgs[i])
 			himax_images.append(himax_image)
 			bebop_image = bridge.imgmsg_to_cv2(bebop_msgs[i])
 			bebop_image = cv2.cvtColor(bebop_image, cv2.COLOR_RGB2BGR)
 			bebop_images.append(bebop_image)
+
 
 		return himax_images, bebop_images
 
