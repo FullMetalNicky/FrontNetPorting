@@ -65,9 +65,11 @@ Once I had the frames synced, I transformed the images to be more alike - gamma 
 
 
 # Real-time, Real-life 
-In order to quantize the NN you will need the secret nemo folder, which is not public yet. Once the weights were quantized, I created a folder structure identical to that of pulp-dronet. Note that if you clone my repo, you will have to download and compile the autotiler yourself, as explained beautifully in pulp-dronet [documentation](https://github.com/pulp-platform/pulp-dronet#23-install-the-autotiler). When you retrain a model, keeping the same architecture, you can simply replacre the weights and biases, and manually update the checksums in the config.h. If you make changes to the architecture, it gets a little messy. To run the project I use the same commands as in the pulp-dronet.
+In order to quantize the NN you will need the secret nemo folder, which is not public yet. Once the weights were quantized, I created a folder structure identical to that of pulp-dronet. Note that if you clone my repo, you will have to download and compile the autotiler yourself, as explained beautifully in pulp-dronet [documentation](https://github.com/pulp-platform/pulp-dronet#23-install-the-autotiler). When you retrain a model, keeping the same architecture, you can simply replace the weights and biases, and manually update the checksums in the config.h. If you make changes to the architecture, it gets a little messy. To run the project I use the same commands as in the pulp-dronet.
 If you wish to simply capture images from the pulp-shield, you can run the MasterScript.py, just use the bottom part. 
-
+<p align="center">
+<img src="/resources/pulpdrone.jpg" alt="drawing" width="500"/>
+<p/>
 
 ### Project Structure
 The project has the following directory structure. Change it at your own risk.
@@ -107,6 +109,7 @@ The following dependencies are needed:
 * PULP-sdk - https://github.com/pulp-platform/pulp-sdk
 * PULP Toolchain - https://github.com/pulp-platform/riscv
 * PULP-dronet - https://github.com/pulp-platform/pulp-dronet
+* PyTorch 1.4
 
 Following the installation instruction on the [PULP-dronet](https://github.com/pulp-platform/pulp-dronet) would be the easiest, as they cover all the PULP-related dependencies.
 
