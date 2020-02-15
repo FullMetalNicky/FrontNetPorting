@@ -70,6 +70,10 @@ If you wish to simply capture images from the pulp-shield, you can run the Maste
 <p align="center">
 <img src="/resources/pulpdrone.jpg" alt="drawing" width="500"/>
 <p/>
+To ease the deployment and reduce possible bugs, the first NN I converted from PyTorch to its c equivalent was very similar to the original pulp-dronet. This allowed me to reuse the majority of the layer definitions from the pulp-dronet project. The performance of the netwrok was tested, and it gave satisfying results, performing at the level of FrontNet. 
+<p align="center">
+<img src="/resources/dronetarch.png" alt="drawing" width="1000"/>
+<p/>
 
 ### Project Structure
 The project has the following directory structure. Change it at your own risk.
