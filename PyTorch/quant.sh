@@ -6,7 +6,5 @@
 #
 # This script runs a full precision training example
 
-CUDA_VISIBLE_DEVICES=1
-
-python3 ETH.py --regime regime.json --epochs 10 --gray 1 --load-trainset "/home/nickyz/data/train_vignette4.pickle" --load-testset "/home/nickyz/data/test_vignette4.pickle" --load-model "Models/DronetGray.pt" --quantiz --save-model "DronetGrayQ.pt"
+CUDA_VISIBLE_DEVICES= python3 ETH.py --regime regime.json --epochs 10 --gray 1 --load-trainset "/scratch/fconti/frontnet/data/train_vignette4.pickle" --load-testset "/scratch/fconti/frontnet/data/test_vignette4.pickle" --load-model "Models/DronetGray.pt" --quantiz --save-model "DronetGrayQ.pt"
 

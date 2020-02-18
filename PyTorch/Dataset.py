@@ -61,7 +61,7 @@ class Dataset(data.Dataset):
 
         if self.train == True:
             if np.random.choice([True, False]):
-                X = torch.flip(X, [1])
+                X = torch.flip(X, [2])
                 y[1] = -y[1]  # Y
                 y[3] = -y[3]  # Relative YAW
 

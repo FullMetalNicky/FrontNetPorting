@@ -17,12 +17,21 @@ from torchsummary import summary
 
 def TestInference():
 
-    frame = cv2.imread("sample2.png")
-    frame = cv2.resize(frame, (108, 60))
-    model = FrontNet(PreActBlock, [1, 1, 1])
-    ModelManager.Read("Models/FrontNetMixed.pt", model)
+    frame = cv2.imread("test13.pgm", 0)
+    frame = frame[92:152, 108:216]
+    frame = np.reshape(frame, (60, 108, 1))
+    #print(frame.flatten()[:10])
+    #cv2.imshow("", frame)
+    #cv2.waitKey()
+    model = Dronet(PreActBlock, [1, 1, 1], True)
+    ModelManager.Read("Models/DronetGray.pt", model)
+    # weight = model.conv.weight.data
+    # weight = np.reshape(weight, (-1))
+    # weight = weight[:10]
+    # print(weight)
     trainer = ModelTrainer(model)
     v1_pred = trainer.InferSingleSample(frame)
+    print("output")
     print(v1_pred)
 
 
@@ -85,6 +94,10 @@ def TrainGray():
 
     trainer.Train(training_generator, validation_generator)
 
+def DumpImages():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/"
+    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "test_vignette4.pickle", 60, 108, True)
+
 
 def ConvertToGray():
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
@@ -105,11 +118,12 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    TrainGray()
+    #TrainGray()
     #ConvertToGray()
     #MergeDatasets()
     #Train()
     #TestInference()
+    DumpImages()
 
 if __name__ == '__main__':
     main()

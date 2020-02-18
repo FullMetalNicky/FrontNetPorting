@@ -8,6 +8,7 @@ from EarlyStopping import EarlyStopping
 from ValidationUtils import Metrics
 import nemo
 import logging
+from ModelManager import ModelManager
 from collections import OrderedDict
 
 class ModelTrainer:
@@ -39,12 +40,12 @@ class ModelTrainer:
     def Quantize(self, validation_loader):
 
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-            validation_loader)
+             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
         print("[ModelTrainer]: Before quantization process: %f" % acc)
 
         # [NeMO] This call "transforms" the model into a quantization-aware one, which is printed immediately afterwards.
-        self.model = nemo.transform.quantize_pact(self.model)
+        self.model = nemo.transform.quantize_pact(self.model, dummy_input=torch.randn(1, 1, 60, 108))
         logging.info("[ModelTrainer] Model: %s", self.model)
         # [NeMO] NeMO re-training usually converges better using an Adam optimizer, and a smaller learning rate
         # optimizer = torch.optim.Adam(self.model.parameters(), lr=float(self.regime['lr']),
@@ -56,51 +57,46 @@ class ModelTrainer:
         # seen during a validation run. DNNs that employ BN or ReLU6 (or both) do not require this operation, as their
         # activations are already statistically bounded in terms of dynamic range.
         # logging.info("[ModelTrainer] Gather statistics for non batch-normed activations")
+    
+        # this is with original-Dronet non-fixed PreActBlock
+        self.model.fold_bn({
+             'conv':            'layer1.bn1',
+             'layer1.conv1':    'layer1.bn2',
+        }, {
+             'layer1.bn1':      'layer1.shortcut',
+        })
+        self.model.fold_bn({
+             'layer1.shortcut': 'layer2.bn1',
+             'layer1.conv2':    'layer2.bn1',
+             'layer2.conv1':    'layer2.bn2',
+        }, {
+             'layer2.bn1':      'layer2.shortcut',
+        })
+        self.model.fold_bn({
+             'layer2.shortcut': 'layer3.bn1',
+             'layer2.conv2':    'layer3.bn1',
+             'layer3.conv1':    'layer3.bn2',
+        }, {
+             'layer3.bn1':      'layer3.shortcut',
+        })
 
-        # dict = {"layer1.conv1": "layer1.bn1",
-        # "layer1.conv2": "layer1.bn2",
-        # "layer2.conv2": "layer2.bn2"}
-        # self.model.fold_bn(OrderedDict(dict))
-        # dict = {"layer1.conv1": "layer1.bn2",
-        #     "layer1.conv2": "layer2.bn1",
-        #     "layer1.shortcut": "layer2.bn1",
-        #     "layer2.conv1": "layer2.bn2",
-        #     "layer2.conv2": "layer3.bn1",
-        #     "layer2.shortcut": "layer3.bn1",
-        #     "layer3.conv1": "layer3.bn2"}
-        # self.model.fold_bn(OrderedDict(dict))
+        # # this is with fixed PreActBlock
+        # self.model.fold_bn({
+        #     'conv':            'layer1.bn1',
+        #     'layer1.conv1':    'layer1.bn2',
+        #     'layer1.shortcut': 'layer2.bn1',
+        #     'layer1.conv2':    'layer2.bn1',
+        #     'layer2.conv1':    'layer2.bn2',
+        #     'layer2.shortcut': 'layer3.bn1',
+        #     'layer2.conv2':    'layer3.bn1',
+        #     'layer3.conv1':    'layer3.bn2',
+        # })
 
-        # first block folding
+        # import IPython; IPython.embed()
 
-        self.model.fold_bn_withinv(bn_dict={
-            "conv": "layer1.bn1",
-            "layer1.conv1": "layer1.bn2",
-        },
-            bn_inv_dict={
-                "layer1.shortcut": "layer1.bn1",
-            })
-
-        # second block folding
-        self.model.fold_bn_withinv(bn_dict={
-            "layer1.conv2": "layer2.bn1",
-            "layer1.shortcut": "layer2.bn1",
-            "layer2.conv1": "layer2.bn2",
-        },
-            bn_inv_dict={
-                "layer2.shortcut": "layer2.bn1",
-            })
-
-        # third block folding
-        self.model.fold_bn_withinv(bn_dict={
-            "layer2.conv2": "layer3.bn1",
-            "layer2.shortcut": "layer3.bn1",
-            "layer3.conv1": "layer3.bn2",
-        },
-            bn_inv_dict={
-                "layer3.shortcut": "layer3.bn1",
-            })
+        self.model.reset_alpha_weights()
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-            validation_loader)
+             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
         print("[ModelTrainer]: After BN folding: %f" % acc)
 
@@ -118,44 +114,60 @@ class ModelTrainer:
         # [NeMO] Change precision and reset weight clipping parameters
         self.model.change_precision(bits=16)
         self.model.reset_alpha_weights()
-        # [NeMO] Export legacy-style INT-16 weights. Clipping parameters are changed!
-        self.model.export_weights_legacy_int16()
-        # [NeMO] Re-check validation accuracy
+
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+        print("[ModelTrainer]: Before export: %f" % acc)
+
+        # [NeMO] Export legacy-style INT-16 weights. Clipping parameters are changed!
+        self.model.export_weights_legacy_int16(save_binary=True, folder_name="frontnet_weights", x_alpha_safety_factor=1)
+        # [NeMO] Re-check validation accuracy
+        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+             validation_loader)
+        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
         print("[ModelTrainer]: After export: %f" % acc)
+        
+        import cv2 
+        frame = cv2.imread("../Deployment/dataset/test0.pgm", 0) 
+        frame = frame[92:152, 108:216] 
+        frame = np.reshape(frame, (60, 108, 1)) 
+        act = nemo.utils.get_intermediate_activations(self.model, self.InferSingleSample, frame)
 
+        # golden model
+        try:
+            os.makedirs("frontnet_golden")
+        except Exception:
+            pass
+        bidx = 0
 
-        # [NeMO] The evaluation engine performs a simple grid search to decide, among the possible quantization configurations,
-        # which one is the most promising step for the relaxation procedure. It uses an internal heuristic binning validation
-        # results in top-bin (high accuracy), middle-bin (reduced accuracy, but not garbage) and bottom-bin (garbage results).
-        # It typically selects a step from the middle-bin to maximize training speed without sacrificing the final results.
-        # evale = nemo.evaluation.EvaluationEngine(self.model, precision_rule=precision_rule,
-        #                                          validate_fn=self.ValidateSingleEpoch,
-        #                                          validate_data=validation_loader)
-        # # while evale.step():
-        #     valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-        #         validation_loader)
-        #     acc = torch.tensor(float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi))
-        #     evale.report(acc)
-        #     logging.info("[ModelTrainer] %.1f-bit W, %.1f-bit x: %.2f" % (
-        #         evale.wgrid[evale.idx], evale.xgrid[evale.idx], acc))
-        #Wbits, xbits = evale.get_next_config(upper_threshold=0.97)
-        # Wbits = 16
-        # xbits = 16
-        # precision_rule['0']['W_bits'] = min(Wbits, precision_rule['0']['W_bits'])
-        # precision_rule['0']['x_bits'] = min(xbits, precision_rule['0']['x_bits'])
-        # logging.info("[ModelTrainer] Choosing %.1f-bit W, %.1f-bit x for first step" % (
-        #     precision_rule['0']['W_bits'], precision_rule['0']['x_bits']))
-        #
-        # # [NeMO] The relaxation engine can be stepped to automatically change the DNN precisions and end training if the final
-        # # target has been achieved.
-        # self.relax = nemo.relaxation.RelaxationEngine(self.model, optimizer, criterion=None, trainloader=None,
-        #                                          precision_rule=precision_rule, reset_alpha_weights=False,
-        #                                          min_prec_dict=None, evaluator=evale)
+        name_map = {
+            'maxpool'         : '5x5ConvMax_1'  ,
+            'layer1.relu1'    : 'ReLU_1'        ,
+            'layer1.relu2'    : '3x3ConvReLU_2' ,
+            'layer1.conv2'    : '3x3Conv_3'     ,
+            'layer1.shortcut' : '1x1Conv_4'     ,
+            'layer1'          : 'Add_1'         ,
+            'layer2.relu1'    : 'ReLU_2'        ,
+            'layer2.relu2'    : '3x3ConvReLU_5' ,
+            'layer2.conv2'    : '3x3Conv_6'     ,
+            'layer2.shortcut' : '1x1Conv_7'     ,
+            'layer2'          : 'Add_2'         ,
+            'layer3.relu1'    : 'ReLU_3'        ,
+            'layer3.relu2'    : '3x3ConvReLU_8' ,
+            'layer3.conv2'    : '3x3Conv_9'     ,
+            'layer3.shortcut' : '1x1Conv_10'    ,
+            'relu'            : 'AddReLU_3'     ,
+            'fc_x'            : 'Dense_1'       ,
+            'fc_y'            : 'Dense_2'       ,
+            'fc_z'            : 'Dense_3'       ,
+            'fc_phi'          : 'Dense_4'       ,
+        }
 
-
+        np.savetxt("frontnet_golden/golden_Input.txt", act[0]['conv'][0][bidx].numpy().flatten(), fmt="%f", newline='\n')
+        for n in name_map.keys():
+            actbuf = act[1][n][bidx]
+            np.savetxt("frontnet_golden/golden_%s.txt" % name_map[n], actbuf.numpy().flatten(), fmt="%f", newline='\n')
 
     def TrainSingleEpoch(self, training_generator):
 
@@ -267,13 +279,13 @@ class ModelTrainer:
 
             gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
             y_pred = torch.tensor(y_pred, dtype=torch.float32)
-            MSE, MAE, r_score = metrics.Update(y_pred, gt_labels,
+            MSE, MAE, r2_score = metrics.Update(y_pred, gt_labels,
                                                [train_loss_x, train_loss_y, train_loss_z, train_loss_phi],
                                                [valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi])
 
             logging.info('[ModelTrainer] Validation MSE: {}'.format(MSE))
             logging.info('[ModelTrainer] Validation MAE: {}'.format(MAE))
-            logging.info('[ModelTrainer] Validation r_score: {}'.format(r_score))
+            logging.info('[ModelTrainer] Validation r2_score: {}'.format(r2_score))
 
             checkpoint_filename = self.folderPath + self.model.name + '-{:03d}.pt'.format(epoch)
             early_stopping(valid_loss, self.model, epoch, checkpoint_filename)
@@ -283,7 +295,7 @@ class ModelTrainer:
 
         MSEs = metrics.GetMSE()
         MAEs = metrics.GetMAE()
-        r_score = metrics.Getr2_score()
+        r2_score = metrics.Get()
         y_pred_viz = metrics.GetPred()
         gt_labels_viz = metrics.GetLabels()
         train_losses_x, train_losses_y, train_losses_z, train_losses_phi, valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi = metrics.GetLosses()
@@ -292,7 +304,7 @@ class ModelTrainer:
         DataVisualization.PlotLoss(train_losses_x, train_losses_y, train_losses_z, train_losses_phi , valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi)
         DataVisualization.PlotMSE(MSEs)
         DataVisualization.PlotMAE(MAEs)
-        DataVisualization.PlotR2Score(r_score)
+        DataVisualization.PlotR2Score(r2_score)
 
         DataVisualization.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
         DataVisualization.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
@@ -338,8 +350,8 @@ class ModelTrainer:
 
         outputs = torch.stack(outputs, 0)
         outputs = torch.squeeze(outputs)
-        outputs = torch.t(outputs)
-        outputs = outputs.cpu().numpy()
+        #outputs = torch.t(outputs)
+        #outputs = outputs.cpu().numpy()
         return outputs
 
     def Predict(self, test_generator):
@@ -351,7 +363,7 @@ class ModelTrainer:
 
         gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
         y_pred = torch.tensor(y_pred, dtype=torch.float32)
-        MSE, MAE, r_score = metrics.Update(y_pred, gt_labels,
+        MSE, MAE, r2_score = metrics.Update(y_pred, gt_labels,
                                            [0, 0, 0, 0],
                                            [valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi])
 
@@ -364,7 +376,7 @@ class ModelTrainer:
         DataVisualization.DisplayPlots()
         logging.info('[ModelTrainer] Test MSE: {}'.format(MSE))
         logging.info('[ModelTrainer] Test MAE: {}'.format(MAE))
-        logging.info('[ModelTrainer] Test r_score: {}'.format(r_score))
+        logging.info('[ModelTrainer] Test r2_score: {}'.format(r2_score))
 
     def Infer(self, live_generator):
 

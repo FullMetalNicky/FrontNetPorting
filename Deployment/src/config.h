@@ -24,9 +24,12 @@
 #ifndef PULP_DRONET_CONFIG
 #define PULP_DRONET_CONFIG
 
+#define DUMP_OUT_FM 0
+#define DUMP_TYPE 1
+
 /****************************** USER PARAMETERS *******************************/
-// #define DATASET_TEST				// Enable if you test the Dataset (single iteration)
-// #define VERBOSE					// Enables additional information
+//#define DATASET_TEST				// Enable if you test the Dataset (single iteration)
+#define VERBOSE					// Enables additional information
 // #define CHECKSUM					// Enables correctness check per layer
 // #define PROFILE_CL				// Profiling execution from the Cluster
 // #define PROFILE_FC				// Profiling execution from the Fabric Ctrl
@@ -35,9 +38,9 @@
 #define SPI_COMM					// Enables SPI communication
 #define CAM_FULLRES_W	324			// HiMax full width 324
 #define CAM_FULLRES_H	244			// HiMax full height 244
-#define CAM_CROP_W		108			// Cropped camera width
-#define CAM_CROP_H		60			// Cropped camera height
-#define	NORM_INPUT		8			// Input image Norm Factor [Default Q8.8]
+#define CAM_CROP_W		324			// Cropped camera width
+#define CAM_CROP_H		180			// Cropped camera height
+#define	NORM_INPUT	 	0			// Input image Norm Factor [Default Q8.8]
 #define NORM_ACT		11			// Activations Norm Factor [Default Q5.11]
 
 /* ---------------------- PULP-DroNet Operative Points ---------------------- *
@@ -79,11 +82,11 @@
 #define FLASH_BUFF_SIZE	128 		// Safe to keep this <= 256 Bytes
 #define NLAYERS			20			// Overall number of layers (ReLu, Add, Conv, Dense)
 #define NWEIGTHS		14			// Number of Conv Weights
-#define SPIM_BUFFER		4			// SPI master buffer size [Bytes]
+#define SPIM_BUFFER		8			// SPI master buffer size [Bytes]
 #define NORM_BIAS_DENSE	NORM_ACT	// Normalization Factor for the Biases of dense layers
 #define NUM_L2_BUFF		2			// Number of L2 buffers
 #define	CROPPING_X		1			// Cropping area X (Horizontal/Width): 0=Left, 1=Central, 2=Right
-#define	CROPPING_Y		2			// Cropping area Y (Vertical/Height): 0=Top, 1=Central, 2=Bottom
+#define	CROPPING_Y		1			// Cropping area Y (Vertical/Height): 0=Top, 1=Central, 2=Bottom
 /******************************************************************************/
 
 /****************************** Cropping Setting *******************************
@@ -114,6 +117,9 @@
 #define LL_Y			(CAM_FULLRES_H-CAM_CROP_H)		// up y coordinate 44
 #endif
 
+#define DSMPL_RATIO		3
+#define CAM_DSMPL_W		108 							//it's  on you to calculate the final size after cropping and downsampling 
+#define CAM_DSMPL_H		60 								//it's  on you to calculate the final size after cropping and downsampling 
 #define UR_X			CAM_CROP_W+LL_X					// right x coordinate
 #define UR_Y			CAM_CROP_H+LL_Y 				// bottom y coordinate
 
@@ -144,7 +150,8 @@
 /******************************************************************************/
 
 /* ----------------------------- L2 Buffer Sizes ---------------------------- */
-const int			L2_buffers_size[NUM_L2_BUFF] = {320000, 61632};
+//const int			L2_buffers_size[NUM_L2_BUFF] = {320000, 61632};
+const int			L2_buffers_size[NUM_L2_BUFF] = {300000, 40000};
 
 /* --------------------------- Input Channel Sizes -------------------------- */
 const int			inCh[] = {
@@ -292,107 +299,110 @@ const int			outHeight[] = {
 
 /* ------------------------- L3 Weights File Names -------------------------- */
 const char *		L3_weights_files[] = {
-	"weights_conv2d_1.hex",		// 1	5x5ConvMax_1	1600	Bytes
-	"weights_conv2d_2.hex",		// 3	3x3ConvReLU_2	18432	Bytes
-	"weights_conv2d_3.hex",		// 4	3x3Conv_3		18432	Bytes
-	"weights_conv2d_4.hex",		// 5	1x1Conv_4		2048	Bytes
-	"weights_conv2d_5.hex",		// 8	3x3ConvReLU_5	36864	Bytes
-	"weights_conv2d_6.hex",		// 9	3x3Conv_6		73728	Bytes
-	"weights_conv2d_7.hex",		// 10	1x1Conv_7		4096	Bytes
-	"weights_conv2d_8.hex",		// 13	3x3ConvReLU_8	147456	Bytes
-	"weights_conv2d_9.hex",		// 14	3x3Conv_9		294912	Bytes
-	"weights_conv2d_10.hex",	// 15	1x1Conv_10		16384	Bytes
-	"weights_dense_1.hex",		// 17	Dense_1			12544	Bytes
-	"weights_dense_2.hex",		// 18	Dense_2			12544	Bytes
-	"weights_dense_3.hex",		// 19	Dense_3			12544	Bytes
-	"weights_dense_4.hex"		// 20	Dense_4			12544	Bytes
+	"weights_conv.hex",				// 1	5x5ConvMax_1	1600	Bytes
+	"weights_layer1_conv1.hex",		// 3	3x3ConvReLU_2	18432	Bytes
+	"weights_layer1_conv2.hex",		// 4	3x3Conv_3		18432	Bytes
+	"weights_layer1_shortcut.hex",	// 5	1x1Conv_4		2048	Bytes
+	"weights_layer2_conv1.hex",		// 8	3x3ConvReLU_5	36864	Bytes
+	"weights_layer2_conv2.hex",		// 9	3x3Conv_6		73728	Bytes
+	"weights_layer2_shortcut.hex",	// 10	1x1Conv_7		4096	Bytes
+	"weights_layer3_conv1.hex",		// 13	3x3ConvReLU_8	147456	Bytes
+	"weights_layer3_conv2.hex",		// 14	3x3Conv_9		294912	Bytes
+	"weights_layer3_shortcut.hex",	// 15	1x1Conv_10		16384	Bytes
+	"weights_fc_x.hex",				// 17	Dense_1			12544	Bytes
+	"weights_fc_y.hex",				// 18	Dense_2			12544	Bytes
+	"weights_fc_z.hex",				// 19	Dense_3			12544	Bytes
+	"weights_fc_phi.hex"			// 20	Dense_4			12544	Bytes
 };
 
 /* -------------------------- L3 Biases File Names -------------------------- */
+
+
 const char *		L3_bias_files[] = {
-	"bias_conv2d_1.hex",		// 1	5x5ConvMax_1	64		Bytes
-	"bias_conv2d_2.hex",		// 3	3x3ConvReLU_2	64		Bytes
-	"bias_conv2d_3.hex",		// 4	3x3Conv_3		64		Bytes
-	"bias_conv2d_4.hex",		// 5	1x1Conv_4		64		Bytes
-	"bias_conv2d_5.hex",		// 8	3x3ConvReLU_5	128		Bytes
-	"bias_conv2d_6.hex",		// 9	3x3Conv_6		128		Bytes
-	"bias_conv2d_7.hex",		// 10	1x1Conv_7		128		Bytes
-	"bias_conv2d_8.hex",		// 13	3x3ConvReLU_8	256		Bytes
-	"bias_conv2d_9.hex",		// 14	3x3Conv_9		256		Bytes
-	"bias_conv2d_10.hex",		// 15	1x1Conv_10		256		Bytes
-	"bias_dense_1.hex",			// 17	Dense_1			2		Bytes
-	"bias_dense_2.hex",			// 18	Dense_2			2		Bytes
-	"bias_dense_3.hex",			// 19	Dense_3			2		Bytes
-	"bias_dense_4.hex"			// 20	Dense_4			2		Bytes
+	"bias_conv.hex",				// 1	5x5ConvMax_1	64		Bytes
+	"bias_layer1_conv1.hex",		// 3	3x3ConvReLU_2	64		Bytes
+	"bias_layer1_conv2.hex",		// 4	3x3Conv_3		64		Bytes
+	"bias_layer1_shortcut.hex",		// 5	1x1Conv_4		64		Bytes
+	"bias_layer2_conv1.hex",		// 8	3x3ConvReLU_5	128		Bytes
+	"bias_layer2_conv2.hex",		// 9	3x3Conv_6		128		Bytes
+	"bias_layer2_shortcut.hex",		// 10	1x1Conv_7		128		Bytes
+	"bias_layer3_conv1.hex",		// 13	3x3ConvReLU_8	256		Bytes
+	"bias_layer3_conv2.hex",		// 14	3x3Conv_9		256		Bytes
+	"bias_layer3_shortcut.hex",		// 15	1x1Conv_10		256		Bytes
+	"bias_fc_x.hex",				// 17	Dense_1			2		Bytes
+	"bias_fc_y.hex",				// 18	Dense_2			2		Bytes
+	"bias_fc_z.hex",				// 19	Dense_3			2		Bytes
+	"bias_fc_phi.hex"				// 20	Dense_4			2		Bytes
 };
 
 /* ----------------------- Weights Ground Truth (GT) ------------------------ */
 const unsigned int	L3_weights_GT[NWEIGTHS] = {
-	25985189,					// 1	5x5ConvMax_1
-	171247369,					// 3	3x3ConvReLU_2
-	215325794,					// 4	3x3Conv_3
-	31883544,					// 5	1x1Conv_4
-	198666713,					// 8	3x3ConvReLU_5
-	401025883,					// 9	3x3Conv_6
-	63738646,					// 10	1x1Conv_7
-	264630086,					// 13	3x3ConvReLU_8
-	194687313,					// 14	3x3Conv_9
-	281798119,					// 15	1x1Conv_10
-	204663510,					// 17	Dense_1
-	204663510,					// 18	Dense_2
-	204663510,					// 19	Dense_3
-	204663510					// 20	Dense_4
+	27270384,					// 1	5x5ConvMax_1
+	317311429,					// 3	3x3ConvReLU_2
+	311091664,					// 4	3x3Conv_3
+	36580896,					// 5	1x1Conv_4
+	636538343,					// 8	3x3ConvReLU_5
+	1224571106,					// 9	3x3Conv_6
+	62730065,					// 10	1x1Conv_7
+	2488023927,					// 13	3x3ConvReLU_8
+	6798224116,					// 14	3x3Conv_9
+	217070237,					// 15	1x1Conv_10
+	34530659,					// 17	Dense_1
+	32618647,					// 18	Dense_2
+	32529124,					// 19	Dense_3
+	34098266					// 20	Dense_4
 };
 
 /* ------------------------ Biases Ground Truth (GT) ------------------------ */
 const unsigned int	L3_biases_GT[NWEIGTHS] = {
-	1484287,					// 1	5x5ConvMax_1
-	1364354,					// 3	3x3ConvReLU_2
-	1369951,					// 4	3x3Conv_3
-	1045420,					// 5	1x1Conv_4
-	3869389,					// 8	3x3ConvReLU_5
-	3442234,					// 9	3x3Conv_6
-	3245463,					// 10	1x1Conv_7
-	7635667,					// 13	3x3ConvReLU_8
-	8031559,					// 14	3x3Conv_9
-	7469135,					// 15	1x1Conv_10
-	0,							// 17	Dense_1
-	0,							// 18	Dense_2
-	0,							// 19	Dense_3
-	0							// 20	Dense_4
+	1504237,					// 1	5x5ConvMax_1
+	670448,						// 3	3x3ConvReLU_2
+	595272,						// 4	3x3Conv_3
+	859099,						// 5	1x1Conv_4
+	1010829,					// 8	3x3ConvReLU_5
+	2945358,					// 9	3x3Conv_6
+	2410798,					// 10	1x1Conv_7
+	5164349,					// 13	3x3ConvReLU_8
+	0,							// 14	3x3Conv_9
+	2947548,					// 15	1x1Conv_10
+	2985,						// 17	Dense_1
+	11,							// 18	Dense_2
+	2,							// 19	Dense_3
+	14							// 20	Dense_4
 };
 
 /* --------------------- Quantization Factor per layer ---------------------- */
 const int			Q_Factor[NWEIGTHS] = {
-	12,							// 1	5x5ConvMax_1
-	14,							// 3	3x3ConvReLU_2
-	14,							// 4	3x3Conv_3
-	7,							// 5	1x1Conv_4
-	14,							// 8	3x3ConvReLU_5
-	14,							// 9	3x3Conv_6
-	14,							// 10	1x1Conv_7
-	14,							// 13	3x3ConvReLU_8
-	14,							// 14	3x3Conv_9
-	12,							// 15	1x1Conv_10
-	11,							// 17	Dense_1
-	11,							// 18	Dense_2
-	11,							// 19	Dense_3
-	11 							// 20	Dense_4
+	21,							// 1	5x5ConvMax_1
+	16,							// 3	3x3ConvReLU_2
+	16,							// 4	3x3Conv_3
+	16,							// 5	1x1Conv_4
+	17,							// 8	3x3ConvReLU_5
+	16,							// 9	3x3Conv_6
+	10,							// 10	1x1Conv_7
+	17,							// 13	3x3ConvReLU_8
+	15,							// 14	3x3Conv_9
+	8,							// 15	1x1Conv_10
+	17,							// 17	Dense_1 
+	17,							// 18	Dense_2
+	17,							// 19	Dense_3
+	16 							// 20	Dense_4
 };
 
 #ifdef CHECKSUM
 /* --------------------- Layer output Ground Truth (GT) --------------------- *
  * for:	pulp-dronet/dataset/Himax_Dataset/test_2/frame_22.pgm						  *
  * -------------------------------------------------------------------------- */
+// this is garbage, I didn't calculate these numbers
 const unsigned int	Layer_GT[NLAYERS] = {
-	3583346007,					// 1	5x5ConvMax_1
-	33640519,					// 2	ReLU_1
-	3054757,					// 3	3x3ConvReLU_2
-	969723858,					// 4	3x3Conv_3
-	733574305,					// 5	1x1Conv_4
-	961234035,					// 6	Add_1
-	5702624,					// 7	ReLU_2
-	800684,						// 8	3x3ConvReLU_5
+	26210557,					// 1	5x5ConvMax_1
+	317935783,					// 2	ReLU_1
+	315850819,					// 3	3x3ConvReLU_2
+	36647058,					// 4	3x3Conv_3
+	646193316,					// 5	1x1Conv_4
+	1234576685,					// 6	Add_1
+	72329195,					// 7	ReLU_2
+	2566870546,					// 8	3x3ConvReLU_5
 	568751660,					// 9	3x3Conv_6
 	536587146,					// 10	1x1Conv_7
 	562176438,					// 11	Add_2
@@ -401,10 +411,10 @@ const unsigned int	Layer_GT[NLAYERS] = {
 	400248723,					// 14	3x3Conv_9
 	382744684,					// 15	1x1Conv_10
 	34510,						// 16	AddReLU_3
-	193,						// 17	Dense_1
-	59518,						// 18	Dense_2
-	193,						// 19	Dense_3
-	59518						// 20	Dense_4
+	32456913,						// 17	Dense_1
+	32654030,						// 18	Dense_2
+	34901714,						// 19	Dense_3
+	31362521						// 20	Dense_4
 };
 #endif // CHECKSUM
 

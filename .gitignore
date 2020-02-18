@@ -130,7 +130,6 @@ dmypy.json
 
 autotiler/
 build/
-nemo/
 *.DS_Store
 *log.txt
 *build/
@@ -138,3 +137,20 @@ nemo/
 *.gch
 *.yaml
 *.avi
+Results/
+frontnet_weights/
+frontnet_golden/
+*.ods
+data/
+Visualization/*.mp4
+PyTorch/*.jpg
+PyTorch/*.pgm
+PyTorch/report
+PyTorch/test
+PyTorch/validation
+*.zip
+*.bag
+*.active
+
+
+

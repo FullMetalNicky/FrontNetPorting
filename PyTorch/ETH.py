@@ -2,7 +2,7 @@ from __future__ import print_function
 from PreActBlock import PreActBlock
 from FrontNet import FrontNet
 from Dronet import Dronet
-
+import numpy as np
 
 from DataProcessor import DataProcessor
 from ModelTrainerETH import ModelTrainer
@@ -10,6 +10,7 @@ from Dataset import Dataset
 from torch.utils import data
 from ModelManager import ModelManager
 import torch
+import cv2
 
 import argparse
 import json
@@ -113,7 +114,6 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    # DATA_PATH = "/Users/usi/Downloads/"
     train_loader, validation_loader, test_loader = LoadData(args)
 
     # [NeMO] Loading of the JSON regime file.
@@ -141,14 +141,22 @@ def main():
 
     trainer = ModelTrainer(model, args, regime)
     if args.quantize:
+        #logging.disable(logging.INFO)
         trainer.Quantize(validation_loader)
 
-    trainer.Train(train_loader, validation_loader)
-    trainer.Predict(test_loader)
+
+    #trainer.Train(train_loader, validation_loader)
+    #trainer.Predict(test_loader)
 
     if args.save_model is not None:
-        #torch.save(trainer.model.state_dict(), args.save_model)
         ModelManager.Write(trainer.GetModel(), 100, args.save_model)
+        # state_dict = torch.load(args.save_model, map_location='cpu')
+        # qmodel = state_dict["model"]
+        # for key, value in qmodel.items():
+        #     if "bias" in key:
+        #         value = value.reshape(-1)
+        #         value = list(value.numpy())
+        #         logging.info("{}={}".format(key, value))
 
 if __name__ == '__main__':
     main()

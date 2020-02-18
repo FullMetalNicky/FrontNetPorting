@@ -13,7 +13,7 @@ from DataProcessor import DataProcessor
 from Dataset import Dataset
 
 
-def VizDroneBEV(frames, hand_labels, head_labels):
+def VizDroneBEV(frames, hand_labels, head_labels, isGray=False):
 
     fig = plt.figure(888, figsize=(15, 5))
 
@@ -61,9 +61,12 @@ def VizDroneBEV(frames, hand_labels, head_labels):
 
     ax3 = plt.subplot2grid((h, w), (2, 9), rowspan=7, colspan=7)
     ax3.axis('off')
-    frame = frames[0].transpose(1, 2, 0)
-    frame = frame.astype(np.uint8)
-    imgplot = plt.imshow(frame)
+    frame = frames[0].astype(np.uint8)
+    if isGray == True:
+        imgplot = plt.imshow(frame, cmap="gray", vmin=0, vmax=255)
+    else:
+        frame = frame.transpose(1, 2, 0)
+        imgplot = plt.imshow(frame)
 
     ax4 = plt.subplot2grid((h, w), (0, 9), colspan=7)
     ax4.set_xlim([0, 8])
@@ -115,8 +118,9 @@ def VizDroneBEV(frames, hand_labels, head_labels):
         scatter2gthead.set_offsets(np.array([-0.05, z_head]))
         scatter2gthand.set_offsets(np.array([-0.0, z_hand]))
 
-        frame = frames[id].transpose(1, 2, 0)
-        frame = frame.astype(np.uint8)
+        frame = frames[id].astype(np.uint8)
+        if isGray == False:
+            frame = frame.transpose(1, 2, 0)
         imgplot.set_array(frame)
 
         annotation2.set_text('Frame {}'.format(id))
@@ -127,7 +131,7 @@ def VizDroneBEV(frames, hand_labels, head_labels):
 
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save('Davide.mp4', writer=writer)
+    ani.save('session3.mp4', writer=writer)
     #ani.save('viz2.gif', dpi=80, writer='imagemagick')
     plt.show()
 
@@ -147,15 +151,10 @@ def main():
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
 
-    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "DavideHand.pickle", 60, 108)
+    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "session3.pickle", 60, 108, True, True)
+    x_test = np.reshape(x_test, (-1, 60, 108))
 
-    test_set = Dataset(x_test, y_test)
-    params = {'batch_size': 1,
-              'shuffle': False,
-              'num_workers': 0}
-
-
-    VizDroneBEV(x_test, y_test, z_test)
+    VizDroneBEV(x_test, z_test, y_test, True)
 
 
 if __name__ == '__main__':

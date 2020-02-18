@@ -56,39 +56,45 @@ clean_tiler: clean
 
 
 ################################### WEIGHTS ####################################
-override CONFIG_OPT += 	flash/fs/files=$(WEIGHTS_DIR)/binary/weights_conv2d_1.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_conv2d_2.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_conv2d_3.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_conv2d_4.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_conv2d_5.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_conv2d_6.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_conv2d_7.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_conv2d_8.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_conv2d_9.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_conv2d_10.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_dense_1.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_dense_2.hex 
+override CONFIG_OPT += 	flash/fs/files=$(WEIGHTS_DIR)/binary/weights_conv.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_layer1_conv1.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_layer1_conv2.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_layer1_shortcut.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_layer2_conv1.hex  \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_layer2_conv2.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_layer2_shortcut.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_layer3_conv1.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_layer3_conv2.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_layer3_shortcut.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_fc_x.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_fc_y.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_fc_z.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/weights_fc_phi.hex 
 
 
 #################################### BIASES ####################################
-override CONFIG_OPT +=	flash/fs/files=$(WEIGHTS_DIR)/binary/bias_conv2d_1.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_conv2d_2.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_conv2d_3.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_conv2d_4.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_conv2d_5.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_conv2d_6.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_conv2d_7.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_conv2d_8.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_conv2d_9.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_conv2d_10.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_dense_1.hex \
-						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_dense_2.hex
+override CONFIG_OPT +=	flash/fs/files=$(WEIGHTS_DIR)/binary/bias_conv.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_layer1_conv1.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_layer1_conv2.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_layer1_shortcut.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_layer2_conv1.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_layer2_conv2.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_layer2_shortcut.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_layer3_conv1.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_layer3_conv2.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_layer3_shortcut.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_fc_x.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_fc_y.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_fc_z.hex \
+						flash/fs/files=$(WEIGHTS_DIR)/binary/bias_fc_phi.hex \
+
 
 
 ################################# CAMERA IMGS ##################################
 
 # Use this if you want to test a single image
-override CONFIG_OPT += camera/image-stream=$(CURDIR)/../dataset/Himax_Dataset/test_2/frame_22.pgm
+#override CONFIG_OPT += camera/image-stream=$(CURDIR)/../dataset/Himax_Dataset/test_2/frame_23.pgm
+override CONFIG_OPT += camera/image-stream=$(CURDIR)/../dataset/test13.pgm
 
 # Use this if you want to test the dataset
 # override CONFIG_OPT += camera/image-stream=$(EXT_INPUT)
