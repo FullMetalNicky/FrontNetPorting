@@ -23,31 +23,50 @@ class Dataset(data.Dataset):
         'Denotes the total number of samples'
         return len(self.list_IDs)
 
-  def augmentGamma(self, X):
+
+  def toNumpy(self, X):
       X = X.cpu().numpy()
       h, w = X.shape[1:3]
       X = np.reshape(X, (h, w)).astype("uint8")
+      return X
+
+  def toTensor(self, X):
+      h, w = X.shape
+      X = np.reshape(X, (1, h, w))
+      X = torch.from_numpy(X).float()
+      return X
+
+  def augmentGamma(self, X):
+
       # gamma correction augmentation
       gamma = np.random.uniform(0.6, 1.4)
       table = self.it.adjust_gamma(gamma)
       X = cv2.LUT(X, table)
-      X = np.reshape(X, (1, h, w))
-      X = torch.from_numpy(X).float()
 
       return X
 
   def augmentDR(self, X):
-      X = X.cpu().numpy()
-      h, w = X.shape[1:3]
-      X = np.reshape(X, (h, w)).astype("uint8")
-      # dynamic range augmentation
+
+      # # dynamic range augmentation
       dr = np.random.uniform(0.4, 0.8)  # dynamic range
       lo = np.random.uniform(0, 0.3)
       hi = min(1.0, lo + dr)
       X = np.interp(X/255.0, [0, lo, hi, 1], [0, 0, 1, 1])
       X = 255 * X
-      X = np.reshape(X, (1, h, w))
-      X = torch.from_numpy(X).float()
+
+      return X
+
+  def augmentBlur(self, X):
+      kernel = np.random.choice([3, 5])  # dynamic range
+      X = cv2.blur(X, (kernel, kernel))
+
+      return X
+
+  def augmentNoise(self, X):
+      h, w = X.shape[:2]
+      noise = np.zeros((h,w), np.uint8)
+      cv2.randn(noise, 0, 1)
+      X = X + noise
 
       return X
 
@@ -66,9 +85,16 @@ class Dataset(data.Dataset):
                 y[3] = -y[3]  # Relative YAW
 
             if X.shape[0] == 1:
-               # if np.random.choice([True, False]):
-                #    X = self.augmentGamma(X)
+                X = self.toNumpy(X)
+                if np.random.choice([True, False]):
+                    X = self.augmentGamma(X)
                 if np.random.choice([True, False]):
                     X = self.augmentDR(X)
+                if np.random.choice([True, False]):
+                    X = self.augmentBlur(X)
+                if np.random.choice([True, False]):
+                    X = self.augmentNoise(X)
+
+                X = self.toTensor(X)
 
         return X, y
