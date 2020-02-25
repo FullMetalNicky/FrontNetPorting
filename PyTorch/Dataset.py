@@ -23,33 +23,30 @@ class Dataset(data.Dataset):
         'Denotes the total number of samples'
         return len(self.list_IDs)
 
-  def augmentGamma(self, X):
+
+  def toNumpy(self, X):
       X = X.cpu().numpy()
       h, w = X.shape[1:3]
       X = np.reshape(X, (h, w)).astype("uint8")
-      # gamma correction augmentation
-      gamma = np.random.uniform(0.6, 1.4)
-      table = self.it.adjust_gamma(gamma)
-      X = cv2.LUT(X, table)
+      return X
+
+  def toTensor(self, X):
+      h, w = X.shape
       X = np.reshape(X, (1, h, w))
       X = torch.from_numpy(X).float()
-
       return X
 
   def augmentDR(self, X):
-      X = X.cpu().numpy()
-      h, w = X.shape[1:3]
-      X = np.reshape(X, (h, w)).astype("uint8")
-      # dynamic range augmentation
+
+      # # dynamic range augmentation
       dr = np.random.uniform(0.4, 0.8)  # dynamic range
       lo = np.random.uniform(0, 0.3)
       hi = min(1.0, lo + dr)
       X = np.interp(X/255.0, [0, lo, hi, 1], [0, 0, 1, 1])
       X = 255 * X
-      X = np.reshape(X, (1, h, w))
-      X = torch.from_numpy(X).float()
 
       return X
+
 
 
   def __getitem__(self, index):
@@ -66,9 +63,22 @@ class Dataset(data.Dataset):
                 y[3] = -y[3]  # Relative YAW
 
             if X.shape[0] == 1:
-               # if np.random.choice([True, False]):
-                #    X = self.augmentGamma(X)
+                X = self.toNumpy(X)
+              #  if np.random.choice([True, False]):
+               #     X = self.it.ApplyVignette(X, np.random.randint(100, 200))
                 if np.random.choice([True, False]):
-                    X = self.augmentDR(X)
+                    X = self.it.ApplyBlur(X, 3)
+                if np.random.choice([True, False]):
+                    X = self.it.ApplyNoise(X, 0, 1)
+                if np.random.choice([True, False]):
+                     X = self.it.ApplyGamma(X, 0.4, 1.4)
+                elif np.random.choice([True, False]):
+                    X = self.it.ApplyDynamicRange(X, np.random.uniform(0.7, 0.9), np.random.uniform(0.0, 0.2))
+
+                imv = X.astype("uint8")
+                cv2.imshow("frame", imv)
+                cv2.waitKey()
+
+                X = self.toTensor(X)
 
         return X, y

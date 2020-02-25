@@ -39,7 +39,7 @@ class DataProcessor:
         n_val = int(float(size) * 0.2)
         #n_val = 13000
 
-        np.random.seed()
+        np.random.seed(100)
         # split between train and test sets:
         x_train = train_set[:, 0]
         x_train = np.vstack(x_train[:]).astype(np.float32)
@@ -111,11 +111,11 @@ class DataProcessor:
             x_test = np.reshape(x_test, (-1, image_height, image_width, 1))
         else:
             x_test = np.reshape(x_test, (-1, image_height, image_width, 3))
+
         x_test = np.swapaxes(x_test, 1, 3)
         x_test = np.swapaxes(x_test, 2, 3)
         y_test = test_set[:, 1]
         y_test = np.vstack(y_test[:]).astype(np.float32)
-
 
         if isExtended ==True:
             z_test = test_set[:, 2]
@@ -124,6 +124,55 @@ class DataProcessor:
 
 
         return [x_test, y_test]
+
+    @staticmethod
+    def ExtractValidationLabels(testPath, image_height, image_width, isGray = False):
+        """Reads the .pickle file and converts it into a format suitable for testing on pulp
+            You need to create a folder called test though
+
+            Parameters
+            ----------
+            testPath : str
+                The file location of the .pickle
+            image_height : int
+                Please...
+            image_width : int
+                Please...
+            isGray : bool, optional
+                True is the dataset is of 1-channel (gray) images, False if RGB
+
+           """
+
+        test_set = pd.read_pickle(testPath).values
+        logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
+
+        x_test = test_set[:, 0]
+        x_test = np.vstack(x_test[:]).astype(np.float32)
+        if isGray == True:
+            x_test = np.reshape(x_test, (-1, image_height, image_width, 1))
+        else:
+            x_test = np.reshape(x_test, (-1, image_height, image_width, 3))
+
+        x_test = np.swapaxes(x_test, 1, 3)
+        x_test = np.swapaxes(x_test, 2, 3)
+        y_test = test_set[:, 1]
+        y_test = np.vstack(y_test[:]).astype(np.float32)
+
+        f = open("test/labels.txt", "w")
+
+        for i in range(0, len(x_test)):
+            data = x_test[i]
+            data = np.swapaxes(data, 0, 2)
+            data = np.swapaxes(data, 0, 1)
+            data = np.reshape(data, (60, 108))
+            img = np.zeros((244, 324), np.uint8)
+            img[92:152, 108:216] = data
+            cv2.imwrite("test/{}.pgm".format(i), img)
+            label = y_test[i]
+            f.write("{},{},{},{}\n".format(label[0], label[1],label[2],label[3]))
+        f.close()
+
+
 
     @staticmethod
     def ProcessInferenceData(images, image_height, image_width, isGray=False):
@@ -188,7 +237,7 @@ class DataProcessor:
 
         x_train_grey = []
         sigma = 50
-        mask = it.ApplyVignette(image_width, image_width, sigma)
+        mask = it.GetVignette(image_width, image_width, sigma)
 
         for i in range(len(x_train)):
             gray_image = cv2.cvtColor(x_train[i], cv2.COLOR_RGB2GRAY)

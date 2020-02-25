@@ -27,17 +27,46 @@ class ImageTransformer:
 	
 		return table
 
-	def ApplyVignette(self, rows, cols, sigma=150):
+	def ApplyGamma(self, img, low, high):
+		gamma = np.random.uniform(low, high)
+		table = self.adjust_gamma(gamma)
+		img = cv2.LUT(img, table)
+		return img
+
+	def ApplyBlur(self, img, kernel):
+		img = cv2.blur(img, (kernel, kernel))
+		return img
+
+	def ApplyDynamicRange(self, img, dr, low):
+		high = min(1.0, low + dr)
+		img = np.interp(img/255.0, [0, low, high, 1], [0, 0, 1, 1])
+		img =  255.0 * img
+		return img
+
+
+	def ApplyNoise(self, img, mu, std):
+		h, w = img.shape[:2]
+		noise = np.zeros((h, w), np.uint8)
+		cv2.randn(noise, mu, std)
+
+		return img + noise
+
+
+	def ApplyVignette(self, img, sigma):
+		h, w = img.shape[:2]
+		mask = self.GetVignette(w, w, sigma)
+		img = img * mask[24:84, 0:108]
+		return img
+
+	def GetVignette(self, rows, cols, sigma=150):
 
 		# generating vignette mask using Gaussian kernels
 		kernel_x = cv2.getGaussianKernel(cols,sigma)
 		kernel_y = cv2.getGaussianKernel(rows,sigma)
 		kernel = kernel_y * kernel_x.T
-		#mask = 255 * kernel / np.linalg.norm(kernel)
 		mask = kernel / kernel.max()
 		return mask
-		 #output[:,:,i] = output[:,:,i] * mask
-	
+
 
 	def get_crop_parameters(self, himaxCalibFile, bebopCalibFile):
 
@@ -84,7 +113,7 @@ class ImageTransformer:
 			himaxTransImages.append(crop_img)
 
 		table = self.adjust_gamma(0.6)
-		mask = self.ApplyVignette(w_himax, w_himax, 150)
+		mask = self.GetVignette(w_himax, w_himax, 150)
 		for img in bebopImages:
 			gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 			gray = cv2.LUT(gray, table)
