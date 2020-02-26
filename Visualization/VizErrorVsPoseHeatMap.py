@@ -22,6 +22,9 @@ from ModelTrainer import ModelTrainer
 from ModelManager import ModelManager
 from torch.utils import data
 
+mincord = -0.75
+maxcord = 0.75
+
 
 def VizHeatMap(valid_loss, a, samples, xlen, ylen, w, min, max):
 
@@ -41,8 +44,8 @@ def VizHeatMap(valid_loss, a, samples, xlen, ylen, w, min, max):
     idy = int((w / 2) % 2)
     im = a[idy][idx].imshow(valid_loss)
 
-    a[idy][idx].set_xticklabels(np.around([min[0], (min[0] - 1) / 2, -1, 0, 1, (max[0] + 1) / 2, max[0]], 2))
-    a[idy][idx].set_yticklabels(np.around([max[1], (max[1] + 1) / 2, 1, 0, - 1, (min[0] - 1) / 2, min[1]], 2))
+    a[idy][idx].set_xticklabels(np.around([min[0], (min[0] + mincord) / 2, mincord, 0, maxcord, (max[0] + maxcord) / 2, max[0]], 2))
+    a[idy][idx].set_yticklabels(np.around([max[1], (max[1] + maxcord) / 2, maxcord, 0, mincord, (min[0] + mincord) / 2, min[1]], 2))
 
     # Loop over data dimensions and create text annotations.
     for i in range(xlen):
@@ -78,14 +81,14 @@ def SortByAngle(df):
 
 def SortByCoordinates(df, cord_id):
 
-    high = (df[cord_id] > 1)
+    high = (df[cord_id] > maxcord)
     cell1 = df.index[high].tolist()
 
-    low = (df[cord_id] > -1)
-    high = (df[cord_id] < 1)
+    low = (df[cord_id] > mincord)
+    high = (df[cord_id] < maxcord)
     cell2 = df.index[low & high].tolist()
 
-    low = (df[cord_id] < -1)
+    low = (df[cord_id] < mincord)
     cell3 = df.index[low].tolist()
 
     return cell1, cell2, cell3
