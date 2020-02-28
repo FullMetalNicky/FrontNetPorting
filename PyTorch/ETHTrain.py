@@ -79,7 +79,8 @@ def LoadData(args):
     test_set = Dataset(x_test, y_test)
 
     # Parameters
-    num_workers = 0
+    # num_workers - 0 for debug in Mac+PyCharm, 6 for everything else
+    num_workers = 6
     params = {'batch_size': args.batch_size,
               'shuffle': True,
               'num_workers': num_workers}

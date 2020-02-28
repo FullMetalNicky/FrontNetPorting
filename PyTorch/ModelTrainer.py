@@ -236,6 +236,7 @@ class ModelTrainer:
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             test_generator)
 
+        outputs = y_pred
         y_pred = np.reshape(y_pred, (-1, 4))
         gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
         y_pred = torch.tensor(y_pred, dtype=torch.float32)
@@ -247,7 +248,7 @@ class ModelTrainer:
         logging.info('Test MAE: {}'.format(MAE))
         logging.info('Test r2_score: {}'.format(r2_score))
 
-        return MSE, MAE, r2_score, y_pred, gt_labels
+        return MSE, MAE, r2_score, outputs, gt_labels
 
     def Infer(self, live_generator):
 

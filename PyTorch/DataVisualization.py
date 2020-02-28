@@ -137,7 +137,7 @@ class DataVisualization:
         plt.title('Pose Variables ')
         plt.xlabel('Epoch')
         plt.ylabel('')
-        plt.xticks(np.arange(0, len(), step=5))
+        plt.xticks(np.arange(0, len(r2_score), step=5))
         plt.savefig(DataVisualization.folderPath + DataVisualization.desc + 'Rsq.png')
 
 
