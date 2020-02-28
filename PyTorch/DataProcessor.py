@@ -241,7 +241,7 @@ class DataProcessor:
 
         for i in range(len(x_train)):
             gray_image = cv2.cvtColor(x_train[i], cv2.COLOR_RGB2GRAY)
-            gray_image = gray_image * mask[24:84, 0:108]
+            #gray_image = gray_image * mask[24:84, 0:108]
             gray_image = gray_image.astype(np.uint8)
             x_train_grey.append(gray_image)
 

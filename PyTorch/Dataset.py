@@ -64,20 +64,22 @@ class Dataset(data.Dataset):
 
             if X.shape[0] == 1:
                 X = self.toNumpy(X)
-              #  if np.random.choice([True, False]):
-               #     X = self.it.ApplyVignette(X, np.random.randint(100, 200))
+                X = self.it.ApplyVignette(X, np.random.randint(25, 50))
+
                 if np.random.choice([True, False]):
                     X = self.it.ApplyBlur(X, 3)
+                # if np.random.choice([True, False]):
+                #     X = self.it.ApplyNoise(X, 0, 1)
                 if np.random.choice([True, False]):
-                    X = self.it.ApplyNoise(X, 0, 1)
+                    X = self.it.ApplyExposure(X, np.random.uniform(0.7, 2.0))
                 if np.random.choice([True, False]):
-                     X = self.it.ApplyGamma(X, 0.4, 1.4)
+                     X = self.it.ApplyGamma(X, 0.4, 2.0)
                 elif np.random.choice([True, False]):
                     X = self.it.ApplyDynamicRange(X, np.random.uniform(0.7, 0.9), np.random.uniform(0.0, 0.2))
 
-                imv = X.astype("uint8")
-                cv2.imshow("frame", imv)
-                cv2.waitKey()
+                # imv = X.astype("uint8")
+                # cv2.imshow("frame", imv)
+                # cv2.waitKey()
 
                 X = self.toTensor(X)
 

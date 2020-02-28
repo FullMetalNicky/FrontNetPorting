@@ -56,6 +56,13 @@ class ImageTransformer:
 		h, w = img.shape[:2]
 		mask = self.GetVignette(w, w, sigma)
 		img = img * mask[24:84, 0:108]
+		img = img.astype(np.uint8)
+		return img
+
+	def ApplyExposure(self, img, factor):
+		img = factor * img
+		img = np.clip(img, 0, 255)
+		img = img.astype(np.uint8)
 		return img
 
 	def GetVignette(self, rows, cols, sigma=150):
