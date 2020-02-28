@@ -22,8 +22,8 @@ from ModelTrainer import ModelTrainer
 from ModelManager import ModelManager
 from torch.utils import data
 
-mincord = -0.75
-maxcord = 0.75
+mincord = -1
+maxcord = 1
 
 
 def VizHeatMap(valid_loss, a, samples, xlen, ylen, w, min, max):
@@ -37,14 +37,14 @@ def VizHeatMap(valid_loss, a, samples, xlen, ylen, w, min, max):
     valid_loss = np.reshape(valid_loss, (xlen, ylen))
     samples = np.reshape(samples, (xlen, ylen))
     # [[(1,3), (1, 2), (1,3)], ... , [(3,3), (3, 2), (3,1)]]
-    valid_loss = np.flip(valid_loss, 1)
-    samples = np.flip(samples, 1)
+    # valid_loss = np.flip(valid_loss, 1)
+    # samples = np.flip(samples, 1)
 
     idx = w % 2
     idy = int((w / 2) % 2)
     im = a[idy][idx].imshow(valid_loss)
 
-    a[idy][idx].set_xticklabels(np.around([min[0], (min[0] + mincord) / 2, mincord, 0, maxcord, (max[0] + maxcord) / 2, max[0]], 2))
+    a[idy][idx].set_xticklabels(np.around([max[0], (max[0] + mincord) / 2, maxcord, 0, mincord, (min[0] + maxcord) / 2, min[0]], 2))
     a[idy][idx].set_yticklabels(np.around([max[1], (max[1] + maxcord) / 2, maxcord, 0, mincord, (min[0] + mincord) / 2, min[1]], 2))
 
     # Loop over data dimensions and create text annotations.
@@ -149,7 +149,7 @@ def main():
                     test_generator = data.DataLoader(test_set, **params)
 
                     MSE, MAE, r2_score, y_pred, gt_labels = trainer.Test(test_generator)
-                    loss = MAE[0]
+                    loss = MAE[1]
                 else:
                     loss = 0
                 valid_loss.append(loss)
@@ -158,7 +158,8 @@ def main():
         VizHeatMap(valid_loss, a, samples, len(xcells), len(ycells), w, min, max)
 
     fig.tight_layout()
-    plt.savefig("heatmap.png")
+    fig.suptitle('Y axis Error vs Pose')
+    plt.savefig("yheatmap.png")
     plt.show()
 
 
