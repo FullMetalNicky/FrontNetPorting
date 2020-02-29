@@ -119,6 +119,7 @@ Following the installation instruction on the [PULP-dronet](https://github.com/p
 
 ### How-To Guide
 * Recording - In order to redcord, you may use the MasterScript.py. This will run the c code needed to transfer images from the device to the pipe, the ROS node that reads from the pipe and broadcasts the topic and viewers that allow you to see the streams. 
+* A better option for recording is using this dedicated repo - [PULP-Streamer](https://github.com/FullMetalNicky/PULP-Streamer)
 * Creating Dataset from Rosbags - Once you have rosbags recorded, you can converted it to a .pickle, with the proper format for training, using DataProcessing/Main.py. 
 * Training, Testing, Infering - Examples for how to execute tasks related to PyTorch can be found in PyTorch/Main.py
 * Visualization - To visualize a standard dataset, tou can use the DatasetVisualizer class. For displaying the prediction along with the GT, you can use another script, the purpose of the script will be indicated by its name. Don't use scripts that include "Hand" in their names, they are specifically for a side quest called Scarlet Witch, where I also recorded the poses of the hand. 
