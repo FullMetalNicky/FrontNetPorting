@@ -237,6 +237,8 @@ class ModelTrainer:
             test_generator)
 
         outputs = y_pred
+        outputs = np.reshape(outputs, (-1, 4))
+        labels = gt_labels
         y_pred = np.reshape(y_pred, (-1, 4))
         gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
         y_pred = torch.tensor(y_pred, dtype=torch.float32)
@@ -248,7 +250,7 @@ class ModelTrainer:
         logging.info('Test MAE: {}'.format(MAE))
         logging.info('Test r2_score: {}'.format(r2_score))
 
-        return MSE, MAE, r2_score, outputs, gt_labels
+        return MSE, MAE, r2_score, outputs, labels
 
     def Infer(self, live_generator):
 

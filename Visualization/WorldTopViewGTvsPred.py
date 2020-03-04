@@ -29,8 +29,6 @@ def MoveToWorldFrame(head, himax):
 
     return x, y, phi
 
-# def PlotGrid():
-#     plt.plot()
 
 def VizWorldTopView(frames, labels, camPoses, outputs, isGray=False):
 
@@ -47,8 +45,6 @@ def VizWorldTopView(frames, labels, camPoses, outputs, isGray=False):
 
     ax1 = plt.subplot2grid((h, w), (2, 0), colspan=8, rowspan=7)
     ax1.set_title('World Frame Pose')
-    ax1.yaxis.set_ticks([-3, -1.5, 0, 1.5, 3])  # set y-ticks
-    #ax1.xaxis.set_ticks([3.0, 1.5, 0, -1.5, -3.0])  # set y-ticks
     plt.xlim(3.0, -3.0)
     plt.ylim(-3.0, 3.0)
 
@@ -58,8 +54,6 @@ def VizWorldTopView(frames, labels, camPoses, outputs, isGray=False):
     ax1.spines['bottom'].set_visible(False)
     ax1.set_xlabel('Y')
     ax1.set_ylabel('X')
-    #plt.gca().invert_xaxis()
-
 
     plot1gt, = plt.plot([], [], color='green', label='GT', linestyle='None', marker='o', markersize=10)
     plot1pr, = plt.plot([], [], color='blue', label='Prediction', linestyle='None', marker='^', markersize=10)
@@ -81,11 +75,7 @@ def VizWorldTopView(frames, labels, camPoses, outputs, isGray=False):
     plt.plot([0, 0], [2.4, -2.4], color='gray', linestyle='solid')
     plt.plot([-1.2, -1.2], [2.4, -2.4], color='gray', linestyle='solid')
 
-
-
     plt.legend(loc='lower right', bbox_to_anchor=(0.8, 0.2, 0.25, 0.25))
-
-
 
     ax3 = plt.subplot2grid((h, w), (2, 9), rowspan=7, colspan=7)
     ax3.axis('off')
@@ -104,7 +94,6 @@ def VizWorldTopView(frames, labels, camPoses, outputs, isGray=False):
 
     plt.subplots_adjust(wspace=1.5)
 
-
     Writer = animation.writers['ffmpeg']
     writer = Writer(fps=10, metadata=dict(artist='FullMetalNicky'))
 
@@ -112,7 +101,7 @@ def VizWorldTopView(frames, labels, camPoses, outputs, isGray=False):
 
         label = labels[id]
         camPose = camPoses[id]
-        pred = [outputs[id * 4 + 0], outputs[id * 4 + 1], outputs[id * 4 + 2], outputs[id * 4 + 3]]
+        pred = outputs[id]
         x_gt, y_gt, phi_gt = MoveToWorldFrame(label, camPose)
         x_pred, y_pred, phi_pred = MoveToWorldFrame(pred, camPose)
 
@@ -121,10 +110,6 @@ def VizWorldTopView(frames, labels, camPoses, outputs, isGray=False):
         str1 = "x_cam={:05.3f}, y_cam={:05.3f}, phi_cam={:05.3f} {}".format(x_cam, y_cam, phi_cam, "\n")
         str1 = str1 + "x_gt={:05.3f}, y_gt={:05.3f}, phi_gt={:05.3f} {}".format(x_gt, y_gt, phi_gt, "\n")
         str1 = str1 + "x_pr={:05.3f}, y_pr={:05.3f},  phi_pr={:05.3f}".format(x_pred, y_pred, phi_pred)
-
-
-        # phi_gt = - phi_gt - np.pi / 2
-        # phi_pred = -phi_pred - np.pi / 2
 
         annotation.set_text(str1)
 
@@ -162,7 +147,7 @@ def VizWorldTopView(frames, labels, camPoses, outputs, isGray=False):
         return plot1gt, plot1pr, plot1cam, patch1, patch2, patch3, imgplot, annotation, annotation2
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save('WorldTopView.mp4', writer=writer)
+    ani.save('WorldTopViewPatterns.mp4', writer=writer)
     # ani.save('viz2.gif', dpi=80, writer='imagemagick')
     plt.show()
 
@@ -185,17 +170,17 @@ def main():
     ModelManager.Read('../PyTorch/Models/DronetGray.pt', model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "himaxposetest.pickle", 60, 108, True, True)
+    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "PatternsHimaxTest.pickle", 60, 108, True, True)
 
     test_set = Dataset(x_test, y_test)
     params = {'batch_size': 1,
               'shuffle': False,
-              'num_workers': 0}
+              'num_workers': 1}
     test_generator = data.DataLoader(test_set, **params)
     trainer = ModelTrainer(model)
 
-    valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, outputs, gt_labels = trainer.ValidateSingleEpoch(
-        test_generator)
+    MSE, MAE, r2_score, outputs, gt_labels = trainer.Test(test_generator)
+
     x_test = np.reshape(x_test, (-1, 60, 108))
     VizWorldTopView(x_test, y_test, z_test, outputs, True)
 

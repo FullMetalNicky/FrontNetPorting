@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from torch.utils import data
 import sys
 import matplotlib.patches as patches
+import Utils as utils
 
 sys.path.append("../PyTorch/")
 
@@ -15,19 +16,6 @@ from DataProcessor import DataProcessor
 from ModelTrainer import ModelTrainer
 from Dataset import Dataset
 from ModelManager import ModelManager
-
-
-def MoveToWorldFrame(head, himax):
-    phi = head[3] + himax[3] + np.pi
-
-    rotation = np.array([[np.cos(himax[3]), -np.sin(himax[3])], [np.sin(himax[3]), np.cos(himax[3])] ])
-    xy = np.array([[head[0], head[1]]]).transpose()
-    xy = rotation @ xy
-    xy = xy + np.array([[himax[0], himax[1]]]).transpose()
-    x, = xy[0]
-    y, = xy[1]
-
-    return x, y, phi
 
 
 def VizWorldTopView(frames, labels, camPoses, outputs, outputs2, isGray=False):
@@ -103,11 +91,11 @@ def VizWorldTopView(frames, labels, camPoses, outputs, outputs2, isGray=False):
 
         label = labels[id]
         camPose = camPoses[id]
-        pred = [outputs[id * 4 + 0], outputs[id * 4 + 1], outputs[id * 4 + 2], outputs[id * 4 + 3]]
-        pred2 = [outputs2[id * 4 + 0], outputs2[id * 4 + 1], outputs2[id * 4 + 2], outputs2[id * 4 + 3]]
-        x_gt, y_gt, phi_gt = MoveToWorldFrame(label, camPose)
-        x_pred, y_pred, phi_pred = MoveToWorldFrame(pred, camPose)
-        x_pred2, y_pred2, phi_pred2 = MoveToWorldFrame(pred2, camPose)
+        pred = outputs[id]
+        pred2 = outputs2[id]
+        x_gt, y_gt, phi_gt = utils.MoveToWorldFrame(label, camPose)
+        x_pred, y_pred, phi_pred = utils.MoveToWorldFrame(pred, camPose)
+        x_pred2, y_pred2, phi_pred2 = utils.MoveToWorldFrame(pred2, camPose)
 
         x_cam, y_cam, z_cam, phi_cam = camPose[0], camPose[1], camPose[2], camPose[3]
 
@@ -157,7 +145,7 @@ def VizWorldTopView(frames, labels, camPoses, outputs, outputs2, isGray=False):
         return plot1gt, plot1pr, plot1pr2, plot1cam, patch1, patch2, patch3, patch4, imgplot, annotation, annotation2
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save('WorldTopViewPatternsComb.mp4', writer=writer)
+    ani.save('balh.mp4', writer=writer)
     # ani.save('viz2.gif', dpi=80, writer='imagemagick')
     plt.show()
 
@@ -180,21 +168,27 @@ def main():
     ModelManager.Read('../PyTorch/Models/DronetGray.pt', model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "PatternsHimaxTest.pickle", 60, 108, True, True)
+    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "Nicewall2.pickle", 60, 108, True, True)
+    t_test = DataProcessor.GetTimeStampsFromTestData(DATA_PATH + "Nicewall2.pickle")
 
     test_set = Dataset(x_test, y_test)
     params = {'batch_size': 1,
               'shuffle': False,
-              'num_workers': 1}
+              'num_workers': 0}
     test_generator = data.DataLoader(test_set, **params)
     trainer = ModelTrainer(model)
 
+
     MSE, MAE, r2_score, outputs, gt_labels = trainer.Test(test_generator)
+
+   # utils.SaveResultsToCSV(gt_labels, outputs, t_test, "wow.csv")
+    utils.SaveResultsToCSVinWorldFrame(gt_labels, outputs, t_test, z_test, "wow.csv")
 
     model2 = Dronet(PreActBlock, [1, 1, 1], True)
     ModelManager.Read('../PyTorch/Models/DronetGrayAug120.pt', model2)
     trainer2 = ModelTrainer(model2)
     MSE, MAE, r2_score, outputs2, gt_labels2 = trainer2.Test(test_generator)
+    outputs2 = np.reshape(outputs2, (-1, 4))
 
     x_test = np.reshape(x_test, (-1, 60, 108))
     VizWorldTopView(x_test, y_test, z_test, outputs, outputs2, True)
