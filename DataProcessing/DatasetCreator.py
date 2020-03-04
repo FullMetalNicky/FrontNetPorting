@@ -39,6 +39,17 @@ def _pose(frame, reference_frame='reference'):
     pose.header.frame_id = reference_frame
     return pose
 
+def ExtractPoseFromMessage(Pose):
+	#print(Pose)
+	position = Pose.pose.position
+	x, y, z = position.x , position.y, position.z
+	q = Pose.pose.orientation
+	_, _, yaw = tf.transformations.euler_from_quaternion((q.x, q.y, q.z, q.w))
+
+	return x, y, z, yaw
+
+
+
 def relative_pose(stamped_pose, reference_pose, reference_frame='reference'):
 	frame = _frame(stamped_pose)
 	ref_frame = _frame(reference_pose)
@@ -80,6 +91,8 @@ class DatasetCreator:
 			isCompressed = True
 		else:
 			isCompressed = False
+
+		isCompressed = False
 		print(isCompressed)
 
 
@@ -408,6 +421,10 @@ class DatasetCreator:
 			elif len(y_dataset) == 3:
 				print("dataset ready x:{} y:{} z:{} w:{}".format(len(x_dataset), len(y_dataset[0]), len(y_dataset[1]), len(y_dataset[2])))
 				df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z':y_dataset[1], 'w':y_dataset[2]})
+			elif len(y_dataset) == 1:
+				print("dataset ready x:{} y:{}".format(len(x_dataset), len(y_dataset[0])))
+				df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0]})
+
 			# add your own line if you have more tracking markers.....
 			
 		print("dataframe ready")
@@ -533,7 +550,126 @@ class DatasetCreator:
 		self.SaveInfoFile(datasetName, topic_list)
 
 
-	def CreateHimaxDataset(self, delay, datasetName, camera_topic_himax, camera_topic_bebop, drone_topic, tracking_topic_list, start = None, end = None):
+	def CreateHimaxDataset(self, delay, datasetName, camera_topic_himax, drone_topic, tracking_topic_list, start = None, end = None, pose = False):
+
+		"""Converts rosbag to format suitable for training/testing. 
+		if start_frame, end_frame are unknown, FrameSelector will help you choose how to trim the video
+		the output.
+		Additionally to .pickle, this function also creates a .txt file with the topics (in the correct order) contained in the dataset
+
+	    Parameters
+	    ----------
+	    delay : int
+	        The delay between the himax camera and the optitrack or bebop camera
+	    datasetName : str
+	        name of the new .pickle file
+	    camera_topic_himax : str
+	        name of the himax (video) topic
+	    drone_topic : str
+	        name of the optitrack msg of the dron's pose
+	    tracking_topic_list : list
+	        list of names, specifying all the tracked marker topics (hand, head, etc)
+	    start_frame : int, optional
+	        if known, the timestamp in ns of the frame you wish to start from 
+	    end_frame : int, optional
+	        if known, the timestamp in ns of the frame you wish to finish at
+	    """
+
+		self.camera_topic = camera_topic_himax
+		self.other_topic_list = tracking_topic_list
+		self.drone_topic = drone_topic
+
+		if (start is None) or (end is None):
+			start, end  = self.FrameSelector()
+
+
+		if self.camera_topic.find("compressed"):
+			isCompressed = True
+		else:
+			isCompressed = False
+
+		isCompressed = False
+
+		print("unpacking...")
+		#unpack the stamps
+		camera_stamps = self.ts.ExtractStampsFromHeader(self.camera_topic)
+		drone_stamps = self.ts.ExtractStampsFromHeader(self.drone_topic)
+
+		other_stamps_list = []
+		for topic in tracking_topic_list:
+			topic_stamps = self.ts.ExtractStampsFromRosbag(topic)
+			other_stamps_list.append(topic_stamps)
+			if (len(topic_stamps) < len(camera_stamps)):
+				print("Error:recording data corrupted. not enough MoCap stamps.") 
+				return
+
+		other_stamps_list.append(drone_stamps)
+
+		drone_msgs = self.ts.GetMessages(self.drone_topic)
+		other_messages = []
+		for topic in tracking_topic_list:
+			msgs = self.ts.GetMessages(topic)
+			other_messages.append(msgs)
+
+		bridge = CvBridge()
+
+		x_dataset = []
+		y_dataset = [None] * len(tracking_topic_list)
+		z_dataset = []
+		t_dataset = []
+		for i in range(len(y_dataset)):
+			y_dataset[i] = []
+
+		self.camera_topic = camera_topic_himax
+
+		#unpack the stamps
+		camera_stamps = self.ts.ExtractStampsFromHeader(self.camera_topic)
+		print("unpacked stamps")
+		print("Getting camera messages")
+
+		himax_msgs = self.ts.GetMessages(self.camera_topic)
+		print("Synching IDs")
+		sync_camera_ids, sync_other_ids = self.ts.SyncStampsToMain(camera_stamps, other_stamps_list, delay)
+		sync_drone_ids = sync_other_ids.pop()
+
+		print("Preparing DataFrame")
+		for i in range(len(himax_msgs)):
+			t = himax_msgs[i].header.stamp.to_nsec()
+			if (t >= start) and (t <=end):
+
+				cv_image = bridge.imgmsg_to_cv2(himax_msgs[i])
+				#need to crop too?
+				#cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
+				x_dataset.append(cv_image)	
+				himax_id = sync_camera_ids[i]
+				drone_id = sync_drone_ids[i]
+
+				for id in range(len(sync_other_ids)):
+					topic_msgs = other_messages[id]
+					topic_id = sync_other_ids[id][i]
+					x, y, z, yaw = relative_pose(topic_msgs[topic_id], drone_msgs[drone_id])
+					y_dataset[id].append([x, y, z, yaw]) 
+				
+				x, y, z, yaw = ExtractPoseFromMessage(drone_msgs[drone_id])
+				z_dataset.append([x, y, z, yaw])	
+				t_dataset.append(t)
+			
+		
+		if pose is False:								
+			self.SaveToDataFrame(x_dataset, y_dataset, datasetName)
+		else:
+			df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset})
+			#df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset})
+			print("dataframe ready, frames: {}".format(len(x_dataset)))
+			df.to_pickle(datasetName)
+
+		topic_list = []
+		topic_list.append("video")
+		topic_list = topic_list + tracking_topic_list
+		self.SaveInfoFile(datasetName, topic_list)
+
+
+	def CreateMixedDataset(self, delay, datasetName, camera_topic_himax, camera_topic_bebop, drone_topic, tracking_topic_list, start = None, end = None):
 
 		"""Converts rosbag to format suitable for training/testing. 
 		if start_frame, end_frame are unknown, FrameSelector will help you choose how to trim the video
@@ -573,6 +709,8 @@ class DatasetCreator:
 		else:
 			isCompressed = False
 
+		isCompressed = False
+
 		print("unpacking...")
 		#unpack the stamps
 		camera_stamps = self.ts.ExtractStampsFromHeader(self.camera_topic)
@@ -592,8 +730,6 @@ class DatasetCreator:
 		#get the sync ids 
 		sync_camera_ids, sync_other_ids = self.ts.SyncStampsToMain(camera_stamps, other_stamps_list, 0)
 		sync_drone_ids = sync_other_ids.pop()
-		#print(len(sync_drone_ids))
-		#print(len(sync_camera_ids))
 
 		print("synced ids")
 
@@ -660,7 +796,7 @@ class DatasetCreator:
 		for i in range(len(himax_msgs)):
 			cv_image = bridge.imgmsg_to_cv2(himax_msgs[i])
 			#need to crop too?
-			cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
+			#cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
 			x_dataset.append(cv_image)	
 			himax_id = sync_camera_ids[i]
 			drone_id = sync_drone_ids[i]
@@ -676,6 +812,7 @@ class DatasetCreator:
 		topic_list.append("video")
 		topic_list = topic_list + tracking_topic_list
 		self.SaveInfoFile(datasetName, topic_list)
+
 
 
 
@@ -707,6 +844,8 @@ class DatasetCreator:
 
 		print("dataset ready x:{} hand:{} head:{}".format(len(x_dataset), len(y_dataset), len(z_dataset)))
 		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset, 'z' : z_dataset})
+		# print("dataset ready x:{} head:{}".format(len(x_dataset), len(y_dataset)))
+		# df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
 		print("dataframe ready")
 		df.to_pickle(datasetName)
 
