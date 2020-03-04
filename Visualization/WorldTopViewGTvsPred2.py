@@ -182,7 +182,7 @@ def main():
     MSE, MAE, r2_score, outputs, gt_labels = trainer.Test(test_generator)
 
    # utils.SaveResultsToCSV(gt_labels, outputs, t_test, "wow.csv")
-    utils.SaveResultsToCSVinWorldFrame(gt_labels, outputs, t_test, z_test, "wow.csv")
+    utils.SaveResultsToCSVWithCamPoses(gt_labels, outputs, t_test, z_test, "wow.csv")
 
     model2 = Dronet(PreActBlock, [1, 1, 1], True)
     ModelManager.Read('../PyTorch/Models/DronetGrayAug120.pt', model2)
