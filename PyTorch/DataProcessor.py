@@ -32,16 +32,16 @@ class DataProcessor:
             list
                 list of video frames and list of labels (poses)
             """
-        train_set = pd.read_pickle(trainPath).values
+        train_set = pd.read_pickle(trainPath)
 
         logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
-        size = len(train_set[:, 0])
+        size = train_set.shape[0]
         n_val = int(float(size) * 0.2)
         #n_val = 13000
 
-        np.random.seed(100)
+        np.random.seed()
         # split between train and test sets:
-        x_train = train_set[:, 0]
+        x_train = train_set['x'].values
         x_train = np.vstack(x_train[:]).astype(np.float32)
         if isGray == True:
             x_train = np.reshape(x_train, (-1, image_height, image_width, 1))
@@ -51,7 +51,7 @@ class DataProcessor:
         x_train= np.swapaxes(x_train, 1, 3)
         x_train = np.swapaxes(x_train, 2, 3)
 
-        y_train = train_set[:, 1]
+        y_train = train_set['y'].values
         y_train = np.vstack(y_train[:]).astype(np.float32)
 
         ix_val, ix_tr = np.split(np.random.permutation(train_set.shape[0]), [n_val])
@@ -70,7 +70,7 @@ class DataProcessor:
 
 
         if isExtended == True:
-            z_train = train_set[:, 2]
+            z_train = train_set['z'].values
             z_train = np.vstack(z_train[:]).astype(np.float32)
             z_validation = z_train[ix_val, :]
             z_train = z_train[ix_tr, :]
@@ -102,10 +102,11 @@ class DataProcessor:
             list
                 list of video frames and list of labels (poses)
             """
-        test_set = pd.read_pickle(testPath).values
+
+        test_set = pd.read_pickle(testPath)
         logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
 
-        x_test = test_set[:, 0]
+        x_test = test_set['x'].values
         x_test = np.vstack(x_test[:]).astype(np.float32)
         if isGray == True:
             x_test = np.reshape(x_test, (-1, image_height, image_width, 1))
@@ -114,16 +115,41 @@ class DataProcessor:
 
         x_test = np.swapaxes(x_test, 1, 3)
         x_test = np.swapaxes(x_test, 2, 3)
-        y_test = test_set[:, 1]
+        y_test = test_set['y'].values
         y_test = np.vstack(y_test[:]).astype(np.float32)
 
         if isExtended ==True:
-            z_test = test_set[:, 2]
+            z_test = test_set['z'].values
             z_test = np.vstack(z_test[:]).astype(np.float32)
             return [x_test, y_test, z_test]
 
 
         return [x_test, y_test]
+
+    @staticmethod
+    def GetTimeStampsFromTestData(testPath):
+
+        """Reads the .pickle file and extrects the frames' timestamps
+
+                   Parameters
+                   ----------
+                   testPath : str
+                       The file location of the .pickle
+
+                   Returns
+                   -------
+                   list
+                       list of timestamps
+                   """
+
+        t_test = None
+        test_set = pd.read_pickle(testPath)
+        logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
+        if 't' in test_set.columns:
+            t_test = test_set['t'].values
+
+
+        return t_test
 
     @staticmethod
     def ExtractValidationLabels(testPath, image_height, image_width, isGray = False):
@@ -143,10 +169,10 @@ class DataProcessor:
 
            """
 
-        test_set = pd.read_pickle(testPath).values
+        test_set = pd.read_pickle(testPath)
         logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
 
-        x_test = test_set[:, 0]
+        x_test = test_set['x'].values
         x_test = np.vstack(x_test[:]).astype(np.float32)
         if isGray == True:
             x_test = np.reshape(x_test, (-1, image_height, image_width, 1))
@@ -155,7 +181,7 @@ class DataProcessor:
 
         x_test = np.swapaxes(x_test, 1, 3)
         x_test = np.swapaxes(x_test, 2, 3)
-        y_test = test_set[:, 1]
+        y_test = test_set['y'].values
         y_test = np.vstack(y_test[:]).astype(np.float32)
 
         f = open("test/labels.txt", "w")

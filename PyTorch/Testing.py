@@ -7,20 +7,11 @@ import torch
 
 def TestDataset():
 
-    [x_test, y_test] = DataProcessor.ProcessTestData("/Users/usi/PycharmProjects/data/beboptest.pickle", 60, 108, True)
+    path = "/Users/usi/PycharmProjects/data/Nicewall2.pickle"
+    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(path, 60, 108, True, True)
     test_set = Dataset(x_test, y_test)
+    t_test = DataProcessor.GetTimeStampsFromTestData(path)
 
-    frame = cv2.imread("13.jpg", 0)
-    frame = np.reshape(frame, (60, 108, 1))
-    frame = np.swapaxes(frame, 0, 2)
-    frame = np.swapaxes(frame, 1, 2)
-
-    for i in range(20):
-        newframe = torch.from_numpy(frame).float()
-        newframe = test_set.augmentNoise(newframe)
-        newframe = test_set.toNumpy(newframe)
-        cv2.imshow("frame", newframe)
-        cv2.waitKey()
 
 
 
@@ -39,7 +30,6 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    print("here")
     TestDataset()
 
 
