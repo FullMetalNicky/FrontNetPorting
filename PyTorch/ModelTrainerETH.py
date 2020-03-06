@@ -374,9 +374,36 @@ class ModelTrainer:
         DataVisualization.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
         DataVisualization.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
         DataVisualization.DisplayPlots()
-        logging.info('[ModelTrainer] Test MSE: {}'.format(MSE))
-        logging.info('[ModelTrainer] Test MAE: {}'.format(MAE))
-        logging.info('[ModelTrainer] Test r2_score: {}'.format(r2_score))
+
+        logging.info('[ModelTrainer] Test MSE: [{0:.4f}, {0:.4f}, {0:.4f}, {0:.4f}]'.format(MSE[0], MSE[1], MSE[2], MSE[3]))
+        logging.info('[ModelTrainer] Test MAE: [{0:.4f}, {0:.4f}, {0:.4f}, {0:.4f}]'.format(MAE[0], MAE[1], MAE[2], MAE[3]))
+        logging.info('[ModelTrainer] Test r2_score: [{0:.4f}, {0:.4f}, {0:.4f}, {0:.4f}]'.format(r2_score[0], r2_score[1], r2_score[2],
+                                                                                  r2_score[3]))
+
+    def Test(self, test_generator):
+
+        metrics = Metrics()
+
+        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+            test_generator)
+
+        outputs = y_pred
+        outputs = np.reshape(outputs, (-1, 4))
+        labels = gt_labels
+        y_pred = np.reshape(y_pred, (-1, 4))
+        gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
+        y_pred = torch.tensor(y_pred, dtype=torch.float32)
+        MSE, MAE, r2_score = metrics.Update(y_pred, gt_labels,
+                                           [0, 0, 0, 0],
+                                           [valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi])
+
+        logging.info('[ModelTrainer] Test MSE: [{0:.4f}, {0:.4f}, {0:.4f}, {0:.4f}]'.format(MSE[0], MSE[1], MSE[2], MSE[3]))
+        logging.info('[ModelTrainer] Test MAE: [{0:.4f}, {0:.4f}, {0:.4f}, {0:.4f}]'.format(MAE[0], MAE[1], MAE[2], MAE[3]))
+        logging.info('[ModelTrainer] Test r2_score: [{0:.4f}, {0:.4f}, {0:.4f}, {0:.4f}]'.format(r2_score[0], r2_score[1], r2_score[2], r2_score[3] ))
+
+
+        return MSE, MAE, r2_score, outputs, labels
+
 
     def Infer(self, live_generator):
 
