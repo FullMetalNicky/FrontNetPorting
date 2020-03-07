@@ -526,6 +526,7 @@ class DatasetCreator:
 					else:
 						cv_image = bridge.imgmsg_to_cv2(camera_msgs[i])
 					cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
+					cv_image = cv2.cvtColor(cv_image, cv2.COLOR_RGB2GRAY)
 					cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
 					x_dataset.append(cv_image)	
 					camera_id = sync_camera_ids[chunk * chunk_size + i]
@@ -543,7 +544,8 @@ class DatasetCreator:
 					t_dataset.append(t)
 					if outputs is not None:
 						output = output_msgs[i].data
-						o_dataset.append(output)
+						x, y, z, yaw = output
+						o_dataset.append([x, y, z, yaw])
 		
 					#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
 
