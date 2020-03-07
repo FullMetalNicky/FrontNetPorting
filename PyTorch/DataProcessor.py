@@ -172,6 +172,7 @@ class DataProcessor:
         logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
         if 'o' in test_set.columns:
             o_test = test_set['o'].values
+            o_test = np.vstack(o_test[:]).astype(np.float32)
 
         return o_test
 
