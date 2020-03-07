@@ -152,6 +152,30 @@ class DataProcessor:
         return t_test
 
     @staticmethod
+    def GetOutputsFromTestData(testPath):
+
+        """Reads the .pickle file and extrects the recorded NNs outputs
+
+                   Parameters
+                   ----------
+                   testPath : str
+                       The file location of the .pickle
+
+                   Returns
+                   -------
+                   list
+                       list of outputs/predictions
+                   """
+
+        o_test = None
+        test_set = pd.read_pickle(testPath)
+        logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
+        if 'o' in test_set.columns:
+            o_test = test_set['o'].values
+
+        return o_test
+
+    @staticmethod
     def ExtractValidationLabels(testPath, image_height, image_width, isGray = False):
         """Reads the .pickle file and converts it into a format suitable for testing on pulp
             You need to create a folder called test though
@@ -190,12 +214,12 @@ class DataProcessor:
             data = x_test[i]
             data = np.swapaxes(data, 0, 2)
             data = np.swapaxes(data, 0, 1)
-            data = np.reshape(data, (60, 108))
-            img = np.zeros((244, 324), np.uint8)
-            img[92:152, 108:216] = data
+            img = np.reshape(data, (60, 108))
+            #img = np.zeros((244, 324), np.uint8)
+            #img[92:152, 108:216] = data
             cv2.imwrite("test/{}.pgm".format(i), img)
             label = y_test[i]
-            f.write("{},{},{},{}\n".format(label[0], label[1],label[2],label[3]))
+            #f.write("{},{},{},{}\n".format(label[0], label[1],label[2],label[3]))
         f.close()
 
 
