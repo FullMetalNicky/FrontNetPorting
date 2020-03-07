@@ -76,7 +76,7 @@ class DatasetCreator:
 		self.camera_topic = "bebop/image_raw"
 		self.body_topic = "optitrack/hand"
 
-	def FrameSelector(self):
+	def FrameSelector(self, isCompressed):
 		"""Helps to select where to start and stop the video
 		When you wish to mark a frame for start/end, press 's', for viewing the next frame press any other key
 		"""
@@ -85,15 +85,6 @@ class DatasetCreator:
 		# 	self.camera_topic = "bebop/image_raw/compressed"
 		# else:
 		# 	self.camera_topic = "bebop/image_raw"
-
-
-		if self.camera_topic.find("compressed"):
-			isCompressed = True
-		else:
-			isCompressed = False
-
-		isCompressed = False
-		print(isCompressed)
 
 
 		bridge = CvBridge()
@@ -442,7 +433,7 @@ class DatasetCreator:
 		f.close()
 
 
-	def CreateBebopDataset(self, delay, datasetName, camera_topic, drone_topic, tracking_topic_list, start = None, end = None):
+	def CreateBebopDataset(self, delay, datasetName, camera_topic, drone_topic, tracking_topic_list, start = None, end = None, pose = None, outputs = None, throttle = 1):
 		"""Converts rosbag to format suitable for training/testing. 
 		if start_frame, end_frame are unknown, FrameSelector will help you choose how to trim the video
 		the output.
@@ -470,14 +461,15 @@ class DatasetCreator:
 		self.other_topic_list = tracking_topic_list
 		self.drone_topic = drone_topic
 
-		if (start is None) or (end is None):
-			start, end  = self.FrameSelector()
 
-
-		if self.camera_topic.find("compressed"):
+		if (self.camera_topic.find("compressed")) > -1:
 			isCompressed = True
 		else:
 			isCompressed = False
+
+
+		if (start is None) or (end is None):
+			start, end  = self.FrameSelector(isCompressed)
 
 		print("unpacking...")
 		#unpack the stamps
@@ -494,6 +486,8 @@ class DatasetCreator:
 		print("unpacked stamps")
 
 		other_stamps_list.append(drone_stamps)
+		if outputs is not None:
+			output_msgs = self.ts.GetMessages("/bebop/output")
 		
 		#get the sync ids 
 		sync_camera_ids, sync_other_ids = self.ts.SyncStampsToMain(camera_stamps, other_stamps_list, delay)
@@ -513,6 +507,9 @@ class DatasetCreator:
 		y_dataset = [None] * len(tracking_topic_list)
 		for i in range(len(y_dataset)):
 			y_dataset[i] = []
+		z_dataset =  []
+		t_dataset = []
+		o_dataset = []
 
 		#read in chunks because memory is low
 		camera_msgs_count = self.ts.GetMessagesCount(self.camera_topic)
@@ -521,7 +518,7 @@ class DatasetCreator:
 		for chunk in tqdm(range(chunks)):
 			camera_msgs = self.ts.GetMessages(self.camera_topic, chunk * chunk_size + 1, (chunk+1) * chunk_size)
 
-			for i in tqdm(range(len(camera_msgs))):
+			for i in tqdm(range(0, len(camera_msgs), throttle)):
 				t = camera_msgs[i].header.stamp.to_nsec()
 				if (t >= start) and (t <=end):
 					if isCompressed==True:
@@ -539,11 +536,23 @@ class DatasetCreator:
 						topic_id = sync_other_ids[id][chunk * chunk_size + i]
 						x, y, z, yaw = relative_pose(topic_msgs[topic_id], drone_msgs[drone_id])
 						y_dataset[id].append([x, y, z, yaw])
+
+
+					x, y, z, yaw = ExtractPoseFromMessage(drone_msgs[drone_id])
+					z_dataset.append([x, y, z, yaw])	
+					t_dataset.append(t)
+					if outputs is not None:
+						output = output_msgs[i].data
+						o_dataset.append(output)
 		
 					#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
 
 										
-		self.SaveToDataFrame(x_dataset, y_dataset, datasetName)
+		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset, 'o': o_dataset})
+		print("dataframe ready, frames: {}".format(len(x_dataset)))
+		df.to_pickle(datasetName)
+
+		#self.SaveToDataFrame(x_dataset, y_dataset, datasetName)
 		topic_list = []
 		topic_list.append("video")
 		topic_list = topic_list + tracking_topic_list
@@ -579,16 +588,14 @@ class DatasetCreator:
 		self.other_topic_list = tracking_topic_list
 		self.drone_topic = drone_topic
 
-		if (start is None) or (end is None):
-			start, end  = self.FrameSelector()
-
-
-		if self.camera_topic.find("compressed"):
+		if (self.camera_topic.find("compressed")) > -1:
 			isCompressed = True
 		else:
 			isCompressed = False
 
-		isCompressed = False
+		if (start is None) or (end is None):
+			start, end  = self.FrameSelector(isCompressed)
+
 
 		print("unpacking...")
 		#unpack the stamps
@@ -700,16 +707,14 @@ class DatasetCreator:
 		self.other_topic_list = tracking_topic_list
 		self.drone_topic = drone_topic
 
-		if (start is None) or (end is None):
-			start, end  = self.FrameSelector()
 
-
-		if self.camera_topic.find("compressed"):
+		if (self.camera_topic.find("compressed")) > -1:
 			isCompressed = True
 		else:
 			isCompressed = False
 
-		isCompressed = False
+		if (start is None) or (end is None):
+			start, end  = self.FrameSelector(isCompressed)
 
 		print("unpacking...")
 		#unpack the stamps
