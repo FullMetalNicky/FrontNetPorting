@@ -474,7 +474,7 @@ class DatasetCreator:
 		print("unpacking...")
 		#unpack the stamps
 		camera_stamps = self.ts.ExtractStampsFromHeader(self.camera_topic)
-		drone_stamps = self.ts.ExtractStampsFromHeader(self.drone_topic)
+		drone_stamps = self.ts.ExtractStampsFromRosbag(self.drone_topic)
 
 		other_stamps_list = []
 		for topic in tracking_topic_list:
@@ -602,7 +602,7 @@ class DatasetCreator:
 		print("unpacking...")
 		#unpack the stamps
 		camera_stamps = self.ts.ExtractStampsFromHeader(self.camera_topic)
-		drone_stamps = self.ts.ExtractStampsFromHeader(self.drone_topic)
+		drone_stamps = self.ts.ExtractStampsFromRosbag(self.drone_topic)
 
 		other_stamps_list = []
 		for topic in tracking_topic_list:
@@ -721,7 +721,7 @@ class DatasetCreator:
 		print("unpacking...")
 		#unpack the stamps
 		camera_stamps = self.ts.ExtractStampsFromHeader(self.camera_topic)
-		drone_stamps = self.ts.ExtractStampsFromHeader(self.drone_topic)
+		drone_stamps = self.ts.ExtractStampsFromRosbag(self.drone_topic)
 
 		other_stamps_list = []
 		for topic in tracking_topic_list:
