@@ -375,9 +375,9 @@ class ModelTrainer:
         DataVisualization.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
         DataVisualization.DisplayPlots()
 
-        logging.info('[ModelTrainer] Test MSE: [{0:.4f}, {0:.4f}, {0:.4f}, {0:.4f}]'.format(MSE[0], MSE[1], MSE[2], MSE[3]))
-        logging.info('[ModelTrainer] Test MAE: [{0:.4f}, {0:.4f}, {0:.4f}, {0:.4f}]'.format(MAE[0], MAE[1], MAE[2], MAE[3]))
-        logging.info('[ModelTrainer] Test r2_score: [{0:.4f}, {0:.4f}, {0:.4f}, {0:.4f}]'.format(r2_score[0], r2_score[1], r2_score[2],
+        logging.info('[ModelTrainer] Test MSE: [{0:.4f}, {1:.4f}, {2:.4f}, {3:.4f}]'.format(MSE[0], MSE[1], MSE[2], MSE[3]))
+        logging.info('[ModelTrainer] Test MAE: [{0:.4f}, {1:.4f}, {2:.4f}, {3:.4f}]'.format(MAE[0], MAE[1], MAE[2], MAE[3]))
+        logging.info('[ModelTrainer] Test r2_score: [{0:.4f}, {1:.4f}, {2:.4f}, {3:.4f}]'.format(r2_score[0], r2_score[1], r2_score[2],
                                                                                   r2_score[3]))
 
     def Test(self, test_generator):
@@ -397,9 +397,9 @@ class ModelTrainer:
                                            [0, 0, 0, 0],
                                            [valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi])
 
-        logging.info('[ModelTrainer] Test MSE: [{0:.4f}, {0:.4f}, {0:.4f}, {0:.4f}]'.format(MSE[0], MSE[1], MSE[2], MSE[3]))
-        logging.info('[ModelTrainer] Test MAE: [{0:.4f}, {0:.4f}, {0:.4f}, {0:.4f}]'.format(MAE[0], MAE[1], MAE[2], MAE[3]))
-        logging.info('[ModelTrainer] Test r2_score: [{0:.4f}, {0:.4f}, {0:.4f}, {0:.4f}]'.format(r2_score[0], r2_score[1], r2_score[2], r2_score[3] ))
+        logging.info('[ModelTrainer] Test MSE: [{0:.4f}, {1:.4f}, {2:.4f}, {3:.4f}]'.format(MSE[0], MSE[1], MSE[2], MSE[3]))
+        logging.info('[ModelTrainer] Test MAE: [{0:.4f}, {1:.4f}, {2:.4f}, {3:.4f}]'.format(MAE[0], MAE[1], MAE[2], MAE[3]))
+        logging.info('[ModelTrainer] Test r2_score: [{0:.4f}, {1:.4f}, {2:.4f}, {3:.4f}]'.format(r2_score[0], r2_score[1], r2_score[2], r2_score[3] ))
 
 
         return MSE, MAE, r2_score, outputs, labels
