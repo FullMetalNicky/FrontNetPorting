@@ -543,7 +543,7 @@ class DatasetCreator:
 					z_dataset.append([x, y, z, yaw])	
 					t_dataset.append(t)
 					if outputs is not None:
-						output = output_msgs[i].data
+						output = output_msgs[chunk * chunk_size + i].data
 						x, y, z, yaw = output
 						o_dataset.append([x, y, z, yaw])
 		
@@ -841,16 +841,18 @@ class DatasetCreator:
 		x_dataset = []
 		y_dataset = []
 		z_dataset = []
+		t_dataset = []
 
 		for file in fileList:
-			dataset = pd.read_pickle(folderPath + file).values
-			print(len(dataset[:, 0]))
-			x_dataset.extend(dataset[:, 0])
-			y_dataset.extend(dataset[:, 1])
-			z_dataset.extend(dataset[:, 2])
+			dataset = pd.read_pickle(folderPath + file)
+			print(len(dataset['x'].values))
+			x_dataset.extend(dataset['x'].values)
+			y_dataset.extend(dataset['y'].values)
+			z_dataset.extend(dataset['z'].values)
+			t_dataset.extend(dataset['t'].values)
 
 		print("dataset ready x:{} hand:{} head:{}".format(len(x_dataset), len(y_dataset), len(z_dataset)))
-		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset, 'z' : z_dataset})
+		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset, 'z' : z_dataset, 't' : t_dataset})
 		# print("dataset ready x:{} head:{}".format(len(x_dataset), len(y_dataset)))
 		# df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
 		print("dataframe ready")
