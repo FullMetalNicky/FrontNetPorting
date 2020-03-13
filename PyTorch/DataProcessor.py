@@ -224,6 +224,52 @@ class DataProcessor:
         f.close()
 
 
+    @staticmethod
+    def CropCenteredDataset(path, imgSize, desiredSize, file_name, isGray = False):
+        """Crop dataset in a centered way into a desired size
+
+              Parameters
+            ----------
+            path : str
+                The file location of the .pickle
+            imgSize : (int height, int width)
+                Please...
+            desiredSize : (int height, int width)
+                Please...
+            isGray : bool, optional
+                True is the dataset is of 1-channel (gray) images, False if RGB
+            file_name: string
+                name of the .pickle with the cropped images
+
+           """
+        dataset = pd.read_pickle(path)
+        logging.info('[DataProcessor] train shape: ' + str(dataset.shape))
+
+        x_set = dataset['x'].values
+        x_set = np.vstack(x_set[:]).astype(np.float32)
+        if isGray == True:
+            x_set = np.reshape(x_set, (-1, imgSize[0], imgSize[1], 1))
+        else:
+            x_set = np.reshape(x_set, (-1, imgSize[0], imgSize[1], 3))
+
+        x_cropped = []
+
+        for i in range(len(x_set)):
+            img = x_set[i]
+            w = int((imgSize[1] - desiredSize[1]) / 2)
+            h = int((imgSize[0] - desiredSize[0]) / 2)
+            img = img[h:(h+desiredSize[0]), w:(w+desiredSize[1])]
+            x_cropped.append(img)
+
+        y_set= dataset['y'].values
+        z_set= dataset['z'].values
+        t_set = dataset['t'].values
+        #o_train = train_set['o'].values
+
+        # df = pd.DataFrame(data={'x': x_train_grey, 'y': y_train})
+        #df = pd.DataFrame(data={'x': x_train_grey, 'y': y_train, 'z': z_train, 'o': o_train, 't': t_train})
+        df = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set})
+        df.to_pickle(file_name)
 
     @staticmethod
     def ProcessInferenceData(images, image_height, image_width, isGray=False):
@@ -276,11 +322,11 @@ class DataProcessor:
                 name of the new .pickle
 
             """
-        train_set = pd.read_pickle(trainPath).values
+        train_set = pd.read_pickle(trainPath)
         logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
 
         # split between train and test sets:
-        x_train = train_set[:, 0]
+        x_train = train_set['x'].values
         x_train = np.vstack(x_train[:])
         x_train = np.reshape(x_train, (-1, image_height, image_width, 3))
 
@@ -296,9 +342,13 @@ class DataProcessor:
             gray_image = gray_image.astype(np.uint8)
             x_train_grey.append(gray_image)
 
-        y_train = train_set[:, 1]
+        y_train = train_set['y'].values
+        z_train = train_set['z'].values
+        t_train = train_set['t'].values
+        o_train = train_set['o'].values
 
-        df = pd.DataFrame(data={'x': x_train_grey, 'y': y_train})
+        #df = pd.DataFrame(data={'x': x_train_grey, 'y': y_train})
+        df = pd.DataFrame(data={'x': x_train_grey, 'y': y_train, 'z': z_train, 'o': o_train, 't': t_train})
         df.to_pickle(file_name)
 
 
