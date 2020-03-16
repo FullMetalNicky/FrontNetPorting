@@ -527,7 +527,7 @@ class DatasetCreator:
 						cv_image = bridge.imgmsg_to_cv2(camera_msgs[i])
 					cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
 					cv_image = cv2.cvtColor(cv_image, cv2.COLOR_RGB2GRAY)
-					cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
+					cv_image = cv2.resize(cv_image, (config.input_width, config.input_height))
 					x_dataset.append(cv_image)	
 					camera_id = sync_camera_ids[chunk * chunk_size + i]
 					drone_id = sync_drone_ids[chunk * chunk_size + i]
@@ -549,14 +549,25 @@ class DatasetCreator:
 		
 					#print("opti_id={}/{}, drone_id={}/{}, bebop_id={}".format(optitrack_id, len(optitrack_msgs), drone_id, len(drone_msgs), bebop_id))
 
-										
-		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset, 'o': o_dataset})
+
+		height = cv_image.shape[0]
+		width = cv_image.shape[1]
+		if len(cv_image.shape) > 2: 
+			channels = cv_image.shape[2]
+		else:
+			channels = 1
+
+
+		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset, 'w': width, 'h' : height, 'c': channels})		
+		#df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset, 'o': o_dataset})
 		print("dataframe ready, frames: {}".format(len(x_dataset)))
 		df.to_pickle(datasetName)
 
 		#self.SaveToDataFrame(x_dataset, y_dataset, datasetName)
 		topic_list = []
+		topic_list.append("start:{}, end:{}".format(start, end))
 		topic_list.append("video")
+		topic_list.append(self.drone_topic)
 		topic_list = topic_list + tracking_topic_list
 		self.SaveInfoFile(datasetName, topic_list)
 
@@ -648,7 +659,6 @@ class DatasetCreator:
 
 				cv_image = bridge.imgmsg_to_cv2(himax_msgs[i])
 				#need to crop too?
-				#cv_image = cv2.resize(cv_image, (config.input_width, config.input_height), cv2.INTER_AREA)
 				x_dataset.append(cv_image)	
 				himax_id = sync_camera_ids[i]
 				drone_id = sync_drone_ids[i]
@@ -663,17 +673,25 @@ class DatasetCreator:
 				z_dataset.append([x, y, z, yaw])	
 				t_dataset.append(t)
 			
+		height = cv_image.shape[0]
+		width = cv_image.shape[1]
+		if len(cv_image.shape) > 2: 
+			channels = cv_image.shape[2]
+		else:
+			channels = 1
 		
 		if pose is False:								
 			self.SaveToDataFrame(x_dataset, y_dataset, datasetName)
 		else:
-			df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset})
-			#df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset})
+			#df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset})
+			df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset, 'w': width, 'h' : height, 'c': channels})
 			print("dataframe ready, frames: {}".format(len(x_dataset)))
 			df.to_pickle(datasetName)
 
 		topic_list = []
+		topic_list.append("start:{}, end:{}".format(start, end))
 		topic_list.append("video")
+		topic_list.append(self.drone_topic)
 		topic_list = topic_list + tracking_topic_list
 		self.SaveInfoFile(datasetName, topic_list)
 
@@ -818,6 +836,7 @@ class DatasetCreator:
 		topic_list = []
 		topic_list.append("video")
 		topic_list = topic_list + tracking_topic_list
+
 		self.SaveInfoFile(datasetName, topic_list)
 
 
