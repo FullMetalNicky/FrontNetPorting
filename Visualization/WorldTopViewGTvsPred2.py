@@ -18,7 +18,7 @@ from Dataset import Dataset
 from ModelManager import ModelManager
 
 
-def VizWorldTopView(frames, labels, camPoses, outputs, outputs2, isGray=False):
+def VizWorldTopView(frames, labels, camPoses, outputs, outputs2, isGray=False, videoName = "WorldTopView"):
 
     fig = plt.figure(888, figsize=(15, 8))
 
@@ -145,7 +145,7 @@ def VizWorldTopView(frames, labels, camPoses, outputs, outputs2, isGray=False):
         return plot1gt, plot1pr, plot1pr2, plot1cam, patch1, patch2, patch3, patch4, imgplot, annotation, annotation2
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save('balh.mp4', writer=writer)
+    ani.save(videoName + '.mp4', writer=writer)
     # ani.save('viz2.gif', dpi=80, writer='imagemagick')
     plt.show()
 
@@ -168,13 +168,31 @@ def main():
     ModelManager.Read('../PyTorch/Models/DronetGray.pt', model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "Nicewall2.pickle", 60, 108, True, True)
-    t_test = DataProcessor.GetTimeStampsFromTestData(DATA_PATH + "Nicewall2.pickle")
+    picklename = "HimaxDynamic_12_03_20.pickle"
+    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + picklename, True)
+    t_test = DataProcessor.GetTimeStampsFromTestData(DATA_PATH + picklename)
+
+    if picklename.find(".pickle"):
+        picklename = picklename.replace(".pickle", '')
+
+    x_test2 = []
+    y_test2 = []
+    z_test2 = []
+    # for i in range(len(x_test)):
+    #     gt = y_test[i]
+    #     if ((gt[0] > 1.0) and (gt[0] < 2.0)):
+    #         x_test2.append(x_test[i])
+    #         y_test2.append(y_test[i])
+    #         z_test2.append(z_test[i])
+    #
+    # x_test = np.asarray(x_test2)
+    # y_test = np.asarray(y_test2)
+    # z_test = np.asarray(z_test2)
 
     test_set = Dataset(x_test, y_test)
     params = {'batch_size': 1,
               'shuffle': False,
-              'num_workers': 0}
+              'num_workers': 1}
     test_generator = data.DataLoader(test_set, **params)
     trainer = ModelTrainer(model)
 
@@ -182,16 +200,20 @@ def main():
     MSE, MAE, r2_score, outputs, gt_labels = trainer.Test(test_generator)
 
    # utils.SaveResultsToCSV(gt_labels, outputs, t_test, "wow.csv")
-    utils.SaveResultsToCSVWithCamPoses(gt_labels, outputs, t_test, z_test, "wow.csv")
 
     model2 = Dronet(PreActBlock, [1, 1, 1], True)
     ModelManager.Read('../PyTorch/Models/DronetGrayAug120.pt', model2)
     trainer2 = ModelTrainer(model2)
     MSE, MAE, r2_score, outputs2, gt_labels2 = trainer2.Test(test_generator)
+
+    utils.SaveResultsToCSVWithCamPoses(gt_labels, outputs2, t_test, z_test, picklename + ".csv")
+
     outputs2 = np.reshape(outputs2, (-1, 4))
 
-    x_test = np.reshape(x_test, (-1, 60, 108))
-    VizWorldTopView(x_test, y_test, z_test, outputs, outputs2, True)
+    h = x_test.shape[2]
+    w = x_test.shape[3]
+    x_test = np.reshape(x_test, (-1, h, w))
+    VizWorldTopView(x_test, y_test, z_test, outputs, outputs2, True, picklename)
 
 if __name__ == '__main__':
     main()

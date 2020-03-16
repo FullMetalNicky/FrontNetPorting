@@ -10,19 +10,13 @@ from ImageTransformer import ImageTransformer
 class DataProcessor:
 
     @staticmethod
-    def ProcessTrainData(trainPath, image_height, image_width, isGray = False, isExtended=False):
+    def ProcessTrainData(trainPath, isExtended=False):
         """Reads the .pickle file and converts it into a format suitable fot training
 
             Parameters
             ----------
             trainPath : str
-                The file location of the .pickle
-            image_height : int
-                Please...
-            image_width : int
-                Please...
-            isGray : bool, optional
-                True is the dataset is of 1-channel (gray) images, False if RGB
+                The file location of the .pickl
             isExtended : bool, optional
                 True if the dataset contains both head and hand pose and you wish to retrieve both
 
@@ -39,14 +33,15 @@ class DataProcessor:
         n_val = int(float(size) * 0.2)
         #n_val = 13000
 
+        h = int(train_set['h'].values[0])
+        w = int(train_set['w'].values[0])
+        c = int(train_set['c'].values[0])
+
         np.random.seed()
         # split between train and test sets:
         x_train = train_set['x'].values
         x_train = np.vstack(x_train[:]).astype(np.float32)
-        if isGray == True:
-            x_train = np.reshape(x_train, (-1, image_height, image_width, 1))
-        else:
-            x_train = np.reshape(x_train, (-1, image_height, image_width, 3))
+        x_train = np.reshape(x_train, (-1, h, w, c))
 
         x_train= np.swapaxes(x_train, 1, 3)
         x_train = np.swapaxes(x_train, 2, 3)
@@ -80,19 +75,13 @@ class DataProcessor:
         return [x_train, x_validation, y_train, y_validation]
 
     @staticmethod
-    def ProcessTestData(testPath, image_height, image_width, isGray = False, isExtended=False):
+    def ProcessTestData(testPath, isExtended=False):
         """Reads the .pickle file and converts it into a format suitable fot testing
 
             Parameters
             ----------
             testPath : str
                 The file location of the .pickle
-            image_height : int
-                Please...
-            image_width : int
-                Please...
-            isGray : bool, optional
-                True is the dataset is of 1-channel (gray) images, False if RGB
             isExtended : bool, optional
                 True if the dataset contains both head and hand pose and you wish to retrieve both
 
@@ -105,13 +94,15 @@ class DataProcessor:
 
         test_set = pd.read_pickle(testPath)
         logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
+        h = int(test_set['h'].values[0])
+        w = int(test_set['w'].values[0])
+        c = int(test_set['c'].values[0])
+
 
         x_test = test_set['x'].values
         x_test = np.vstack(x_test[:]).astype(np.float32)
-        if isGray == True:
-            x_test = np.reshape(x_test, (-1, image_height, image_width, 1))
-        else:
-            x_test = np.reshape(x_test, (-1, image_height, image_width, 3))
+        x_test = np.reshape(x_test, (-1, h, w, c))
+
 
         x_test = np.swapaxes(x_test, 1, 3)
         x_test = np.swapaxes(x_test, 2, 3)
@@ -177,7 +168,7 @@ class DataProcessor:
         return o_test
 
     @staticmethod
-    def ExtractValidationLabels(testPath, image_height, image_width, isGray = False):
+    def ExtractValidationLabels(testPath):
         """Reads the .pickle file and converts it into a format suitable for testing on pulp
             You need to create a folder called test though
 
@@ -185,12 +176,6 @@ class DataProcessor:
             ----------
             testPath : str
                 The file location of the .pickle
-            image_height : int
-                Please...
-            image_width : int
-                Please...
-            isGray : bool, optional
-                True is the dataset is of 1-channel (gray) images, False if RGB
 
            """
 
@@ -199,10 +184,10 @@ class DataProcessor:
 
         x_test = test_set['x'].values
         x_test = np.vstack(x_test[:]).astype(np.float32)
-        if isGray == True:
-            x_test = np.reshape(x_test, (-1, image_height, image_width, 1))
-        else:
-            x_test = np.reshape(x_test, (-1, image_height, image_width, 3))
+        h = int(test_set['h'].values[0])
+        w = int(test_set['w'].values[0])
+        c = int(test_set['c'].values[0])
+        x_test = np.reshape(x_test, (-1, h, w, c))
 
         x_test = np.swapaxes(x_test, 1, 3)
         x_test = np.swapaxes(x_test, 2, 3)
@@ -225,19 +210,15 @@ class DataProcessor:
 
 
     @staticmethod
-    def CropCenteredDataset(path, imgSize, desiredSize, file_name, isGray = False):
+    def CropCenteredDataset(path,desiredSize, file_name):
         """Crop dataset in a centered way into a desired size
 
               Parameters
             ----------
             path : str
                 The file location of the .pickle
-            imgSize : (int height, int width)
-                Please...
             desiredSize : (int height, int width)
                 Please...
-            isGray : bool, optional
-                True is the dataset is of 1-channel (gray) images, False if RGB
             file_name: string
                 name of the .pickle with the cropped images
 
@@ -247,17 +228,17 @@ class DataProcessor:
 
         x_set = dataset['x'].values
         x_set = np.vstack(x_set[:]).astype(np.float32)
-        if isGray == True:
-            x_set = np.reshape(x_set, (-1, imgSize[0], imgSize[1], 1))
-        else:
-            x_set = np.reshape(x_set, (-1, imgSize[0], imgSize[1], 3))
+        h = int(dataset['h'].values[0])
+        w = int(dataset['w'].values[0])
+        c = int(dataset['c'].values[0])
+        x_set = np.reshape(x_set, (-1, h, w, c))
 
         x_cropped = []
 
         for i in range(len(x_set)):
             img = x_set[i]
-            w = int((imgSize[1] - desiredSize[1]) / 2)
-            h = int((imgSize[0] - desiredSize[0]) / 2)
+            w = int((w - desiredSize[1]) / 2)
+            h = int((h - desiredSize[0]) / 2)
             img = img[h:(h+desiredSize[0]), w:(w+desiredSize[1])]
             x_cropped.append(img)
 

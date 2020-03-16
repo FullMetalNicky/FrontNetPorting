@@ -170,7 +170,7 @@ def main():
     ModelManager.Read('../PyTorch/Models/DronetGray.pt', model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "PatternsHimaxTest.pickle", 60, 108, True, True)
+    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "PatternsHimaxTest.pickle", True)
 
     test_set = Dataset(x_test, y_test)
     params = {'batch_size': 1,
@@ -181,7 +181,9 @@ def main():
 
     MSE, MAE, r2_score, outputs, gt_labels = trainer.Test(test_generator)
 
-    x_test = np.reshape(x_test, (-1, 60, 108))
+    h = x_test.shape[2]
+    w = x_test.shape[3]
+    x_test = np.reshape(x_test, (-1, h, w))
     VizWorldTopView(x_test, y_test, z_test, outputs, True)
 
 if __name__ == '__main__':
