@@ -63,6 +63,7 @@ def Parse(parser):
 
 
 def LoadData(args):
+
     [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
         args.load_trainset)
     [x_test, y_test] = DataProcessor.ProcessTestData(args.load_testset)
@@ -135,22 +136,13 @@ def main():
 
     trainer = ModelTrainer(model, args, regime)
     if args.quantize:
-        logging.disable(logging.INFO)
+        #logging.disable(logging.INFO)
         trainer.Quantize(validation_loader)
 
 
-    #trainer.Train(train_loader, validation_loader)
-    #trainer.Predict(test_loader)
-
     if args.save_model is not None:
         ModelManager.Write(trainer.GetModel(), 100, args.save_model)
-        # state_dict = torch.load(args.save_model, map_location='cpu')
-        # qmodel = state_dict["model"]
-        # for key, value in qmodel.items():
-        #     if "bias" in key:
-        #         value = value.reshape(-1)
-        #         value = list(value.numpy())
-        #         logging.info("{}={}".format(key, value))
+
 
 if __name__ == '__main__':
     main()

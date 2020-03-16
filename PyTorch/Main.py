@@ -16,7 +16,7 @@ from torchsummary import summary
 import torch
 
 def Filter():
-    [x_test, y_test] = DataProcessor.ProcessTestData("/Users/usi/PycharmProjects/data/test_vignette4.pickle", 60, 108, True)
+    [x_test, y_test] = DataProcessor.ProcessTestData("/Users/usi/PycharmProjects/data/test_vignette4.pickle")
     x_test2 = []
     y_test2 = []
     for i in range(len(x_test)):
@@ -47,7 +47,7 @@ def Test():
     trainer = ModelTrainer(model)
 
     #ModelManager.Read("Models/FrontNetGray.pt", model)
-    [x_test, y_test] = DataProcessor.ProcessTestData("/Users/usi/PycharmProjects/data/beboptest.pickle", 60, 108, True)
+    [x_test, y_test] = DataProcessor.ProcessTestData("/Users/usi/PycharmProjects/data/beboptest.pickle")
     test_set = Dataset(x_test, y_test)
 
     params = {'batch_size': 64,
@@ -122,7 +122,7 @@ def TrainGray():
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
     [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
-        DATA_PATH + "train_grey.pickle", 60, 108, True)
+        DATA_PATH + "train_grey.pickle")
 
     training_set = Dataset(x_train, y_train, True)
     params = {'batch_size': 64,
@@ -137,7 +137,7 @@ def TrainGray():
 
 def DumpImages():
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    [x_test, y_test] = DataProcessor.ExtractValidationLabels(DATA_PATH + "test_grey.pickle", 60, 108, True)
+    [x_test, y_test] = DataProcessor.ExtractValidationLabels(DATA_PATH + "test_grey.pickle")
 
 
 def ConvertToGray():
@@ -147,7 +147,7 @@ def ConvertToGray():
 
 def CropDataset():
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    DataProcessor.CropCenteredDataset(DATA_PATH + "160x160HimaxDynamic_12_03_20.pickle", [160, 160], [60, 108], DATA_PATH + "HimaxDynamic_12_03_20.pickle", True)
+    DataProcessor.CropCenteredDataset(DATA_PATH + "160x160HimaxDynamic_12_03_20.pickle", [60, 108], DATA_PATH + "HimaxDynamic_12_03_20.pickle", True)
 
 def main():
     logging.basicConfig(level=logging.INFO,

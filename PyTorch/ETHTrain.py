@@ -64,14 +64,9 @@ def Parse(parser):
 
 def LoadData(args):
 
-    if args.gray is not None:
-        [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
-            args.load_trainset, 60, 108, True)
-        [x_test, y_test] = DataProcessor.ProcessTestData(args.load_testset, 60, 108, True)
-    else:
-        [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
-            args.load_trainset, 60, 108)
-        [x_test, y_test] = DataProcessor.ProcessTestData(args.load_testset, 60, 108)
+    [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
+        args.load_trainset)
+    [x_test, y_test] = DataProcessor.ProcessTestData(args.load_testset)
 
 
     training_set = Dataset(x_train, y_train, True)
