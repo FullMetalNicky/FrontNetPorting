@@ -1,5 +1,6 @@
 from DatasetCreator import DatasetCreator
 import sys
+import pandas as pd
 sys.path.append("/home/usi/Documents/Drone/FrontNetPorting")
 import config
 
@@ -21,6 +22,21 @@ def JoinPickles(fileList, picklename):
 	#fileList = {"Clip1.pickle", "Clip2.pickle", "Clip3.pickle", "Clip4.pickle", "Clip5.pickle", "Clip6.pickle"}
 	DatasetCreator.JoinPickleFiles(fileList, picklefolder + picklename, picklefolder)
 
+def AddColumnsToDataSet(picklename, height, width, channels ):
+
+	picklefolder = config.folder_path + "/../Pickles/Dynamic/160x160/"
+	dataset = pd.read_pickle(picklefolder + picklename)
+	df = pd.DataFrame({
+    'c': channels,
+    'w' : width,
+    'h' : height
+}, index=[0])
+
+	new = pd.concat([dataset, df], axis=1) 
+	print(new.head)
+	print("dataframe ready")
+	new.to_pickle(picklefolder + picklename)
+
 
 
 def main():
@@ -34,7 +50,8 @@ def main():
 	
 	# #CreatePickle("Clip6")
 	# JoinPickles(fileList, "HimaxDynamic_12_03_20.pickle")
-	CreatePickle("Test", rosbagfolder = config.folder_path+"/../Rosbags/normal/alessandro/")
+	#CreatePickle("Test", rosbagfolder = config.folder_path+"/../Rosbags/normal/alessandro/")
+	AddColumnsToDataSet("Test.pickle", 160, 160, 1)
 
 
 if __name__ == '__main__':

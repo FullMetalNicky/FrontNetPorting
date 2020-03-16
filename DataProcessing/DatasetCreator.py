@@ -557,9 +557,15 @@ class DatasetCreator:
 		else:
 			channels = 1
 
+		sizes = pd.DataFrame({
+		    'c': channels,
+		    'w' : width,
+		    'h' : height
+		}, index=[0])
 
-		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset, 'w': width, 'h' : height, 'c': channels})		
-		#df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset, 'o': o_dataset})
+		data = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset})
+		df = pd.concat([data, sizes], axis=1) 		
+		df.to_pickle(datasetName)
 		print("dataframe ready, frames: {}".format(len(x_dataset)))
 		df.to_pickle(datasetName)
 
@@ -679,14 +685,17 @@ class DatasetCreator:
 			channels = cv_image.shape[2]
 		else:
 			channels = 1
-		
-		if pose is False:								
-			self.SaveToDataFrame(x_dataset, y_dataset, datasetName)
-		else:
-			#df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset})
-			df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset, 'w': width, 'h' : height, 'c': channels})
-			print("dataframe ready, frames: {}".format(len(x_dataset)))
-			df.to_pickle(datasetName)
+
+		sizes = pd.DataFrame({
+		    'c': channels,
+		    'w' : width,
+		    'h' : height
+		}, index=[0])
+
+		data = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset})
+		df = pd.concat([data, sizes], axis=1) 		
+		print("dataframe ready, frames: {}".format(len(x_dataset)))
+		df.to_pickle(datasetName)
 
 		topic_list = []
 		topic_list.append("start:{}, end:{}".format(start, end))
@@ -870,8 +879,20 @@ class DatasetCreator:
 			z_dataset.extend(dataset['z'].values)
 			t_dataset.extend(dataset['t'].values)
 
+	
+		
+		sizes = pd.DataFrame({
+		    'c': channels,
+		    'w' : width,
+		    'h' : height
+		}, index=[0])
+
+		data = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset})
+		df = pd.concat([data, sizes], axis=1) 		
+		df.to_pickle(datasetName)
+
 		print("dataset ready x:{} hand:{} head:{}".format(len(x_dataset), len(y_dataset), len(z_dataset)))
-		df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset, 'z' : z_dataset, 't' : t_dataset})
+		#df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset, 'z' : z_dataset, 't' : t_dataset})
 		# print("dataset ready x:{} head:{}".format(len(x_dataset), len(y_dataset)))
 		# df = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset})
 		print("dataframe ready")
