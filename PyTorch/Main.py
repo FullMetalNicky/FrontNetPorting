@@ -41,18 +41,18 @@ def Filter():
 
 
 def Test():
-    model = FrontNet(PreActBlock, [1, 1, 1], True)
-    state_dict = torch.load("../Models/FrontNetGray.pt", map_location='cpu')
-    model.load_state_dict(state_dict)
+    model = Dronet(PreActBlock, [1, 1, 1], True)
+    ModelManager.Read("Models/DronetHimax160x90.pt", model)
+
     trainer = ModelTrainer(model)
 
     #ModelManager.Read("Models/FrontNetGray.pt", model)
-    [x_test, y_test] = DataProcessor.ProcessTestData("/Users/usi/PycharmProjects/data/beboptest.pickle")
+    [x_test, y_test] = DataProcessor.ProcessTestData("/Users/usi/PycharmProjects/data/160x90HimaxStatic_12_03_20.pickle")
     test_set = Dataset(x_test, y_test)
 
     params = {'batch_size': 64,
               'shuffle': False,
-              'num_workers': 0}
+              'num_workers': 1}
     test_loader = data.DataLoader(test_set, **params)
     trainer.Predict(test_loader)
 
@@ -122,7 +122,7 @@ def TrainGray():
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
     [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
-        DATA_PATH + "train_grey.pickle")
+        DATA_PATH + "160x160HimaxDynamic_12_03_20.pickle")
 
     training_set = Dataset(x_train, y_train, True)
     params = {'batch_size': 64,
@@ -147,7 +147,26 @@ def ConvertToGray():
 
 def CropDataset():
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    DataProcessor.CropCenteredDataset(DATA_PATH + "160x160HimaxDynamic_12_03_20.pickle", [60, 108], DATA_PATH + "HimaxDynamic_12_03_20.pickle", True)
+    DataProcessor.CropCenteredDataset(DATA_PATH + "160x160HimaxStatic_12_03_20.pickle", [90, 160], DATA_PATH + "160x90HimaxStatic_12_03_20.pickle")
+
+def Shift():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/"
+    DataProcessor.ShiftVideoDataset(DATA_PATH + "160x90HimaxStatic_12_03_20.pickle", DATA_PATH + "160x90HimaxStatic_12_03_20.pickle")
+
+def AddColumnsToDataSet(picklename, height, width, channels):
+
+    DATA_PATH = "/Users/usi/PycharmProjects/data/"
+    dataset = pd.read_pickle(DATA_PATH + picklename)
+    df = pd.DataFrame({
+    'c': channels,
+    'w' : width,
+    'h' : height
+    }, index=[0])
+
+    new = pd.concat([dataset, df], axis=1)
+    print(new.head)
+    print("dataframe ready")
+    new.to_pickle(DATA_PATH + "train_grey2.pickle")
 
 def main():
     logging.basicConfig(level=logging.INFO,
@@ -163,6 +182,7 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
+    Test()
     #TrainGray()
     #ConvertToGray()
     #MergeDatasets()
@@ -170,7 +190,10 @@ def main():
     #TestInference()
     #DumpImages()
     #Filter()
-    CropDataset()
+    #CropDataset()
+    #Shift()
+    #AddColumnsToDataSet("train_grey.pickle", 60, 108, 1)
+
 
 if __name__ == '__main__':
     main()

@@ -66,12 +66,9 @@ def LoadData(args):
 
     [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
         args.load_trainset)
-    [x_test, y_test] = DataProcessor.ProcessTestData(args.load_testset)
-
 
     training_set = Dataset(x_train, y_train, True)
     validation_set = Dataset(x_validation, y_validation)
-    test_set = Dataset(x_test, y_test)
 
     # Parameters
     # num_workers - 0 for debug in Mac+PyCharm, 6 for everything else
@@ -81,12 +78,9 @@ def LoadData(args):
               'num_workers': num_workers}
     train_loader = data.DataLoader(training_set, **params)
     validation_loader = data.DataLoader(validation_set, **params)
-    params = {'batch_size': args.batch_size,
-              'shuffle': False,
-              'num_workers': num_workers}
-    test_loader = data.DataLoader(test_set, **params)
 
-    return train_loader, validation_loader, test_loader
+
+    return train_loader, validation_loader
 
 
 def main():
@@ -110,7 +104,7 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    train_loader, validation_loader, test_loader = LoadData(args)
+    train_loader, validation_loader = LoadData(args)
 
     # [NeMO] Loading of the JSON regime file.
     regime = {}
@@ -127,7 +121,7 @@ def main():
                 regime[k] = rr[k]
 
     if args.gray is not None:
-        model = Dronet(PreActBlock, [1, 1, 1], True)
+        model = Dronet(PreActBlock, [1, 1, 1], isGray=True)
     else:
         model = Dronet(PreActBlock, [1, 1, 1], False)
 
@@ -135,7 +129,6 @@ def main():
     trainer = ModelTrainer(model, args, regime)
 
     trainer.Train(train_loader, validation_loader)
-    #trainer.Predict(test_loader)
 
     if args.save_model is not None:
         ModelManager.Write(trainer.GetModel(), 100, args.save_model)

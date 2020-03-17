@@ -233,23 +233,72 @@ class DataProcessor:
         c = int(dataset['c'].values[0])
         x_set = np.reshape(x_set, (-1, h, w, c))
 
+        sizes = pd.DataFrame({
+            'c': c,
+            'w': desiredSize[1],
+            'h': desiredSize[0]
+        }, index=[0])
+
         x_cropped = []
+        dw = int((w - desiredSize[1]) / 2)
+        dh = int((h - desiredSize[0]) / 2)
 
         for i in range(len(x_set)):
             img = x_set[i]
-            w = int((w - desiredSize[1]) / 2)
-            h = int((h - desiredSize[0]) / 2)
-            img = img[h:(h+desiredSize[0]), w:(w+desiredSize[1])]
+            img = img[dh:(dh+desiredSize[0]), dw:(dw+desiredSize[1])]
             x_cropped.append(img)
 
-        y_set= dataset['y'].values
-        z_set= dataset['z'].values
+        y_set = dataset['y'].values
+        z_set = dataset['z'].values
         t_set = dataset['t'].values
         #o_train = train_set['o'].values
 
-        # df = pd.DataFrame(data={'x': x_train_grey, 'y': y_train})
-        #df = pd.DataFrame(data={'x': x_train_grey, 'y': y_train, 'z': z_train, 'o': o_train, 't': t_train})
-        df = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set})
+        data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set})
+        df = pd.concat([data, sizes], axis=1)
+        df.to_pickle(file_name)
+
+    @staticmethod
+    def ShiftVideoDataset(path, file_name):
+        """Shifts video frames by 1 to compensate for camera delay
+
+              Parameters
+            ----------
+            path : str
+                The file location of the .pickle
+            desiredSize : (int height, int width)
+                Please...
+            file_name: string
+                name of the .pickle with the cropped images
+
+           """
+        dataset = pd.read_pickle(path)
+        logging.info('[DataProcessor] train shape: ' + str(dataset.shape))
+
+        x_set = dataset['x'].values
+        #x_set = np.vstack(x_set[:]).astype(np.float32)
+        h = int(dataset['h'].values[0])
+        w = int(dataset['w'].values[0])
+        c = int(dataset['c'].values[0])
+        #x_set = np.reshape(x_set, (-1, h, w, c))
+
+        sizes = pd.DataFrame({
+            'c': c,
+            'w': w,
+            'h': h
+        }, index=[0])
+
+
+        y_set = dataset['y'].values
+        z_set = dataset['z'].values
+        t_set = dataset['t'].values
+        x_set = x_set[1:]
+        y_set = y_set[:-1]
+        z_set = z_set[:-1]
+        t_set = t_set[:-1]
+        # o_train = train_set['o'].values
+
+        data = pd.DataFrame(data={'x': x_set, 'y': y_set, 'z': z_set, 't': t_set})
+        df = pd.concat([data, sizes], axis=1)
         df.to_pickle(file_name)
 
     @staticmethod

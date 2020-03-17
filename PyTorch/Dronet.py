@@ -38,11 +38,12 @@ class Dronet(nn.Module):
 
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout()
-        finalSize = 128*2*4
-        self.fc_x = nn.Linear(finalSize, 1)
-        self.fc_y = nn.Linear(finalSize, 1)
-        self.fc_z = nn.Linear(finalSize, 1)
-        self.fc_phi = nn.Linear(finalSize, 1)
+
+        fcSize = 1920
+        self.fc_x = nn.Linear(fcSize, 1)
+        self.fc_y = nn.Linear(fcSize, 1)
+        self.fc_z = nn.Linear(fcSize, 1)
+        self.fc_phi = nn.Linear(fcSize, 1)
 
 
     def forward(self, x):
