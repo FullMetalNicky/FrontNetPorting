@@ -880,6 +880,9 @@ class DatasetCreator:
 			t_dataset.extend(dataset['t'].values)
 
 	
+		channels = dataset['c'].values[0]
+		width = dataset['w'].values[0]
+		height = dataset['h'].values[0]
 		
 		sizes = pd.DataFrame({
 		    'c': channels,
@@ -887,7 +890,7 @@ class DatasetCreator:
 		    'h' : height
 		}, index=[0])
 
-		data = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset})
+		data = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset, 'z' : z_dataset, 't': t_dataset})
 		df = pd.concat([data, sizes], axis=1) 		
 		df.to_pickle(datasetName)
 
