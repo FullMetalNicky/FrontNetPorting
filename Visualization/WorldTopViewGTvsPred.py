@@ -30,7 +30,7 @@ def MoveToWorldFrame(head, himax):
     return x, y, phi
 
 
-def VizWorldTopView(frames, labels, camPoses, outputs, isGray=False):
+def VizWorldTopView(frames, labels, camPoses, outputs, isGray=False, name="WorldTopViewPatterns"):
 
     fig = plt.figure(888, figsize=(15, 8))
 
@@ -147,7 +147,7 @@ def VizWorldTopView(frames, labels, camPoses, outputs, isGray=False):
         return plot1gt, plot1pr, plot1cam, patch1, patch2, patch3, imgplot, annotation, annotation2
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save('WorldTopViewPatterns.mp4', writer=writer)
+    ani.save(name + '.mp4', writer=writer)
     # ani.save('viz2.gif', dpi=80, writer='imagemagick')
     plt.show()
 
@@ -167,10 +167,11 @@ def main():
     logging.getLogger('').addHandler(console)
 
     model = Dronet(PreActBlock, [1, 1, 1], True)
-    ModelManager.Read('../PyTorch/Models/DronetGray.pt', model)
+    ModelManager.Read('../PyTorch/Models/DronetHimax160x90.pt', model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "PatternsHimaxTest.pickle", True)
+    picklename = "160x90HimaxDynamic_12_03_20.pickle"
+    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + picklename, True)
 
     test_set = Dataset(x_test, y_test)
     params = {'batch_size': 1,
@@ -184,7 +185,11 @@ def main():
     h = x_test.shape[2]
     w = x_test.shape[3]
     x_test = np.reshape(x_test, (-1, h, w))
-    VizWorldTopView(x_test, y_test, z_test, outputs, True)
+
+    if picklename.find(".pickle"):
+        picklename = picklename.replace(".pickle", '')
+
+    VizWorldTopView(x_test, y_test, z_test, outputs, True, picklename)
 
 if __name__ == '__main__':
     main()

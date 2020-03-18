@@ -158,12 +158,17 @@ def main():
 
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    name = "160x160HimaxTest.pickle"
+    name = "160x90HimaxDynamic_12_03_20Shift.pickle"
 
     [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + name, True)
     h = x_test.shape[2]
     w = x_test.shape[3]
     x_test = np.reshape(x_test, (-1, h, w))
+    x_test= x_test[1:]
+    y_test = y_test[:-1]
+    z_test = z_test[:-1]
+
+
 
     if name.find(".pickle"):
         name = name.replace(".pickle", '')

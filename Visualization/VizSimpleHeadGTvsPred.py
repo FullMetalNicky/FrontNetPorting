@@ -117,7 +117,7 @@ def main():
     ModelManager.Read('../PyTorch/Models/Dronet-032.pt', model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    [x_test, y_test] = DataProcessor.ProcessTestDataGray(DATA_PATH + "test_vignette4.pickle", 60, 108)
+    [x_test, y_test] = DataProcessor.ProcessTestDataGray(DATA_PATH + "patterns.pickle", 60, 108)
     #x_test = x_test[:500]
     #y_test = y_test[:500]
     test_set = Dataset(x_test, y_test)
