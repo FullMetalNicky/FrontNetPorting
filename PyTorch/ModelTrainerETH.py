@@ -8,8 +8,7 @@ from EarlyStopping import EarlyStopping
 from ValidationUtils import Metrics
 import nemo
 import logging
-from ModelManager import ModelManager
-from collections import OrderedDict
+import CSVUtils as utils
 
 class ModelTrainer:
     def __init__(self, model, args, regime):
@@ -257,17 +256,9 @@ class ModelTrainer:
                                                                     patience=5, verbose=False,
                                                                     threshold=0.0001, threshold_mode='rel', cooldown=0,
                                                                     min_lr=0.1e-6, eps=1e-08)
-        loss_epoch_m1 = 1e3
 
         for epoch in range(1, self.args.epochs + 1):
             logging.info("[ModelTrainer] Starting Epoch {}".format(epoch))
-
-            change_prec = False
-            ended = False
-            # if self.args.quantize:
-            #     change_prec, ended = self.relax.step(loss_epoch_m1, epoch, None)
-            # if ended:
-            #     break
 
             train_loss_x, train_loss_y, train_loss_z, train_loss_phi = self.TrainSingleEpoch(training_generator)
 
@@ -299,6 +290,8 @@ class ModelTrainer:
         y_pred_viz = metrics.GetPred()
         gt_labels_viz = metrics.GetLabels()
         train_losses_x, train_losses_y, train_losses_z, train_losses_phi, valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi = metrics.GetLosses()
+
+        utils.SaveModelResultsToCSV(MSEs, MAEs, r2_score, gt_labels_viz, y_pred_viz, "Results/train")
 
         DataVisualization.desc = "Train_"
         DataVisualization.PlotLoss(train_losses_x, train_losses_y, train_losses_z, train_losses_phi , valid_losses_x, valid_losses_y, valid_losses_z, valid_losses_phi)
