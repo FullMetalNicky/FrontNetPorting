@@ -8,6 +8,7 @@ from ModelTrainer import ModelTrainer
 from Dataset import Dataset
 from torch.utils import data
 from ModelManager import ModelManager
+from DataManipulator import DataManipulator
 import logging
 import numpy as np
 import cv2
@@ -142,16 +143,24 @@ def DumpImages():
 
 def ConvertToGray():
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    DataProcessor.CreateGreyPickle(DATA_PATH + "BebopFlightSim_06_03_20.pickle", 60, 108, "GreyBebopFlightSim_06_03_20.pickle")
-    DataProcessor.CreateGreyPickle(DATA_PATH + "BebopPatterns_06_03_20.pickle", 60, 108, "GreyBebopPatterns_06_03_20.pickle")
+    DataManipulator.CreateGreyPickle(DATA_PATH + "BebopFlightSim_06_03_20.pickle", 60, 108, "GreyBebopFlightSim_06_03_20.pickle")
+    DataManipulator.CreateGreyPickle(DATA_PATH + "BebopPatterns_06_03_20.pickle", 60, 108, "GreyBebopPatterns_06_03_20.pickle")
 
 def CropDataset():
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    DataProcessor.CropCenteredDataset(DATA_PATH + "160x160HimaxStatic_12_03_20.pickle", [90, 160], DATA_PATH + "160x90HimaxStatic_12_03_20.pickle")
+    DataManipulator.CropCenteredDataset(DATA_PATH + "160x160HimaxStatic_12_03_20.pickle", [90, 160], DATA_PATH + "160x90HimaxStatic_12_03_20.pickle")
 
 def Shift():
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    DataProcessor.ShiftVideoDataset(DATA_PATH + "160x90HimaxStatic_12_03_20.pickle", DATA_PATH + "160x90HimaxStatic_12_03_20.pickle")
+    DataManipulator.ShiftVideoDataset(DATA_PATH + "160x90HimaxStatic_12_03_20.pickle", DATA_PATH + "160x90HimaxStatic_12_03_20.pickle")
+
+def MixAndMatch():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
+    path1 = DATA_PATH + "160x90HimaxStatic_12_03_20.pickle"
+    path2 = DATA_PATH +"160x90HimaxDynamic_12_03_20.pickle"
+    train = DATA_PATH +"160x90HimaxMixedTrain_12_03_20.pickle"
+    test = DATA_PATH + "160x90HimaxMixedTest_12_03_20.pickle"
+    DataManipulator.MixAndMatch(path1, path2, train, test)
 
 def AddColumnsToDataSet(picklename, height, width, channels):
 
@@ -182,7 +191,7 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    Test()
+    #Test()
     #TrainGray()
     #ConvertToGray()
     #MergeDatasets()
@@ -193,6 +202,7 @@ def main():
     #CropDataset()
     #Shift()
     #AddColumnsToDataSet("train_grey.pickle", 60, 108, 1)
+    MixAndMatch()
 
 
 if __name__ == '__main__':

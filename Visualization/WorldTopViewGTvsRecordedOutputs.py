@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 from torch.utils import data
 import sys
 import matplotlib.patches as patches
+import sklearn.metrics
+import Utils as utils
+
 
 sys.path.append("../PyTorch/")
 
@@ -30,7 +33,7 @@ def MoveToWorldFrame(head, himax):
     return x, y, phi
 
 
-def VizWorldTopView(frames, labels, camPoses, isGray=False, videoName = "WorldTopView"):
+def VizWorldTopView(frames, labels, camPoses, outputs, isGray=False):
 
     fig = plt.figure(888, figsize=(15, 8))
 
@@ -56,8 +59,10 @@ def VizWorldTopView(frames, labels, camPoses, isGray=False, videoName = "WorldTo
     ax1.set_ylabel('X')
 
     plot1gt, = plt.plot([], [], color='green', label='GT', linestyle='None', marker='o', markersize=10)
+    plot1pr, = plt.plot([], [], color='blue', label='Prediction', linestyle='None', marker='^', markersize=10)
     plot1cam, = plt.plot([], [], color='k', label='Camera', linestyle='None', marker='s', markersize=10)
     arr1gt = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='green', animated=True)
+    arr1pr = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='blue', animated=True)
     arr1cam = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='k', animated=True)
     plt.plot([2.4, -2.4], [2.4, 2.4], color='gray', linestyle='solid')
     plt.plot([2.4, -2.4], [-2.4, -2.4], color='gray', linestyle='solid')
@@ -99,29 +104,37 @@ def VizWorldTopView(frames, labels, camPoses, isGray=False, videoName = "WorldTo
 
         label = labels[id]
         camPose = camPoses[id]
+        pred = outputs[id]
         x_gt, y_gt, phi_gt = MoveToWorldFrame(label, camPose)
+        x_pred, y_pred, phi_pred = MoveToWorldFrame(pred, camPose)
+
         x_cam, y_cam, z_cam, phi_cam = camPose[0], camPose[1], camPose[2], camPose[3]
 
         str1 = "x_cam={:05.3f}, y_cam={:05.3f}, phi_cam={:05.3f} {}".format(x_cam, y_cam, phi_cam, "\n")
         str1 = str1 + "x_gt={:05.3f}, y_gt={:05.3f}, phi_gt={:05.3f} {}".format(x_gt, y_gt, phi_gt, "\n")
+        str1 = str1 + "x_pr={:05.3f}, y_pr={:05.3f},  phi_pr={:05.3f}".format(x_pred, y_pred, phi_pred)
 
         annotation.set_text(str1)
 
         plot1gt.set_data(np.array([y_gt, x_gt]))
+        plot1pr.set_data(np.array([y_pred, x_pred]))
         plot1cam.set_data(np.array([y_cam, x_cam]))
 
         if (len(ax1.patches) > 1):
             ax1.patches.pop()
             ax1.patches.pop()
+            ax1.patches.pop()
 
         patch1 = patches.FancyArrow(y_gt, x_gt, 0.5 * np.sin(phi_gt), 0.5 * np.cos(phi_gt), head_width=0.05,
                                     head_length=0.05, color='green')
-        patch2 = patches.FancyArrow(y_cam, x_cam, 0.5 * np.sin(phi_cam), 0.5 * np.cos(phi_cam), head_width=0.05,
+        patch2 = patches.FancyArrow(y_pred, x_pred, 0.5 * np.sin(phi_pred), 0.5 * np.cos(phi_pred), head_width=0.05,
+                                    head_length=0.05, color='blue')
+        patch3 = patches.FancyArrow(y_cam, x_cam, 0.5 * np.sin(phi_cam), 0.5 * np.cos(phi_cam), head_width=0.05,
                                     head_length=0.05, color='k')
 
         ax1.add_patch(patch1)
         ax1.add_patch(patch2)
-
+        ax1.add_patch(patch3)
 
         frame = frames[id].astype(np.uint8)
         if isGray == False:
@@ -134,10 +147,10 @@ def VizWorldTopView(frames, labels, camPoses, isGray=False, videoName = "WorldTo
         # return plot1gt, plot1pr, patch1, patch2, scatter2gt, scatter2pr, imgplot, ax1, ax3, annotation, annotation2
         #return plot1gt, plot1pr, patch1, patch2, scatter2gt, scatter2pr, imgplot, annotation, annotation2
 
-        return plot1gt, plot1cam, patch1, patch2, imgplot, annotation, annotation2
+        return plot1gt, plot1pr, plot1cam, patch1, patch2, patch3, imgplot, annotation, annotation2
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save(videoName +'.mp4', writer=writer)
+    ani.save('WorldTopViewBebopPatternsRecordedOutputs.mp4', writer=writer)
     # ani.save('viz2.gif', dpi=80, writer='imagemagick')
     plt.show()
 
@@ -157,20 +170,65 @@ def main():
     logging.getLogger('').addHandler(console)
 
 
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
-    name = "160x90HimaxMixedTrain_12_03_20.pickle"
 
+    DATA_PATH = "/Users/usi/PycharmProjects/data/"
+    name = "BebopFlightSim_06_03_20.pickle"
     [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + name, True)
+    t_test = DataProcessor.GetTimeStampsFromTestData(DATA_PATH + name)
+    o_test = DataProcessor.GetOutputsFromTestData(DATA_PATH + name)
+
+    # x = y_test[:, 0]
+    # size = y_test.shape[0]
+    #
+    # plt.plot(range(size), x, linewidth=2.0)
+    # plt.show()
+
+    x_test2 = []
+    y_test2 = []
+    z_test2 = []
+    o_test2 = []
+    for i in range(len(x_test)):
+        gt = y_test[i]
+        if ((gt[0] > 1.0) and (gt[0] < 2.0)):
+            if ((gt[1] > -1.0) and (gt[1] < 1.0)):
+                x_test2.append(x_test[i])
+                y_test2.append(y_test[i])
+                z_test2.append(z_test[i])
+                o_test2.append(o_test[i])
+
+    x_test = np.asarray(x_test2)
+    y_test = np.asarray(y_test2)
+    z_test = np.asarray(z_test2)
+    o_test = np.asarray(o_test2)
+
+    #utils.SaveResultsToCSVWithCamPoses(y_test, o_test, t_test, z_test, "BebopPatterns_06_03_20.csv")
+
+
+    x_gt = y_test[:, 0]
+    y_gt = y_test[:, 1]
+    z_gt = y_test[:, 2]
+    phi_gt = y_test[:, 3]
+
+    x = o_test[:, 0]
+    y = o_test[:, 1]
+    z = o_test[:, 2]
+    phi = o_test[:, 3]
+
+    MSE = np.mean(np.power(o_test - y_test, 2), 0)
+    MAE = np.mean(np.fabs(o_test - y_test), 0)
+    logging.info('Test MSE: [{0:.4f}, {1:.4f}, {2:.4f}, {3:.4f}]'.format(MSE[0], MSE[1], MSE[2], MSE[3]))
+    logging.info('Test MAE: [{0:.4f}, {1:.4f}, {2:.4f}, {3:.4f}]'.format(MAE[0], MAE[1], MAE[2], MAE[3]))
+
+    x_r2 = sklearn.metrics.r2_score(x_gt, x)
+    y_r2 = sklearn.metrics.r2_score(y_gt, y)
+    z_r2 = sklearn.metrics.r2_score(z_gt, z)
+    phi_r2 = sklearn.metrics.r2_score(phi_gt, phi)
+    logging.info('Test r2_score: [{0:.4f}, {1:.4f}, {2:.4f}, {3:.4f}]'.format(x_r2, y_r2, z_r2, phi_r2))
+
     h = x_test.shape[2]
     w = x_test.shape[3]
     x_test = np.reshape(x_test, (-1, h, w))
-
-
-
-    if name.find(".pickle"):
-        name = name.replace(".pickle", '')
-
-    VizWorldTopView(x_test, y_test, z_test, True, name)
+    VizWorldTopView(x_test, y_test, z_test, o_test, True)
 
 if __name__ == '__main__':
     main()

@@ -129,7 +129,7 @@ class DataVisualization:
         plt.plot(epochs, y, color='blue', label='y')
         z = r2_score[:, 2]
         z = z.cpu().numpy()
-        plt.plot(epochs, z, color='r',  label='z')
+        #plt.plot(epochs, z, color='r',  label='z')
         phi = r2_score[:, 3]
         phi = phi.cpu().numpy()
         plt.plot(epochs, phi, color='m', label='phi')

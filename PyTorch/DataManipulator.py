@@ -1,0 +1,236 @@
+import pandas as pd
+import numpy as np
+import random
+import logging
+import cv2
+import sys
+sys.path.append("../DataProcessing/")
+from ImageTransformer import ImageTransformer
+
+class DataManipulator:
+
+
+    @staticmethod
+    def CropCenteredDataset(path,desiredSize, file_name):
+        """Crop dataset in a centered way into a desired size
+
+              Parameters
+            ----------
+            path : str
+                The file location of the .pickle
+            desiredSize : (int height, int width)
+                Please...
+            file_name: string
+                name of the .pickle with the cropped images
+
+           """
+        dataset = pd.read_pickle(path)
+        logging.info('[DataProcessor] train shape: ' + str(dataset.shape))
+
+        x_set = dataset['x'].values
+        x_set = np.vstack(x_set[:]).astype(np.float32)
+        h = int(dataset['h'].values[0])
+        w = int(dataset['w'].values[0])
+        c = int(dataset['c'].values[0])
+        x_set = np.reshape(x_set, (-1, h, w, c))
+
+        sizes = pd.DataFrame({
+            'c': c,
+            'w': desiredSize[1],
+            'h': desiredSize[0]
+        }, index=[0])
+
+        x_cropped = []
+        dw = int((w - desiredSize[1]) / 2)
+        dh = int((h - desiredSize[0]) / 2)
+
+        for i in range(len(x_set)):
+            img = x_set[i]
+            img = img[dh:(dh+desiredSize[0]), dw:(dw+desiredSize[1])]
+            x_cropped.append(img)
+
+        y_set = dataset['y'].values
+        z_set = dataset['z'].values
+        t_set = dataset['t'].values
+        #o_train = train_set['o'].values
+
+        data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set})
+        df = pd.concat([data, sizes], axis=1)
+        df.to_pickle(file_name)
+
+    @staticmethod
+    def ShiftVideoDataset(path, file_name):
+        """Shifts video frames by 1 to compensate for camera delay
+
+              Parameters
+            ----------
+            path : str
+                The file location of the .pickle
+            desiredSize : (int height, int width)
+                Please...
+            file_name: string
+                name of the .pickle with the cropped images
+
+           """
+        dataset = pd.read_pickle(path)
+        logging.info('[DataProcessor] train shape: ' + str(dataset.shape))
+
+        x_set = dataset['x'].values
+        #x_set = np.vstack(x_set[:]).astype(np.float32)
+        h = int(dataset['h'].values[0])
+        w = int(dataset['w'].values[0])
+        c = int(dataset['c'].values[0])
+        #x_set = np.reshape(x_set, (-1, h, w, c))
+
+        sizes = pd.DataFrame({
+            'c': c,
+            'w': w,
+            'h': h
+        }, index=[0])
+
+
+        y_set = dataset['y'].values
+        z_set = dataset['z'].values
+        t_set = dataset['t'].values
+        x_set = x_set[1:]
+        y_set = y_set[:-1]
+        z_set = z_set[:-1]
+        t_set = t_set[:-1]
+        # o_train = train_set['o'].values
+
+        data = pd.DataFrame(data={'x': x_set, 'y': y_set, 'z': z_set, 't': t_set})
+        df = pd.concat([data, sizes], axis=1)
+        df.to_pickle(file_name)
+
+
+    @staticmethod
+    def CreateGreyPickle(trainPath, image_height, image_width, file_name):
+        """Converts Dario's RGB dataset to a gray + vignette dataset
+
+            Parameters
+            ----------
+            images : list
+                list of images
+            image_height : int
+                Please...
+            image_width : int
+                Please...
+            file_name : str
+                name of the new .pickle
+
+            """
+        train_set = pd.read_pickle(trainPath)
+        logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
+
+        # split between train and test sets:
+        x_train = train_set['x'].values
+        x_train = np.vstack(x_train[:])
+        x_train = np.reshape(x_train, (-1, image_height, image_width, 3))
+
+        it = ImageTransformer()
+
+        x_train_grey = []
+        sigma = 50
+        mask = it.GetVignette(image_width, image_width, sigma)
+
+        for i in range(len(x_train)):
+            gray_image = cv2.cvtColor(x_train[i], cv2.COLOR_RGB2GRAY)
+            # gray_image = gray_image * mask[24:84, 0:108]
+            gray_image = gray_image.astype(np.uint8)
+            x_train_grey.append(gray_image)
+
+        y_train = train_set['y'].values
+        z_train = train_set['z'].values
+        t_train = train_set['t'].values
+        o_train = train_set['o'].values
+
+        # df = pd.DataFrame(data={'x': x_train_grey, 'y': y_train})
+        df = pd.DataFrame(data={'x': x_train_grey, 'y': y_train, 'z': z_train, 'o': o_train, 't': t_train})
+        df.to_pickle(file_name)
+
+
+
+    @staticmethod
+    def MixAndMatch(path1, path2, train_name, test_name):
+        """Shifts video frames by 1 to compensate for camera delay
+
+              Parameters
+            ----------
+            path1 : str
+                The file location of the first .pickle
+            path1 : str
+                The file location of the second .pickle
+            train_name: string
+                name of the mixed .pickle of the trian data
+
+            test_name: string
+                name of the mixed .pickle of the test data
+
+           """
+        dataset1 = pd.read_pickle(path1)
+        logging.info('[DataProcessor] shape 1: ' + str(dataset1.shape))
+
+        dataset2 = pd.read_pickle(path2)
+        logging.info('[DataProcessor] shape2 : ' + str(dataset2.shape))
+
+        np.random.seed()
+
+        # size info
+
+        h = int(dataset1['h'].values[0])
+        w = int(dataset1['w'].values[0])
+        c = int(dataset1['c'].values[0])
+
+        sizes = pd.DataFrame({
+            'c': c,
+            'w': w,
+            'h': h
+        }, index=[0])
+
+        # Split first dataset
+
+        size1 = dataset1.shape[0]
+        n_val1 = int(float(size1) * 0.25)
+
+
+        x_set1 = dataset1['x'].values
+        y_set1 = dataset1['y'].values
+        z_set1 = dataset1['z'].values
+        t_set1 = dataset1['t'].values
+
+        ind_test1, ind_train1 = np.split(np.random.permutation(size1), [n_val1])
+        x_test1 = x_set1[ind_test1]
+        y_test1 = y_set1[ind_test1]
+        z_test1 = z_set1[ind_test1]
+        t_test1 = t_set1[ind_test1]
+
+        x_train1 = x_set1[ind_train1]
+        y_train1 = y_set1[ind_train1]
+        z_train1 = z_set1[ind_train1]
+        t_train1 = t_set1[ind_train1]
+
+        # Split second dataset ?
+
+
+        x_set2 = dataset2['x'].values
+        y_set2 = dataset2['y'].values
+        z_set2 = dataset2['z'].values
+        t_set2 = dataset2['t'].values
+
+
+        # merge train
+
+        x_train1 = np.concatenate((x_train1, x_set2), axis=0)
+        y_train1 = np.concatenate((y_train1, y_set2), axis=0)
+        z_train1 = np.concatenate((z_train1, z_set2), axis=0)
+        t_train1 = np.concatenate((t_train1, t_set2), axis=0)
+
+
+        data1 = pd.DataFrame(data={'x': x_train1, 'y': y_train1, 'z': z_train1, 't': t_train1})
+        df1 = pd.concat([data1, sizes], axis=1)
+        df1.to_pickle(train_name)
+
+        data2 = pd.DataFrame(data={'x': x_test1, 'y': y_test1, 'z': z_test1, 't': t_test1})
+        df2 = pd.concat([data2, sizes], axis=1)
+        df2.to_pickle(test_name)
+

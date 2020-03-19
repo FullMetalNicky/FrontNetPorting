@@ -170,7 +170,7 @@ def main():
     ModelManager.Read('../PyTorch/Models/DronetHimax160x90.pt', model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    picklename = "160x90HimaxDynamic_12_03_20.pickle"
+    picklename = "160x90HimaxDynamic_12_03_20Shift.pickle"
     [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + picklename, True)
 
     test_set = Dataset(x_test, y_test)
