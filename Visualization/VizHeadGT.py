@@ -28,6 +28,7 @@ def VizDroneBEV(frames, head_labels, isGray=False):
 
     ax1 = plt.subplot2grid((h, w), (2, 0), colspan=8, rowspan=7)
     ax1.set_title('Relative Pose (x,y)')
+    ax1.set_xlim([-3, 3])
     ax1.yaxis.set_ticks([0, 1.5, 3])  # set y-ticks
     ax1.xaxis.set_ticks([-3.0, -1.5, 0, 1.5, 3.0])  # set y-ticks
     ax1.xaxis.tick_top()  # and move the X-Axis
@@ -35,9 +36,12 @@ def VizDroneBEV(frames, head_labels, isGray=False):
     ax1.spines['right'].set_visible(False)
     ax1.spines['bottom'].set_visible(False)
     ax1.invert_xaxis()
-    trianglex = [2, 0, -2, 2]
+    ax1.set_xlabel('Y')
+    ax1.set_ylabel('X')
+    trianglex = [3, 0, -3, 3]
     triangley = [3, 0, 3, 3]
     collection = plt.fill(trianglex, triangley, facecolor='lightskyblue')
+
 
     plot1gthead, = plt.plot([], [], color='green', label='Head GT', linestyle='None', marker='o', markersize=10)
     arr1gthead = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='green',
@@ -48,11 +52,11 @@ def VizDroneBEV(frames, head_labels, isGray=False):
     ax2 = plt.subplot2grid((h, w), (2, 8), rowspan=7)
     ax2.set_title('Relative z', pad=20)
     ax2.yaxis.tick_right()
-    ax2.set_xlim([-0.5, 0.5])
+    ax2.set_ylim([-1, 1])
     ax2.set_xticklabels([])
     ax2.yaxis.set_ticks([-1, 0, 1])  # set y-ticks
     ax2.xaxis.set_ticks_position('none')
-    scatter2gthead = plt.scatter([], [], color='green', label='Head GT', s=100)
+    scatter2gthead, = plt.plot([], [], color='green', linestyle='None', marker='o', markersize=10)
 
     ax3 = plt.subplot2grid((h, w), (2, 9), rowspan=7, colspan=7)
     ax3.axis('off')
@@ -88,21 +92,23 @@ def VizDroneBEV(frames, head_labels, isGray=False):
         str1 = "x_head={:05.3f}, y_head={:05.3f}, z_head={:05.3f}, phi_head={:05.3f} {}".format(x_head, y_head, z_head,
                                                                                                 phi_head, "\n")
 
+        #phi_head = - phi_head - np.pi/2
+        phi_head = phi_head + np.pi
 
-        phi_head = - phi_head - np.pi/2
 
         annotation.set_text(str1)
 
         plot1gthead.set_data(np.array([y_head, x_head]))
+        scatter2gthead.set_data(0.0, z_head)
 
         if(len(ax1.patches) > 1):
             ax1.patches.pop()
-            ax1.patches.pop()
+            #ax1.patches.pop()
 
-        patch1 = patches.FancyArrow(y_head, x_head, 0.5*np.cos(phi_head), 0.5*np.sin(phi_head), head_width=0.05, head_length=0.05, color='green')
+        patch1 = patches.FancyArrow(y_head, x_head, 0.5*np.sin(phi_head), 0.5*np.cos(phi_head), head_width=0.05, head_length=0.05, color='green')
         ax1.add_patch(patch1)
 
-        scatter2gthead.set_offsets(np.array([-0.05, z_head]))
+
 
         frame = frames[id].astype(np.uint8)
         if isGray == False:
@@ -113,7 +119,7 @@ def VizDroneBEV(frames, head_labels, isGray=False):
 
         #use the first one for viz on screen and second one for video recording
         #return plot1gt, plot1pr, patch1, patch2, scatter2gt, scatter2pr, imgplot, ax1, ax3, annotation, annotation2
-        return plot1gthead, patch1, scatter2gthead, imgplot, annotation, annotation2
+        return scatter2gthead, plot1gthead, patch1, imgplot, annotation, annotation2,
 
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
@@ -135,10 +141,12 @@ def main():
     logging.getLogger('').addHandler(console)
 
 
-    DATA_PATH = "/Users/usi/PycharmProjects/data/"
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
 
-    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "himaxtest.pickle", 60, 108, True)
-    x_test = np.reshape(x_test, (-1, 60, 108))
+    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "160x90HimaxMixedTest_12_03_20.pickle")
+    h = x_test.shape[2]
+    w = x_test.shape[3]
+    x_test = np.reshape(x_test, (-1, h, w))
 
     VizDroneBEV(x_test, y_test, True)
 
