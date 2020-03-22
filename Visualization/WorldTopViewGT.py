@@ -7,6 +7,9 @@ from torch.utils import data
 import sys
 import matplotlib.patches as patches
 
+
+from CoverageHeatMap import SortByAngle
+import pandas as pd
 sys.path.append("../PyTorch/")
 
 from PreActBlock import PreActBlock
@@ -15,6 +18,8 @@ from DataProcessor import DataProcessor
 from ModelTrainer import ModelTrainer
 from Dataset import Dataset
 from ModelManager import ModelManager
+
+
 
 
 def MoveToWorldFrame(head, himax):
@@ -137,7 +142,7 @@ def VizWorldTopView(frames, labels, camPoses, isGray=False, videoName = "WorldTo
         return plot1gt, plot1cam, patch1, patch2, imgplot, annotation, annotation2
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save(videoName +'.mp4', writer=writer)
+    ani.save(videoName +'0.mp4', writer=writer)
     # ani.save('viz2.gif', dpi=80, writer='imagemagick')
     plt.show()
 
