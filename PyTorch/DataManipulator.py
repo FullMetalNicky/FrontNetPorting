@@ -25,20 +25,15 @@ class DataManipulator:
 
            """
         dataset = pd.read_pickle(path)
-        logging.info('[DataProcessor] train shape: ' + str(dataset.shape))
+        logging.info('[DataManipulator] dataset shape: ' + str(dataset.shape))
 
         x_set = dataset['x'].values
         x_set = np.vstack(x_set[:]).astype(np.float32)
-        h = int(dataset['h'].values[0])
-        w = int(dataset['w'].values[0])
-        c = int(dataset['c'].values[0])
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset)
+        sizes = DataManipulator.CreateSizeDataFrame(h, w, c)
+
         x_set = np.reshape(x_set, (-1, h, w, c))
 
-        sizes = pd.DataFrame({
-            'c': c,
-            'w': desiredSize[1],
-            'h': desiredSize[0]
-        }, index=[0])
 
         x_cropped = []
         dw = int((w - desiredSize[1]) / 2)
@@ -73,22 +68,12 @@ class DataManipulator:
 
            """
         dataset = pd.read_pickle(path)
-        logging.info('[DataProcessor] train shape: ' + str(dataset.shape))
+        logging.info('[DataManipulator] dataset shape: ' + str(dataset.shape))
+
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset)
+        sizes = DataManipulator.CreateSizeDataFrame(h, w, c)
 
         x_set = dataset['x'].values
-        #x_set = np.vstack(x_set[:]).astype(np.float32)
-        h = int(dataset['h'].values[0])
-        w = int(dataset['w'].values[0])
-        c = int(dataset['c'].values[0])
-        #x_set = np.reshape(x_set, (-1, h, w, c))
-
-        sizes = pd.DataFrame({
-            'c': c,
-            'w': w,
-            'h': h
-        }, index=[0])
-
-
         y_set = dataset['y'].values
         z_set = dataset['z'].values
         t_set = dataset['t'].values
@@ -120,7 +105,7 @@ class DataManipulator:
 
             """
         train_set = pd.read_pickle(trainPath)
-        logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
+        logging.info('[DataManipulator] dataset shape: ' + str(train_set.shape))
 
         # split between train and test sets:
         x_train = train_set['x'].values
@@ -152,7 +137,7 @@ class DataManipulator:
 
     @staticmethod
     def MixAndMatch(path1, path2, train_name, test_name):
-        """Shifts video frames by 1 to compensate for camera delay
+        """Mixeds 2 datasets to create train and test sets
 
               Parameters
             ----------
@@ -168,24 +153,17 @@ class DataManipulator:
 
            """
         dataset1 = pd.read_pickle(path1)
-        logging.info('[DataProcessor] shape 1: ' + str(dataset1.shape))
+        logging.info('[DataManipulator] dataset shape 1: ' + str(dataset1.shape))
 
         dataset2 = pd.read_pickle(path2)
-        logging.info('[DataProcessor] shape2 : ' + str(dataset2.shape))
+        logging.info('[DataManipulator] dataset shape2 : ' + str(dataset2.shape))
 
         np.random.seed()
 
         # size info
 
-        h = int(dataset1['h'].values[0])
-        w = int(dataset1['w'].values[0])
-        c = int(dataset1['c'].values[0])
-
-        sizes = pd.DataFrame({
-            'c': c,
-            'w': w,
-            'h': h
-        }, index=[0])
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset1)
+        sizes = DataManipulator.CreateSizeDataFrame(h, w, c)
 
         # Split first dataset
 
@@ -198,7 +176,9 @@ class DataManipulator:
         z_set1 = dataset1['z'].values
         t_set1 = dataset1['t'].values
 
-        ind_test1, ind_train1 = np.split(np.random.permutation(size1), [n_val1])
+
+        #ind_test1, ind_train1 = np.split(np.random.permutation(size1), [n_val1])
+        ind_test1, ind_train1 = np.split(np.arange(size1), [n_val1])
         x_test1 = x_set1[ind_test1]
         y_test1 = y_set1[ind_test1]
         z_test1 = z_set1[ind_test1]
@@ -233,4 +213,71 @@ class DataManipulator:
         data2 = pd.DataFrame(data={'x': x_test1, 'y': y_test1, 'z': z_test1, 't': t_test1})
         df2 = pd.concat([data2, sizes], axis=1)
         df2.to_pickle(test_name)
+
+
+    @staticmethod
+    def Augment(path):
+        """Augment dataset 
+
+              Parameters
+            ----------
+            path : str
+                The file location of the .pickle
+
+           """
+        dataset = pd.read_pickle(path)
+        logging.info('[DataManipulator] dataset shape: ' + str(dataset.shape))
+
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset)
+
+        x_set = dataset['x'].values
+        y_set = dataset['y'].values
+        z_set = dataset['z'].values
+        t_set = dataset['t'].values
+
+        it = ImageTransformer()
+        x_set = np.vstack(x_set[:])
+        x_set = np.reshape(x_set, (-1, h, w, c))
+        np.random.seed()
+
+        x_augset = []
+
+        for i in range(len(x_set)):
+            img = x_set[i]
+
+            img = it.ApplyVignette(img, np.random.randint(25, 50))
+
+            if np.random.choice([True, False]):
+                img = it.ApplyBlur(img, 3)
+            # if np.random.choice([True, False]):
+            #     X = self.it.ApplyNoise(X, 0, 1)
+            if np.random.choice([True, False]):
+                img = it.ApplyExposure(img, np.random.uniform(0.7, 2.0))
+            if np.random.choice([True, False]):
+                 img = it.ApplyGamma(img, 0.4, 2.0)
+            elif np.random.choice([True, False]):
+                img = it.ApplyDynamicRange(img, np.random.uniform(0.7, 0.9), np.random.uniform(0.0, 0.2))
+
+        #     # imv = X.astype("uint8")
+        #     # cv2.imshow("frame", imv)
+        #     # cv2.waitKey()
+
+
+    @staticmethod
+    def GetSizeDataFromDataFrame(dataset):
+
+        h = int(dataset['h'].values[0])
+        w = int(dataset['w'].values[0])
+        c = int(dataset['c'].values[0])
+
+        return h, w, c
+
+    @staticmethod
+    def CreateSizeDataFrame(h, w, c):
+
+        sizes_df = pd.DataFrame({'c': c, 'w': w, 'h': h}, index=[0])
+
+        return sizes_df
+
+
 

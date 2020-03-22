@@ -4,6 +4,7 @@ import random
 import logging
 import cv2
 import sys
+from DataManipulator import DataManipulator
 sys.path.append("../DataProcessing/")
 from ImageTransformer import ImageTransformer
 
@@ -33,9 +34,7 @@ class DataProcessor:
         n_val = int(float(size) * 0.2)
         #n_val = 13000
 
-        h = int(train_set['h'].values[0])
-        w = int(train_set['w'].values[0])
-        c = int(train_set['c'].values[0])
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(train_set)
 
         np.random.seed()
         # split between train and test sets:
@@ -94,10 +93,7 @@ class DataProcessor:
 
         test_set = pd.read_pickle(testPath)
         logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
-        h = int(test_set['h'].values[0])
-        w = int(test_set['w'].values[0])
-        c = int(test_set['c'].values[0])
-
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(test_set)
 
         x_test = test_set['x'].values
         x_test = np.vstack(x_test[:]).astype(np.float32)
@@ -184,9 +180,7 @@ class DataProcessor:
 
         x_test = test_set['x'].values
         x_test = np.vstack(x_test[:]).astype(np.float32)
-        h = int(test_set['h'].values[0])
-        w = int(test_set['w'].values[0])
-        c = int(test_set['c'].values[0])
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(test_set)
         x_test = np.reshape(x_test, (-1, h, w, c))
 
         x_test = np.swapaxes(x_test, 1, 3)
