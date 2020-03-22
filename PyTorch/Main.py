@@ -177,6 +177,13 @@ def AddColumnsToDataSet(picklename, height, width, channels):
     print("dataframe ready")
     new.to_pickle(DATA_PATH + "train_grey2.pickle")
 
+
+def Augment():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
+    train = DATA_PATH + "160x90HimaxMixedTrain_12_03_20.pickle"
+    DataManipulator.Augment(train, DATA_PATH +"160x90HimaxMixedTrain_12_03_20Augmented.pickle", 2)
+
+
 def main():
     logging.basicConfig(level=logging.INFO,
                             format="%(asctime)s - %(levelname)s - %(message)s",
@@ -202,7 +209,8 @@ def main():
     #CropDataset()
     #Shift()
     #AddColumnsToDataSet("train_grey.pickle", 60, 108, 1)
-    MixAndMatch()
+    #MixAndMatch()
+    Augment()
 
 
 if __name__ == '__main__':

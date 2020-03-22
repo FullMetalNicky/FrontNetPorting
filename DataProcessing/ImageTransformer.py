@@ -55,7 +55,8 @@ class ImageTransformer:
 	def ApplyVignette(self, img, sigma):
 		h, w = img.shape[:2]
 		mask = self.GetVignette(w, w, sigma)
-		img = img * mask[24:84, 0:108]
+		offset = int((w - h)/2)
+		img = img * mask[offset:(offset+h), 0:w]
 		img = img.astype(np.uint8)
 		return img
 

@@ -216,19 +216,22 @@ class DataManipulator:
 
 
     @staticmethod
-    def Augment(path):
-        """Augment dataset 
+    def Augment(path, pickle_name, factor=1):
+        """Augment dataset
 
               Parameters
             ----------
             path : str
                 The file location of the .pickle
+            factor: int
+                How many augmented variations will be created for each frame
 
            """
         dataset = pd.read_pickle(path)
         logging.info('[DataManipulator] dataset shape: ' + str(dataset.shape))
 
         h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset)
+        sizes = DataManipulator.CreateSizeDataFrame(h, w, c)
 
         x_set = dataset['x'].values
         y_set = dataset['y'].values
@@ -241,26 +244,45 @@ class DataManipulator:
         np.random.seed()
 
         x_augset = []
+        y_augset = []
+        z_augset = []
+        t_augset = []
 
         for i in range(len(x_set)):
-            img = x_set[i]
 
-            img = it.ApplyVignette(img, np.random.randint(25, 50))
+            y = y_set[i]
+            z = z_set[i]
+            t = t_set[i]
+            x = x_set[i]
+            x = np.reshape(x, (h, w)).astype("uint8")
 
-            if np.random.choice([True, False]):
-                img = it.ApplyBlur(img, 3)
-            # if np.random.choice([True, False]):
-            #     X = self.it.ApplyNoise(X, 0, 1)
-            if np.random.choice([True, False]):
-                img = it.ApplyExposure(img, np.random.uniform(0.7, 2.0))
-            if np.random.choice([True, False]):
-                 img = it.ApplyGamma(img, 0.4, 2.0)
-            elif np.random.choice([True, False]):
-                img = it.ApplyDynamicRange(img, np.random.uniform(0.7, 0.9), np.random.uniform(0.0, 0.2))
+            for p in range(factor):
+
+                img = it.ApplyVignette(x, np.random.randint(25, 50))
+
+                if np.random.choice([True, False]):
+                    img = it.ApplyBlur(img, 3)
+                # if np.random.choice([True, False]):
+                #     X = self.it.ApplyNoise(X, 0, 1)
+                if np.random.choice([True, False]):
+                    img = it.ApplyExposure(img, np.random.uniform(0.7, 2.0))
+                if np.random.choice([True, False]):
+                     img = it.ApplyGamma(img, 0.4, 2.0)
+                elif np.random.choice([True, False]):
+                    img = it.ApplyDynamicRange(img, np.random.uniform(0.7, 0.9), np.random.uniform(0.0, 0.2))
+
+                x_augset.append(img)
+                y_augset.append(y)
+                z_augset.append(z)
+                t_augset.append(t)
 
         #     # imv = X.astype("uint8")
         #     # cv2.imshow("frame", imv)
         #     # cv2.waitKey()
+
+        data = pd.DataFrame(data={'x': x_augset, 'y': y_augset, 'z': z_augset, 't': t_augset})
+        df2 = pd.concat([data, sizes], axis=1)
+        df2.to_pickle(pickle_name)
 
 
     @staticmethod
