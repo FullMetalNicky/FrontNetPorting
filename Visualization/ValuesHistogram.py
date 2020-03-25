@@ -12,6 +12,34 @@ sys.path.append("../PyTorch/")
 
 from DataProcessor import DataProcessor
 
+def VizHistogram(y_test, name):
+    fig, ax = plt.subplots(2, 2, figsize=(9, 9))
+    plt.title("Pose Range Histogram")
+    bins_num = 10
+
+    x = y_test[:, 0]
+    y = y_test[:, 1]
+    z = y_test[:, 2]
+    phi = y_test[:, 3]
+
+    ax[0][0].hist(x, bins=bins_num)
+    ax[0][0].set_title("x")
+
+    ax[0][1].hist(y, bins=bins_num)
+    ax[0][1].set_title("y")
+
+    ax[1][0].hist(z, bins=bins_num)
+    ax[1][0].set_title("z")
+
+    ax[1][1].hist(phi, bins=bins_num)
+    ax[1][1].set_title("phi")
+
+
+    if name.find(".pickle"):
+        name = name.replace(".pickle", '')
+    plt.savefig(name + '_histogram.png')
+    plt.show()
+
 
 def main():
     logging.basicConfig(level=logging.INFO,
@@ -27,23 +55,13 @@ def main():
     logging.getLogger('').addHandler(console)
 
 
-    DATA_PATH = "/Users/usi/PycharmProjects/data/"
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
     name = "160x90HimaxStatic_12_03_20.pickle"
-    #name =
 
     [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + name, True)
-    h = x_test.shape[2]
-    w = x_test.shape[3]
-    x_test = np.reshape(x_test, (-1, h, w))
 
+    VizHistogram(y_test, name)
 
-    phi= y_test[:, 3]
-
-    plt.hist(phi, bins=10)
-    if name.find(".pickle"):
-        name = name.replace(".pickle", '')
-    plt.savefig(name + '.png')
-    plt.show()
 
 
 
