@@ -187,7 +187,7 @@ def Augment():
 def CropRandomTest():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
     train = DATA_PATH + "160x160HimaxMixedTest_12_03_20.pickle"
-    DataManipulator.CropDataset(train, "/Users/usi/PycharmProjects/data/160x90/" + "160x90HimaxMixedTest_12_03_20Cropped.pickle", [90, 160], 1)
+    DataManipulator.CropDataset(train, "/Users/usi/PycharmProjects/data/160x90/" + "160x90HimaxMixedTest_12_03_20Cropped.pickle", [90, 160], 20)
 
 
 

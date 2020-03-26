@@ -14,7 +14,7 @@ from DataProcessor import DataProcessor
 
 def VizHistogram(y_test, name):
     fig, ax = plt.subplots(2, 2, figsize=(9, 9))
-    plt.title("Pose Range Histogram")
+    fig.suptitle("Pose Range Histogram")
     bins_num = 10
 
     x = y_test[:, 0]

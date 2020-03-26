@@ -184,7 +184,6 @@ class DataProcessor:
         logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
         if 'p' in test_set.columns:
             p_test = test_set['p'].values
-            p_test = np.vstack(p_test[:]).astype(np.float32)
 
         return p_test
 
