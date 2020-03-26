@@ -21,13 +21,18 @@ from Dataset import Dataset
 from ModelManager import ModelManager
 
 
+vertical_range = 70
+half_vertical_range = vertical_range/2
+val_range = [-14.5, 14.5]
+
 
 def DivideToBins(p_test, h, vfov):
 
-    bin_num = 12
+    bin_num = 30
+    # Negative pitch means looking up, positive pitch means looking down
     pitch = p_test
-    pitch = (35 - pitch) * vfov / h
-    interval = np.linspace(np.min(pitch), np.max(pitch), bin_num)
+    pitch = -(half_vertical_range - pitch) * vfov / h
+    interval = np.linspace(val_range[0], val_range[1], bin_num)
     assignment = np.digitize(pitch, interval)
     ind = []
 
@@ -35,12 +40,10 @@ def DivideToBins(p_test, h, vfov):
         res = np.where(assignment == i)
         ind.append(res)
 
-    #ind = np.histogram(pitch, bins=bin_num)
-
     return ind, interval
 
 
-def PitchvsR2Score(outputs, gt_labels, p_test, name, h, vfov):
+def PitchvsR2Score(outputs, gt_labels, p_test, name, h, vfov, base_r2_score=None):
 
     ind, interval = DivideToBins(p_test, h, vfov)
 
@@ -60,9 +63,8 @@ def PitchvsR2Score(outputs, gt_labels, p_test, name, h, vfov):
     tot_y_r2 = []
     tot_z_r2 = []
     tot_phi_r2 = []
-    tot_pitch = []
     pitch_labels = []
-
+    tot_pitch = []
 
     for i in range(len(ind)):
 
@@ -76,10 +78,10 @@ def PitchvsR2Score(outputs, gt_labels, p_test, name, h, vfov):
         tot_z_r2.append(z_r2)
         tot_phi_r2.append(phi_r2)
         tot_pitch.append(i)
-        pitch_labels.append("{} - {}".format(np.around(interval[i], 2), np.around(interval[i+1], 2)))
+        pitch_labels.append("{}".format(int((interval[i] +interval[i + 1]) / 2)))
 
 
-    fig, ax = plt.subplots(2, 2, figsize=(16, 9))
+    fig, ax = plt.subplots(2, 2, figsize=(16, 12))
     fig.suptitle("R2 Score as a function of Pitch")
 
     ax[0][0].plot(tot_pitch, tot_x_r2)
@@ -110,6 +112,17 @@ def PitchvsR2Score(outputs, gt_labels, p_test, name, h, vfov):
     ax[1][1].set_xlabel('pitch')
     ax[1][1].set_ylabel('R2')
 
+    if base_r2_score is not None:
+        ax[0][0].hlines(base_r2_score[0], 0, len(pitch_labels), colors='r', label='Base')
+        ax[0][0].legend()
+        ax[0][1].hlines(base_r2_score[1], 0, len(pitch_labels), colors='r', label='Base')
+        ax[0][1].legend()
+        ax[1][0].hlines(base_r2_score[2], 0, len(pitch_labels), colors='r', label='Base')
+        ax[1][0].legend()
+        ax[1][1].hlines(base_r2_score[3], 0, len(pitch_labels), colors='r', label='Base')
+        ax[1][1].legend()
+
+
     if name.find(".pickle"):
         name = name.replace(".pickle", '')
     plt.savefig(name + '_pitch.png')
@@ -134,7 +147,7 @@ def main():
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
     picklename = "160x90HimaxMixedTest_12_03_20Cropped.pickle"
-    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + picklename, True)
+    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + picklename)
     p_test = DataProcessor.GetPitchFromTestData(DATA_PATH + picklename)
 
     test_set = Dataset(x_test, y_test)
@@ -150,8 +163,18 @@ def main():
     if picklename.find(".pickle"):
         picklename = picklename.replace(".pickle", '')
 
+    picklename2 = "160x90HimaxMixedTest_12_03_20.pickle"
+    [x_test2, y_test2] = DataProcessor.ProcessTestData(DATA_PATH + picklename2)
+    test_set2 = Dataset(x_test2, y_test2)
+    params = {'batch_size': 1,
+              'shuffle': False,
+              'num_workers': 1}
+    test_generator = data.DataLoader(test_set2, **params)
+    trainer = ModelTrainer(model)
+    MSE2, MAE2, r2_score2, outputs2, gt_labels2 = trainer.Test(test_generator)
+    base = r2_score2
 
-    PitchvsR2Score(outputs, gt_labels, p_test, picklename, 160, 65.65)
+    PitchvsR2Score(outputs, gt_labels, p_test, picklename, 160, 65.65, base)
 
 
 if __name__ == '__main__':
