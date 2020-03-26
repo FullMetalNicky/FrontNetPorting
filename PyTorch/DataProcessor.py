@@ -164,6 +164,31 @@ class DataProcessor:
         return o_test
 
     @staticmethod
+    def GetPitchFromTestData(testPath):
+
+        """Reads the .pickle file and extrects the recorded NNs outputs
+
+                   Parameters
+                   ----------
+                   testPath : str
+                       The file location of the .pickle
+
+                   Returns
+                   -------
+                   list
+                       list of outputs/predictions
+                   """
+
+        p_test = None
+        test_set = pd.read_pickle(testPath)
+        logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
+        if 'p' in test_set.columns:
+            p_test = test_set['p'].values
+            p_test = np.vstack(p_test[:]).astype(np.float32)
+
+        return p_test
+
+    @staticmethod
     def ExtractValidationLabels(testPath):
         """Reads the .pickle file and converts it into a format suitable for testing on pulp
             You need to create a folder called test though

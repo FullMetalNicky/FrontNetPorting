@@ -259,7 +259,6 @@ class DataManipulator:
             for p in range(factor):
 
                 img = it.ApplyVignette(x, np.random.randint(25, 50))
-
                 if np.random.choice([True, False]):
                     img = it.ApplyBlur(img, 3)
                 # if np.random.choice([True, False]):
@@ -281,6 +280,72 @@ class DataManipulator:
         #     # cv2.waitKey()
 
         data = pd.DataFrame(data={'x': x_augset, 'y': y_augset, 'z': z_augset, 't': t_augset})
+        df2 = pd.concat([data, sizes], axis=1)
+        df2.to_pickle(pickle_name)
+
+
+
+
+    @staticmethod
+    def CropDataset(path, pickle_name, desiresSize, factor=1):
+
+        """Augment dataset
+
+                     Parameters
+                   ----------
+                   path : str
+                       The file location of the .pickle
+                   desiresSize: (int height, int width)
+                        The desired size after cropping
+                   factor: int
+                       How many augmented variations will be created for each frame
+
+                  """
+        dataset = pd.read_pickle(path)
+        logging.info('[DataManipulator] dataset shape: ' + str(dataset.shape))
+
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset)
+
+        sizes = DataManipulator.CreateSizeDataFrame(desiresSize[0], desiresSize[1], c)
+
+        x_set = dataset['x'].values
+        y_set = dataset['y'].values
+        z_set = dataset['z'].values
+        t_set = dataset['t'].values
+
+        it = ImageTransformer()
+        x_set = np.vstack(x_set[:])
+        x_set = np.reshape(x_set, (-1, h, w, c))
+        np.random.seed()
+
+        x_augset = []
+        y_augset = []
+        z_augset = []
+        t_augset = []
+        p_augset = []
+
+        vertical_range = h - desiresSize[0]
+
+        for i in range(len(x_set)):
+
+            y = y_set[i]
+            z = z_set[i]
+            t = t_set[i]
+            x = x_set[i]
+            x = np.reshape(x, (h, w)).astype("uint8")
+
+            for p in range(factor):
+                crop_offset = np.random.randint(0, vertical_range)
+                img = x[crop_offset:(crop_offset + desiresSize[0]), 0:w]
+                img = it.ApplyVignette(img, np.random.randint(25, 50))
+
+                p_augset.append(crop_offset)
+                x_augset.append(img)
+                y_augset.append(y)
+                z_augset.append(z)
+                t_augset.append(t)
+
+        data = pd.DataFrame(data={'x': x_augset, 'y': y_augset, 'z': z_augset, 't': t_augset, 'p': p_augset})
         df2 = pd.concat([data, sizes], axis=1)
         df2.to_pickle(pickle_name)
 

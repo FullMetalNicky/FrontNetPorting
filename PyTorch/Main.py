@@ -155,11 +155,11 @@ def Shift():
     DataManipulator.ShiftVideoDataset(DATA_PATH + "160x90HimaxStatic_12_03_20.pickle", DATA_PATH + "160x90HimaxStatic_12_03_20.pickle")
 
 def MixAndMatch():
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
-    path1 = DATA_PATH + "160x90HimaxStatic_12_03_20.pickle"
-    path2 = DATA_PATH +"160x90HimaxDynamic_12_03_20.pickle"
-    train = DATA_PATH +"160x90HimaxMixedTrain_12_03_20.pickle"
-    test = DATA_PATH + "160x90HimaxMixedTest_12_03_20.pickle"
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
+    path1 = DATA_PATH + "160x160HimaxStatic_12_03_20.pickle"
+    path2 = DATA_PATH +"160x160HimaxDynamic_12_03_20.pickle"
+    train = DATA_PATH +"160x160HimaxMixedTrain_12_03_20.pickle"
+    test = DATA_PATH + "160x160HimaxMixedTest_12_03_20.pickle"
     DataManipulator.MixAndMatch(path1, path2, train, test)
 
 def AddColumnsToDataSet(picklename, height, width, channels):
@@ -181,7 +181,14 @@ def AddColumnsToDataSet(picklename, height, width, channels):
 def Augment():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
     train = DATA_PATH + "160x90HimaxMixedTrain_12_03_20.pickle"
-    DataManipulator.Augment(train, DATA_PATH +"160x90HimaxMixedTrain_12_03_20Augmented.pickle", 2)
+    DataManipulator.Augment(train, DATA_PATH +"160x90HimaxMixedTrain_12_03_20Augmented.pickle", 10)
+
+
+def CropRandomTest():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
+    train = DATA_PATH + "160x160HimaxMixedTest_12_03_20.pickle"
+    DataManipulator.CropDataset(train, "/Users/usi/PycharmProjects/data/160x90/" + "160x90HimaxMixedTest_12_03_20Cropped.pickle", [90, 160], 1)
+
 
 
 def main():
@@ -210,7 +217,7 @@ def main():
     #Shift()
     #AddColumnsToDataSet("train_grey.pickle", 60, 108, 1)
     #MixAndMatch()
-    Augment()
+    CropRandomTest()
 
 
 if __name__ == '__main__':
