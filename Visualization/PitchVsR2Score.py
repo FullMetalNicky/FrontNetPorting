@@ -48,6 +48,18 @@ def DivideToBins(p_test, h, vfov):
     return ind, interval
 
 
+def PlotBaseline(ax, base_r2_score, length):
+    ax[0][0].hlines(base_r2_score[0], 0, length, colors='r', label='Base', linestyles='dashed')
+    ax[0][0].legend()
+    ax[0][1].hlines(base_r2_score[1], 0, length, colors='r', label='Base', linestyles='dashed')
+    ax[0][1].legend()
+    ax[1][0].hlines(base_r2_score[2], 0, length, colors='r', label='Base', linestyles='dashed')
+    ax[1][0].legend()
+    ax[1][1].hlines(base_r2_score[3], 0, length, colors='r', label='Base', linestyles='dashed')
+    ax[1][1].legend()
+
+
+
 def PitchvsR2ScoreBinned(outputs, gt_labels, p_test, name, h, vfov, base_r2_score=None):
 
     ind, interval = DivideToBins(p_test, h, vfov)
@@ -118,14 +130,7 @@ def PitchvsR2ScoreBinned(outputs, gt_labels, p_test, name, h, vfov, base_r2_scor
     ax[1][1].set_ylabel('R2')
 
     if base_r2_score is not None:
-        ax[0][0].hlines(base_r2_score[0], 0, len(pitch_labels), colors='r', label='Base')
-        ax[0][0].legend()
-        ax[0][1].hlines(base_r2_score[1], 0, len(pitch_labels), colors='r', label='Base')
-        ax[0][1].legend()
-        ax[1][0].hlines(base_r2_score[2], 0, len(pitch_labels), colors='r', label='Base')
-        ax[1][0].legend()
-        ax[1][1].hlines(base_r2_score[3], 0, len(pitch_labels), colors='r', label='Base')
-        ax[1][1].legend()
+        PlotBaseline(ax, base_r2_score, len(pitch_labels))
 
 
     if name.find(".pickle"):
@@ -149,8 +154,7 @@ def PitchvsR2Score(outputs, gt_labels, p_test, name, h, vfov, base_r2_score=None
     tot_y_r2 = []
     tot_z_r2 = []
     tot_phi_r2 = []
-    pitch_labels = []
-    tot_pitch = []
+
 
     for i in range(range_p):
 
@@ -174,51 +178,47 @@ def PitchvsR2Score(outputs, gt_labels, p_test, name, h, vfov, base_r2_score=None
         tot_y_r2.append(y_r2)
         tot_z_r2.append(z_r2)
         tot_phi_r2.append(phi_r2)
-        tot_pitch.append(i)
 
-    #tot_pitch = np.linspace(-14, 14, 29)
-    pitch_labels = np.linspace(0, 69)
+    tot_pitch = list(range(range_p))
+    skip = 5
+    pitch_labels = np.linspace(-14, 14, 15, endpoint=True)
+    len_labels = len(tot_pitch) + 5
+
 
     fig, ax = plt.subplots(2, 2, figsize=(16, 12))
     fig.suptitle("R2 Score as a function of Pitch")
 
     ax[0][0].plot(tot_pitch, tot_x_r2)
     ax[0][0].set_title("x")
-    ax[0][0].set_xticks(np.arange(0, len(tot_pitch), 5))
-   # ax[0][0].set_xticklabels(pitch_labels, rotation=30, fontsize=8)
+    ax[0][0].set_xticks(np.arange(0, len_labels, skip))
+    ax[0][0].set_xticklabels(pitch_labels, rotation=30, fontsize=8)
     ax[0][0].set_xlabel('pitch')
     ax[0][0].set_ylabel('R2')
 
     ax[0][1].plot(tot_pitch, tot_y_r2)
     ax[0][1].set_title("y")
-    ax[0][1].set_xticks(np.arange(0, len(tot_pitch), 5))
-    #ax[0][1].set_xticklabels(pitch_labels, rotation=30, fontsize=8)
+    ax[0][1].set_xticks(np.arange(0, len_labels, skip))
+    ax[0][1].set_xticklabels(pitch_labels, rotation=30, fontsize=8)
     ax[0][1].set_xlabel('pitch')
     ax[0][1].set_ylabel('R2')
 
     ax[1][0].plot(tot_pitch, tot_z_r2)
     ax[1][0].set_title("z")
-    ax[1][0].set_xticks(np.arange(0, len(tot_pitch), 5))
-    #ax[1][0].set_xticklabels(pitch_labels, rotation=30, fontsize=8)
+    ax[1][0].set_xticks(np.arange(0, len_labels, skip))
+    ax[1][0].set_xticklabels(pitch_labels, rotation=30, fontsize=8)
     ax[1][0].set_xlabel('pitch')
     ax[1][0].set_ylabel('R2')
 
     ax[1][1].plot(tot_pitch, tot_phi_r2)
     ax[1][1].set_title("phi")
-    ax[1][1].set_xticks(np.arange(0, len(tot_pitch), 5))
-    #ax[1][1].set_xticklabels(pitch_labels, rotation=30, fontsize=8)
+    ax[1][1].set_xticks(np.arange(0, len_labels, skip))
+    ax[1][1].set_xticklabels(pitch_labels, rotation=30, fontsize=8)
     ax[1][1].set_xlabel('pitch')
     ax[1][1].set_ylabel('R2')
 
     if base_r2_score is not None:
-        ax[0][0].hlines(base_r2_score[0], 0, len(tot_pitch), colors='r', label='Base')
-        ax[0][0].legend()
-        ax[0][1].hlines(base_r2_score[1], 0, len(tot_pitch), colors='r', label='Base')
-        ax[0][1].legend()
-        ax[1][0].hlines(base_r2_score[2], 0, len(tot_pitch), colors='r', label='Base')
-        ax[1][0].legend()
-        ax[1][1].hlines(base_r2_score[3], 0, len(tot_pitch), colors='r', label='Base')
-        ax[1][1].legend()
+        PlotBaseline(ax, base_r2_score, len(tot_pitch))
+
 
     if name.find(".pickle"):
         name = name.replace(".pickle", '')
