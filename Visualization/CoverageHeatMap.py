@@ -14,13 +14,13 @@ from DataProcessor import DataProcessor
 
 def VizHeatMap(dataset, ax):
 
-    x = dataset[:, 1]
-    y = dataset[:, 0]
+    x = dataset[:, 0]
+    y = dataset[:, 1]
 
-    bins_num = 5
+    hist_bins = [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5]
+    bins_num = len(hist_bins) - 1
 
-    heatmap, xedges, yedges = np.histogram2d(y, x, bins=bins_num)
-    extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+    heatmap, xedges, yedges = np.histogram2d(x, y, bins=hist_bins)
 
     ax.set_xlabel('Y')
     ax.set_ylabel('X')
@@ -28,7 +28,7 @@ def VizHeatMap(dataset, ax):
 
     for i in range(bins_num):
         for j in range(bins_num):
-            line = "{}".format(heatmap[i][j])
+            line = "{}".format(int(heatmap[i][j]))
             text = ax.text(j, i, line, ha="center", va="center", color="w")
 
     x_tick = np.linspace(xedges[0], xedges[-1], bins_num)
@@ -119,10 +119,10 @@ def main():
     logging.getLogger('').addHandler(console)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
-    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "160x90HimaxMixedTrain_12_03_20.pickle", True)
+    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "160x90HimaxMixedTest_12_03_20.pickle", True)
 
     #VizGeneralHeatMap(z_test)
-    #VizHeatMapsByAngle(z_test)
+    VizHeatMapsByAngle(z_test)
     #ScatterPlot(z_test)
 
 
