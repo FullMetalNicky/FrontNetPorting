@@ -112,10 +112,10 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "himaxposetest.pickle", 60, 108, True, True)
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
+    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "160x90HimaxMixedTrain_12_03_20.pickle", True)
     model = Dronet(PreActBlock, [1, 1, 1], True)
-    ModelManager.Read('../PyTorch/Models/DronetGray.pt', model)
+    ModelManager.Read('../PyTorch/Models/DronetHimax160x90Mixed.pt', model)
     trainer = ModelTrainer(model)
 
     df = pd.DataFrame({'x': z_test[:, 0], 'y': z_test[:, 1], 'z': z_test[:,2], 'phi': z_test[:, 3]})
