@@ -69,7 +69,7 @@ def VizHeatMapsByAngle(dataset):
     walls = SortByAngle(df)
 
     fig, ax = plt.subplots(2, 2, figsize=(9, 9))
-    plt.title("Heat Map by Walls")
+    fig.suptitle("Coverage HeatMap For Different Orientations")
 
     wallnames = ["curtains", "TV", "nice wall 1", "nice wall 2"]
 
@@ -81,7 +81,7 @@ def VizHeatMapsByAngle(dataset):
         title = ("Facing {}".format(wallnames[w]))
         ax[idy][idx].set_title(title)
 
-    plt.savefig("wallsheatmap.png")
+    plt.savefig("CoverageHeatMap.png")
     plt.show()
 
 
