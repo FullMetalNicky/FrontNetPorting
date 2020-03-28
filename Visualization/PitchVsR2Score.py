@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from torch.utils import data
 import sys
 import sklearn.metrics
+import pandas as pd
 
 
 sys.path.append("../PyTorch/")
@@ -19,6 +20,7 @@ from DataProcessor import DataProcessor
 from ModelTrainer import ModelTrainer
 from Dataset import Dataset
 from ModelManager import ModelManager
+from PerformanceArchiver import LoadPerformanceResults
 
 
 vertical_range = 70
@@ -41,7 +43,7 @@ def DivideToBins(p_test, h, vfov):
     assignment = np.digitize(pitch, interval)
     ind = []
 
-    for i in range(1, bin_num):
+    for i in range(1, bin_num+1):
         res = np.where(assignment == i)
         ind.append(res)
 
@@ -58,6 +60,15 @@ def PlotBaseline(ax, base_r2_score, length):
     ax[1][1].hlines(base_r2_score[3], 0, length, colors='r', label='Base', linestyles='dashed')
     ax[1][1].legend()
 
+def PlotBasePoint(ax, base_r2_score, mid):
+    ax[0][0].scatter(mid, base_r2_score[0],  c='r', label='Base', marker='^')
+    ax[0][0].legend()
+    ax[0][1].scatter(mid, base_r2_score[1], c='r', label='Base', marker='^')
+    ax[0][1].legend()
+    ax[1][0].scatter(mid, base_r2_score[2], c='r', label='Base', marker='^')
+    ax[1][0].legend()
+    ax[1][1].scatter(mid, base_r2_score[3], c='r', label='Base', marker='^')
+    ax[1][1].legend()
 
 
 def PitchvsR2ScoreBinned(outputs, gt_labels, p_test, name, h, vfov, base_r2_score=None):
@@ -140,24 +151,14 @@ def PitchvsR2ScoreBinned(outputs, gt_labels, p_test, name, h, vfov, base_r2_scor
 
 
 
-def PitchvsR2Score(outputs, gt_labels, p_test, name, h, vfov, base_r2_score=None):
-
-    min_p = np.min(p_test)
-    max_p = np.max(p_test)
-
-    range_p = max_p - min_p + 1
-
-    outputs = np.reshape(outputs, (-1, range_p, 4))
-    gt_labels = np.reshape(gt_labels, (-1, range_p, 4))
+def CalculateR2ForPitch(outputs, gt_labels, range_p):
 
     tot_x_r2 = []
     tot_y_r2 = []
     tot_z_r2 = []
     tot_phi_r2 = []
 
-
     for i in range(range_p):
-
         output = outputs[:, i]
         label = gt_labels[:, i]
 
@@ -179,51 +180,80 @@ def PitchvsR2Score(outputs, gt_labels, p_test, name, h, vfov, base_r2_score=None
         tot_z_r2.append(z_r2)
         tot_phi_r2.append(phi_r2)
 
+
+    return tot_x_r2, tot_y_r2, tot_z_r2, tot_phi_r2
+
+
+def PlotModelR2Score(ax, y_values, x_values, x_labels, len, skip, color, title, model_label):
+    ax.plot(x_values, y_values, color=color, label=model_label)
+    ax.set_title(title)
+    ax.set_xticks(np.arange(0, len, skip))
+    ax.set_xticklabels(x_labels, rotation=30, fontsize=8)
+    ax.set_xlabel('pitch')
+    ax.set_ylabel('R2')
+
+
+
+def VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, p_test, color, model_label):
+
+    min_p = np.min(p_test)
+    max_p = np.max(p_test)
+
+    range_p = max_p - min_p + 1
+    outputs = np.reshape(outputs, (-1, range_p, 4))
+    gt_labels = np.reshape(gt_labels, (-1, range_p, 4))
     tot_pitch = list(range(range_p))
     skip = 5
     pitch_labels = np.linspace(-14, 14, 15, endpoint=True)
     len_labels = len(tot_pitch) + 5
 
+    tot_x_r2, tot_y_r2, tot_z_r2, tot_phi_r2 = CalculateR2ForPitch(outputs, gt_labels, range_p)
+
+
+    PlotModelR2Score(ax[0][0], tot_x_r2, tot_pitch, pitch_labels, len_labels, skip, color, "x", model_label)
+    PlotModelR2Score(ax[0][1], tot_y_r2, tot_pitch, pitch_labels, len_labels, skip, color, "y", model_label)
+    PlotModelR2Score(ax[1][0], tot_z_r2, tot_pitch, pitch_labels, len_labels, skip, color, "z", model_label)
+    PlotModelR2Score(ax[1][1], tot_phi_r2, tot_pitch, pitch_labels, len_labels, skip, color, "phi", model_label)
+
+
+    return range_p
+
+
+def Plot2Models(p_test, name, base_r2_score):
+
 
     fig, ax = plt.subplots(2, 2, figsize=(16, 12))
     fig.suptitle("R2 Score as a function of Pitch")
 
-    ax[0][0].plot(tot_pitch, tot_x_r2)
-    ax[0][0].set_title("x")
-    ax[0][0].set_xticks(np.arange(0, len_labels, skip))
-    ax[0][0].set_xticklabels(pitch_labels, rotation=30, fontsize=8)
-    ax[0][0].set_xlabel('pitch')
-    ax[0][0].set_ylabel('R2')
+    name1 = "DronetHimax160x90AugCropResults.pickle"
+    outputs, gt_labels = LoadPerformanceResults(name1)
+    range_p = VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, p_test, 'b', 'new')
 
-    ax[0][1].plot(tot_pitch, tot_y_r2)
-    ax[0][1].set_title("y")
-    ax[0][1].set_xticks(np.arange(0, len_labels, skip))
-    ax[0][1].set_xticklabels(pitch_labels, rotation=30, fontsize=8)
-    ax[0][1].set_xlabel('pitch')
-    ax[0][1].set_ylabel('R2')
+    name2 = "DronetHimax160x90AugmentedResults.pickle"
+    outputs, gt_labels = LoadPerformanceResults(name2)
+    range_p = VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, p_test, 'g', 'old')
 
-    ax[1][0].plot(tot_pitch, tot_z_r2)
-    ax[1][0].set_title("z")
-    ax[1][0].set_xticks(np.arange(0, len_labels, skip))
-    ax[1][0].set_xticklabels(pitch_labels, rotation=30, fontsize=8)
-    ax[1][0].set_xlabel('pitch')
-    ax[1][0].set_ylabel('R2')
-
-    ax[1][1].plot(tot_pitch, tot_phi_r2)
-    ax[1][1].set_title("phi")
-    ax[1][1].set_xticks(np.arange(0, len_labels, skip))
-    ax[1][1].set_xticklabels(pitch_labels, rotation=30, fontsize=8)
-    ax[1][1].set_xlabel('pitch')
-    ax[1][1].set_ylabel('R2')
-
-    if base_r2_score is not None:
-        PlotBaseline(ax, base_r2_score, len(tot_pitch))
-
+    PlotBasePoint(ax, base_r2_score, (range_p + 1) / 2)
 
     if name.find(".pickle"):
         name = name.replace(".pickle", '')
     plt.savefig(name + '_pitch.png')
     plt.show()
+
+
+def Plot1Model(outputs, gt_labels, p_test, name):
+
+    fig, ax = plt.subplots(2, 2, figsize=(16, 12))
+    fig.suptitle("R2 Score as a function of Pitch")
+
+    range_p = VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, p_test, 'b', 'new')
+
+    if name.find(".pickle"):
+        name = name.replace(".pickle", '')
+    plt.savefig(name + '_pitch.png')
+    plt.show()
+
+
 
 
 def main():
@@ -239,44 +269,33 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    model = Dronet(PreActBlock, [1, 1, 1], True)
-    ModelManager.Read('../PyTorch/Models/DronetHimax160x90Augmented.pt', model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
-    picklename = "160x90HimaxMixedTest_12_03_20Cropped70.pickle"
+
+    # Get baseline results
+
+    picklename = "160x90HimaxMixedTest_12_03_20.pickle"
     [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + picklename)
+    test_set = Dataset(x_test, y_test)
+    params = {'batch_size': 1, 'shuffle': False, 'num_workers': 1}
+    test_generator = data.DataLoader(test_set, **params)
+    model = Dronet(PreActBlock, [1, 1, 1], True)
+    ModelManager.Read('../PyTorch/Models/DronetHimax160x90AugCrop.pt', model)
+    trainer = ModelTrainer(model)
+    MSE2, MAE2, r2_score2, outputs2, gt_labels2 = trainer.Test(test_generator)
+
+    # Get pitch values
+
+    picklename = "160x90HimaxMixedTest_12_03_20Cropped70.pickle"
     p_test = DataProcessor.GetPitchFromTestData(DATA_PATH + picklename)
 
-
-    # x_test = x_test[:7000]
-    # y_test = y_test[:7000]
-    # p_test = p_test[:7000]
-
-    test_set = Dataset(x_test, y_test)
-    params = {'batch_size': 1,
-              'shuffle': False,
-              'num_workers': 1}
-    test_generator = data.DataLoader(test_set, **params)
-    trainer = ModelTrainer(model)
-
-    MSE, MAE, r2_score, outputs, gt_labels = trainer.Test(test_generator)
-    gt_labels = np.reshape(gt_labels, (-1, 4))
 
     if picklename.find(".pickle"):
         picklename = picklename.replace(".pickle", '')
 
-    picklename2 = "160x90HimaxMixedTest_12_03_20.pickle"
-    [x_test2, y_test2] = DataProcessor.ProcessTestData(DATA_PATH + picklename2)
-    test_set2 = Dataset(x_test2, y_test2)
-    params = {'batch_size': 1,
-              'shuffle': False,
-              'num_workers': 1}
-    test_generator = data.DataLoader(test_set2, **params)
-    trainer = ModelTrainer(model)
-    MSE2, MAE2, r2_score2, outputs2, gt_labels2 = trainer.Test(test_generator)
-    base = r2_score2
 
-    PitchvsR2Score(outputs, gt_labels, p_test, picklename, 160, 65.65, base)
+    Plot2Models(p_test, picklename, r2_score2)
+    #Plot1Model(outputs, gt_labels, p_test, picklename)
 
 
 if __name__ == '__main__':
