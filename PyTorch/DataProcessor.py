@@ -166,7 +166,7 @@ class DataProcessor:
     @staticmethod
     def GetPitchFromTestData(testPath):
 
-        """Reads the .pickle file and extrects the recorded NNs outputs
+        """Reads the .pickle file and extracts the pitch values
 
                    Parameters
                    ----------
@@ -176,7 +176,7 @@ class DataProcessor:
                    Returns
                    -------
                    list
-                       list of outputs/predictions
+                       list of pitch  values
                    """
 
         p_test = None
@@ -186,6 +186,30 @@ class DataProcessor:
             p_test = test_set['p'].values
 
         return p_test
+
+    @staticmethod
+    def GetRollFromTestData(testPath):
+
+        """Reads the .pickle file and extracts the roll values
+
+                   Parameters
+                   ----------
+                   testPath : str
+                       The file location of the .pickle
+
+                   Returns
+                   -------
+                   list
+                       list of roll  values
+                   """
+
+        r_test = None
+        test_set = pd.read_pickle(testPath)
+        logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
+        if 'r' in test_set.columns:
+            r_test = test_set['r'].values
+
+        return r_test
 
     @staticmethod
     def ExtractValidationLabels(testPath):

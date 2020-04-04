@@ -148,11 +148,11 @@ def ConvertToGray():
 
 def CropDataset():
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    DataManipulator.CropCenteredDataset(DATA_PATH + "160x160HimaxStatic_12_03_20.pickle", [90, 160], DATA_PATH + "160x90HimaxStatic_12_03_20.pickle")
+    DataManipulator.CropCenteredDataset(DATA_PATH + "160x160/160x160HimaxMixedTest_12_03_20Rot.pickle", [90, 160], DATA_PATH + "160x90/160x90HimaxMixedTest_12_03_20Rot.pickle")
 
 def Shift():
-    DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    DataManipulator.ShiftVideoDataset(DATA_PATH + "160x90HimaxStatic_12_03_20.pickle", DATA_PATH + "160x90HimaxStatic_12_03_20.pickle")
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
+    DataManipulator.ShiftVideoDataset(DATA_PATH + "160x160HimaxStatic_12_03_20.pickle", DATA_PATH + "160x160HimaxStatic_12_03_20.pickle")
 
 def MixAndMatch():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
@@ -187,8 +187,21 @@ def Augment():
 def CropRandomTest():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
     train = DATA_PATH + "160x160HimaxMixedTest_12_03_20.pickle"
-    DataManipulator.CropDataset(train, "/Users/usi/PycharmProjects/data/160x90/" + "160x90HimaxMixedTest_12_03_20Cropped.pickle", [90, 160], 20)
+    DataManipulator.CropDataset(train, "/Users/usi/PycharmProjects/data/160x90/" + "160x90HimaxMixedTest_12_03_20Cropped70.pickle", [90, 160], 70)
 
+def AugmentAndCrop():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
+    train = DATA_PATH + "160x160HimaxMixedTrain_12_03_20.pickle"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x90/"
+    DataManipulator.AugmentAndCrop(train, DATA_PATH2 + "160x90HimaxMixedTrain_12_03_20AugCrop.pickle", [90, 160], 10)
+
+def Rotate():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
+    test = DATA_PATH + "160x160HimaxMixedTest_12_03_20.pickle"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x90/"
+
+    DataManipulator.Rotate(test, DATA_PATH + "160x160HimaxMixedTest_12_03_20Rot.pickle", 29)
+    DataManipulator.CropCenteredDataset(DATA_PATH + "160x160HimaxMixedTest_12_03_20Rot.pickle", [90, 160], DATA_PATH2 + "160x90HimaxMixedTest_12_03_20Rot.pickle")
 
 
 def main():
@@ -217,7 +230,9 @@ def main():
     #Shift()
     #AddColumnsToDataSet("train_grey.pickle", 60, 108, 1)
     #MixAndMatch()
-    CropRandomTest()
+    #CropRandomTest()
+    #AugmentAndCrop()
+    Rotate()
 
 
 if __name__ == '__main__':
