@@ -444,8 +444,8 @@ class DataManipulator:
         #     # cv2.waitKey()
 
         data = pd.DataFrame(data={'x': x_augset, 'y': y_augset, 'z': z_augset, 't': t_augset, 'p': p_augset})
-        df2 = pd.concat([data, sizes], axis=1)
-        df2.to_pickle(pickle_name)
+        df = pd.concat([data, sizes], axis=1)
+        df.to_pickle(pickle_name)
 
 
     @staticmethod
@@ -513,3 +513,81 @@ class DataManipulator:
         data = pd.DataFrame(data={'x': x_augset, 'y': y_augset, 'z': z_augset, 't': t_augset, 'r': r_augset})
         df2 = pd.concat([data, sizes], axis=1)
         df2.to_pickle(pickle_name)
+
+
+    @staticmethod
+    def DivideDataset(pickle_path, new_path1, new_path2, num_split):
+
+        """Divide dataset
+
+                      Parameters
+                    ----------
+                    path : str
+                        The file location of the .pickle
+                    new_path1 : str
+                        The file location of the first new .pickle
+                    new_path2 : str
+                        The file location of the second new .pickle
+                    num_split: int
+                        At which frame to split the dataset
+
+                   """
+        dataset = pd.read_pickle(pickle_path)
+        logging.info('[DataManipulator] dataset shape: ' + str(dataset.shape))
+
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset)
+        sizes = DataManipulator.CreateSizeDataFrame(h, w, c)
+
+        x_set = dataset['x'].values
+        y_set = dataset['y'].values
+        z_set = dataset['z'].values
+        t_set = dataset['t'].values
+
+        data1 = pd.DataFrame(data={'x': x_set[:num_split], 'y': y_set[:num_split],
+                                   'z': z_set[:num_split], 't': t_set[:num_split]})
+        data2 = pd.DataFrame(data={'x': x_set[num_split:-1], 'y': y_set[num_split:-1],
+                                   'z': z_set[num_split:-1], 't': t_set[num_split:-1]})
+        df1 = pd.concat([data1, sizes], axis=1)
+        df1.to_pickle(new_path1)
+        df2 = pd.concat([data2, sizes], axis=1)
+        df2.to_pickle(new_path2)
+
+    @staticmethod
+    def JoinDataset(path1, path2, new_path):
+        """Divide dataset
+
+              Parameters
+            ----------
+            path1 : str
+                The file location of the first .pickle
+            path2 : str
+                The file location of the second .pickle
+            new_path : str
+                The file location of the new .pickle
+
+           """
+
+        dataset1 = pd.read_pickle(path1)
+        logging.info('[DataManipulator] dataset1 shape: ' + str(dataset1.shape))
+
+        dataset2 = pd.read_pickle(path2)
+        logging.info('[DataManipulator] dataset2 shape: ' + str(dataset2.shape))
+
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset1)
+        sizes = DataManipulator.CreateSizeDataFrame(h, w, c)
+
+        x_set = dataset1['x'].values
+        y_set = dataset1['y'].values
+        z_set = dataset1['z'].values
+        t_set = dataset1['t'].values
+        p_set = dataset1['p'].values
+
+        x_set = np.concatenate((x_set, dataset2['x'].values), axis=0)
+        y_set = np.concatenate((y_set, dataset2['y'].values), axis=0)
+        z_set = np.concatenate((z_set, dataset2['z'].values), axis=0)
+        t_set = np.concatenate((t_set, dataset2['t'].values), axis=0)
+        p_set = np.concatenate((p_set, dataset2['p'].values), axis=0)
+
+        data = pd.DataFrame(data={'x': x_set, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
+        df2 = pd.concat([data, sizes], axis=1)
+        df2.to_pickle(new_path)

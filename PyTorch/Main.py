@@ -190,10 +190,10 @@ def CropRandomTest():
     DataManipulator.CropDataset(train, "/Users/usi/PycharmProjects/data/160x90/" + "160x90HimaxMixedTest_12_03_20Cropped70.pickle", [90, 160], 70)
 
 def AugmentAndCrop():
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
-    train = DATA_PATH + "160x160HimaxMixedTrain_12_03_20.pickle"
-    DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x90/"
-    DataManipulator.AugmentAndCrop(train, DATA_PATH2 + "160x90HimaxMixedTrain_12_03_20AugCrop.pickle", [90, 160], 10)
+    DATA_PATH = "/Users/usi/PycharmProjects/data/ScarletWitch/"
+    train = DATA_PATH + "160x160HimaxHandTrain_12_03_20.pickle"
+    #DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x90/"
+    DataManipulator.AugmentAndCrop(train, DATA_PATH + "160x90HimaxHandTrain_12_03_20AugCrop.pickle", [90, 160], 10)
 
 def Rotate():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
@@ -202,6 +202,24 @@ def Rotate():
 
     DataManipulator.Rotate(test, DATA_PATH + "160x160HimaxMixedTest_12_03_20Rot.pickle", 29)
     DataManipulator.CropCenteredDataset(DATA_PATH + "160x160HimaxMixedTest_12_03_20Rot.pickle", [90, 160], DATA_PATH2 + "160x90HimaxMixedTest_12_03_20Rot.pickle")
+
+def Divide():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/Hand/"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/ScarletWitch/"
+
+    old_pickle = "160x160HimaxHand_12_03_20.pickle"
+    test = "160x160HimaxHandTest_12_03_20.pickle"
+    train = "160x160HimaxHandTrain_12_03_20.pickle"
+
+    DataManipulator.DivideDataset(DATA_PATH+old_pickle, DATA_PATH2+train, DATA_PATH2+test, 700)
+
+def JoinDatasets():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/ScarletWitch/"
+    train2 = "160x90HimaxHandTrain_12_03_20AugCrop.pickle"
+    train1 = "160x90HimaxMixedTrain_12_03_20AugCrop.pickle"
+    train = "160x90HimaxScarletTrain.pickle"
+    DataManipulator.JoinDataset(DATA_PATH+train1, DATA_PATH2+train2, DATA_PATH2+train)
 
 
 def main():
@@ -232,7 +250,9 @@ def main():
     #MixAndMatch()
     #CropRandomTest()
     #AugmentAndCrop()
-    Rotate()
+    #Rotate()
+    #Divide()
+    JoinDatasets()
 
 
 if __name__ == '__main__':
