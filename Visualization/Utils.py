@@ -2,6 +2,7 @@ from __future__ import print_function
 import logging
 import numpy as np
 import pandas as pd
+import cv2
 import sys
 
 def MoveToWorldFrame(head, himax):
@@ -15,6 +16,29 @@ def MoveToWorldFrame(head, himax):
     y, = xy[1]
 
     return x, y, phi
+
+
+def ProjectWorldToImage(x,y,z):
+
+
+    f = 185/2
+    pixel_coords_in_camera_frame = (f/x) * np.asarray([-y, -z])
+    pixel_coords_in_image_frame = pixel_coords_in_camera_frame + [80, 80]
+    pixel_coords_in_image_frame = pixel_coords_in_image_frame.astype(int)
+
+    return pixel_coords_in_image_frame
+
+def AddMarkerToVideo(x,y, frame):
+
+    if len(frame.shape) < 3:
+        frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
+
+    frame = cv2.circle(frame, (x, y), 3, (255, 0, 0))
+
+    return frame
+
+
+
 
 def SaveResultsToCSV(labels, predictions, timestamps, csvName):
 

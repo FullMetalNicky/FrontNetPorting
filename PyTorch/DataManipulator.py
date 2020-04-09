@@ -47,11 +47,11 @@ class DataManipulator:
         y_set = dataset['y'].values
         z_set = dataset['z'].values
         t_set = dataset['t'].values
-        r_set =  dataset['r'].values
+        #r_set =  dataset['r'].values
         #o_train = train_set['o'].values
 
-        #data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set})
-        data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set, 'r': r_set})
+        data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set})
+        #data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set, 'r': r_set})
         df = pd.concat([data, sizes], axis=1)
         df.to_pickle(file_name)
 
