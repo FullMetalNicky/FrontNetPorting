@@ -28,12 +28,12 @@ def ProjectWorldToImage(x,y,z):
 
     return pixel_coords_in_image_frame
 
-def AddMarkerToVideo(x,y, frame):
+def AddMarkerToVideo(x,y, frame, color):
 
     if len(frame.shape) < 3:
         frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
 
-    frame = cv2.circle(frame, (x, y), 3, (255, 0, 0))
+    frame = cv2.circle(frame, (x, y), 3, color)
 
     return frame
 
