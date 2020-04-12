@@ -242,7 +242,7 @@ class DataProcessor:
             data = x_test[i]
             data = np.swapaxes(data, 0, 2)
             data = np.swapaxes(data, 0, 1)
-            img = np.reshape(data, (60, 108))
+            img = np.reshape(data, (h, w))
             #img = np.zeros((244, 324), np.uint8)
             #img[92:152, 108:216] = data
             cv2.imwrite("test/{}.pgm".format(i), img)

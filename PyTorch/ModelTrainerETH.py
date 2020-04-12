@@ -36,7 +36,7 @@ class ModelTrainer:
     def GetModel(self):
         return self.model
 
-    def Quantize(self, validation_loader):
+    def Quantize(self, validation_loader, h, w):
 
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
              validation_loader)
@@ -44,7 +44,8 @@ class ModelTrainer:
         print("[ModelTrainer]: Before quantization process: %f" % acc)
 
         # [NeMO] This call "transforms" the model into a quantization-aware one, which is printed immediately afterwards.
-        self.model = nemo.transform.quantize_pact(self.model, dummy_input=torch.randn(1, 1, 60, 108))
+       # self.model = nemo.transform.quantize_pact(self.model, dummy_input=torch.randn(1, 1, 60, 108))
+        self.model = nemo.transform.quantize_pact(self.model, dummy_input=torch.randn(1, 1, h, w))
         logging.info("[ModelTrainer] Model: %s", self.model)
         # [NeMO] NeMO re-training usually converges better using an Adam optimizer, and a smaller learning rate
         # optimizer = torch.optim.Adam(self.model.parameters(), lr=float(self.regime['lr']),
@@ -126,11 +127,14 @@ class ModelTrainer:
              validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
         print("[ModelTrainer]: After export: %f" % acc)
-        
+
+        #Francesco did that and I'm too scared to change it
         import cv2 
-        frame = cv2.imread("../Deployment/dataset/test0.pgm", 0) 
-        frame = frame[92:152, 108:216] 
-        frame = np.reshape(frame, (60, 108, 1)) 
+        frame = cv2.imread("../Deployment/dataset/87.pgm", 0)
+        # frame = frame[92:152, 108:216]
+        frame = np.reshape(frame, (h, w, 1))
+        output = self.InferSingleSample(frame)
+        print("infer results: {}".format(output))
         act = nemo.utils.get_intermediate_activations(self.model, self.InferSingleSample, frame)
 
         # golden model

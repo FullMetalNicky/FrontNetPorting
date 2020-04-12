@@ -59,18 +59,10 @@ def Test():
 
 def TestInference():
 
-    frame = cv2.imread("8.jpg", 0)
-    #frame = frame[92:152, 108:216]
-    frame = np.reshape(frame, (60, 108, 1))
-    #print(frame.flatten()[:10])
-    #cv2.imshow("", frame)
-    #cv2.waitKey()
+    frame = cv2.imread("../Deployment/dataset/87.pgm", 0)
+    frame = np.reshape(frame, (96, 160, 1))
     model = Dronet(PreActBlock, [1, 1, 1], True)
-    ModelManager.Read("Models/DronetGrayAug120.pt", model)
-    # weight = model.conv.weight.data
-    # weight = np.reshape(weight, (-1))
-    # weight = weight[:10]
-    # print(weight)
+    ModelManager.Read("Models/DronetHimax160x96.pt", model)
     trainer = ModelTrainer(model)
     v1_pred = trainer.InferSingleSample(frame)
     print("output")
@@ -118,7 +110,7 @@ def Train():
 
 def TrainGray():
     model = Dronet(PreActBlock, [1, 1, 1], True)
-    summary(model, (1, 60, 108))
+    summary(model, (1, 90, 160))
     trainer = ModelTrainer(model)
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
@@ -147,12 +139,14 @@ def ConvertToGray():
     DataManipulator.CreateGreyPickle(DATA_PATH + "BebopPatterns_06_03_20.pickle", 60, 108, "GreyBebopPatterns_06_03_20.pickle")
 
 def CropDataset():
-    DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    DataManipulator.CropCenteredDataset(DATA_PATH + "160x160/160x160HimaxMixedTest_12_03_20Rot.pickle", [90, 160], DATA_PATH + "160x90/160x90HimaxMixedTest_12_03_20Rot.pickle")
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x96/"
+
+    DataManipulator.CropCenteredDataset(DATA_PATH + "160x160HimaxMixedTest_12_03_20.pickle", [96, 160], DATA_PATH2 + "160x96HimaxMixedTest_12_03_20.pickle")
 
 def Shift():
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
-    DataManipulator.ShiftVideoDataset(DATA_PATH + "160x160HimaxStatic_12_03_20.pickle", DATA_PATH + "160x160HimaxStatic_12_03_20.pickle")
+    DATA_PATH = "/Users/usi/PycharmProjects/data/Hand/"
+    DataManipulator.ShiftVideoDataset(DATA_PATH + "160x160HimaxHand_12_03_20.pickle", DATA_PATH + "160x160HimaxHand_12_03_20.pickle")
 
 def MixAndMatch():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
@@ -187,13 +181,13 @@ def Augment():
 def CropRandomTest():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
     train = DATA_PATH + "160x160HimaxMixedTest_12_03_20.pickle"
-    DataManipulator.CropDataset(train, "/Users/usi/PycharmProjects/data/160x90/" + "160x90HimaxMixedTest_12_03_20Cropped70.pickle", [90, 160], 70)
+    DataManipulator.CropDataset(train, "/Users/usi/PycharmProjects/data/160x96/" + "160x96HimaxMixedTest_12_03_20Cropped70.pickle", [96, 160], 70)
 
 def AugmentAndCrop():
-    DATA_PATH = "/Users/usi/PycharmProjects/data/ScarletWitch/"
-    train = DATA_PATH + "160x160HimaxHandTrain_12_03_20.pickle"
-    #DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x90/"
-    DataManipulator.AugmentAndCrop(train, DATA_PATH + "160x90HimaxHandTrain_12_03_20AugCrop.pickle", [90, 160], 10)
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
+    train = DATA_PATH + "160x160HimaxMixedTrain_12_03_20.pickle"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x96/"
+    DataManipulator.AugmentAndCrop(train, DATA_PATH + "160x96HimaxMixedTrain_12_03_20AugCrop.pickle", [96, 160], 10)
 
 def Rotate():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
@@ -221,6 +215,11 @@ def JoinDatasets():
     train = "160x90HimaxScarletTrain.pickle"
     DataManipulator.JoinDataset(DATA_PATH+train1, DATA_PATH2+train2, DATA_PATH2+train)
 
+def ExrtactImages():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
+    test = "160x96HimaxMixedTest_12_03_20.pickle"
+    DataProcessor.ExtractValidationLabels(DATA_PATH+test)
+
 
 def main():
     logging.basicConfig(level=logging.INFO,
@@ -241,7 +240,7 @@ def main():
     #ConvertToGray()
     #MergeDatasets()
     #Train()
-    #TestInference()
+    TestInference()
     #DumpImages()
     #Filter()
     #CropDataset()
@@ -252,7 +251,8 @@ def main():
     #AugmentAndCrop()
     #Rotate()
     #Divide()
-    JoinDatasets()
+    #JoinDatasets()
+    #ExrtactImages()
 
 
 if __name__ == '__main__':

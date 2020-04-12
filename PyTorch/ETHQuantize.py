@@ -66,11 +66,9 @@ def LoadData(args):
 
     [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
         args.load_trainset)
-    [x_test, y_test] = DataProcessor.ProcessTestData(args.load_testset)
 
     training_set = Dataset(x_train, y_train, True)
     validation_set = Dataset(x_validation, y_validation)
-    test_set = Dataset(x_test, y_test)
 
     # Parameters
     # num_workers - 0 for debug in Mac+PyCharm, 6 for everything else
@@ -80,12 +78,8 @@ def LoadData(args):
               'num_workers': num_workers}
     train_loader = data.DataLoader(training_set, **params)
     validation_loader = data.DataLoader(validation_set, **params)
-    params = {'batch_size': args.batch_size,
-              'shuffle': False,
-              'num_workers': num_workers}
-    test_loader = data.DataLoader(test_set, **params)
 
-    return train_loader, validation_loader, test_loader
+    return train_loader, validation_loader
 
 
 def main():
@@ -109,7 +103,7 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    train_loader, validation_loader, test_loader = LoadData(args)
+    train_loader, validation_loader = LoadData(args)
 
     # [NeMO] Loading of the JSON regime file.
     regime = {}
@@ -137,7 +131,7 @@ def main():
     trainer = ModelTrainer(model, args, regime)
     if args.quantize:
         #logging.disable(logging.INFO)
-        trainer.Quantize(validation_loader)
+        trainer.Quantize(validation_loader, 96, 160)
 
 
     if args.save_model is not None:
