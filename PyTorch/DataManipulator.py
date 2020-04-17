@@ -47,11 +47,12 @@ class DataManipulator:
         y_set = dataset['y'].values
         z_set = dataset['z'].values
         t_set = dataset['t'].values
+        p_set = dataset['p'].values
         #r_set =  dataset['r'].values
         #o_train = train_set['o'].values
 
         data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set})
-        #data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set, 'r': r_set})
+        data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
         df = pd.concat([data, sizes], axis=1)
         df.to_pickle(file_name)
 
@@ -79,13 +80,15 @@ class DataManipulator:
         y_set = dataset['y'].values
         z_set = dataset['z'].values
         t_set = dataset['t'].values
+        p_set = dataset['p'].values
         x_set = x_set[1:]
         y_set = y_set[:-1]
         z_set = z_set[:-1]
         t_set = t_set[:-1]
+        p_set = p_set[:-1]
         # o_train = train_set['o'].values
 
-        data = pd.DataFrame(data={'x': x_set, 'y': y_set, 'z': z_set, 't': t_set})
+        data = pd.DataFrame(data={'x': x_set, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
         df = pd.concat([data, sizes], axis=1)
         df.to_pickle(file_name)
 
@@ -542,11 +545,17 @@ class DataManipulator:
         y_set = dataset['y'].values
         z_set = dataset['z'].values
         t_set = dataset['t'].values
+        p_set = dataset['p'].values
+
+        if num_split <1:
+            num_split = int(len(x_set) * num_split)
+
+
 
         data1 = pd.DataFrame(data={'x': x_set[:num_split], 'y': y_set[:num_split],
-                                   'z': z_set[:num_split], 't': t_set[:num_split]})
+                                   'z': z_set[:num_split], 't': t_set[:num_split], 'p': p_set[:num_split]})
         data2 = pd.DataFrame(data={'x': x_set[num_split:-1], 'y': y_set[num_split:-1],
-                                   'z': z_set[num_split:-1], 't': t_set[num_split:-1]})
+                                   'z': z_set[num_split:-1], 't': t_set[num_split:-1], 'p': p_set[num_split:-1]})
         df1 = pd.concat([data1, sizes], axis=1)
         df1.to_pickle(new_path1)
         df2 = pd.concat([data2, sizes], axis=1)
@@ -587,6 +596,48 @@ class DataManipulator:
         z_set = np.concatenate((z_set, dataset2['z'].values), axis=0)
         t_set = np.concatenate((t_set, dataset2['t'].values), axis=0)
         p_set = np.concatenate((p_set, dataset2['p'].values), axis=0)
+
+        data = pd.DataFrame(data={'x': x_set, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
+        df2 = pd.concat([data, sizes], axis=1)
+        df2.to_pickle(new_path)
+
+    @staticmethod
+    def JoinDatasetFromList(pathlist, new_path):
+        """Divide dataset
+
+              Parameters
+            ----------
+            path1 : str list
+                list of paths to pickles to be joined
+            new_path : str
+                The file location of the new .pickle
+
+           """
+
+        dataset1 = pd.read_pickle(pathlist[0])
+        logging.info('[DataManipulator] dataset1 shape: ' + str(dataset1.shape))
+
+
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset1)
+        sizes = DataManipulator.CreateSizeDataFrame(h, w, c)
+
+        x_set = dataset1['x'].values
+        y_set = dataset1['y'].values
+        z_set = dataset1['z'].values
+        t_set = dataset1['t'].values
+        p_set = dataset1['p'].values
+
+
+        for i in range(1,len(pathlist)):
+            print(i)
+            dataset = pd.read_pickle(pathlist[i])
+            logging.info("[DataManipulator] dataset {} shape: {}".format(i,  dataset.shape))
+
+            x_set = np.concatenate((x_set, dataset['x'].values), axis=0)
+            y_set = np.concatenate((y_set, dataset['y'].values), axis=0)
+            z_set = np.concatenate((z_set, dataset['z'].values), axis=0)
+            t_set = np.concatenate((t_set, dataset['t'].values), axis=0)
+            p_set = np.concatenate((p_set, dataset['p'].values), axis=0)
 
         data = pd.DataFrame(data={'x': x_set, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
         df2 = pd.concat([data, sizes], axis=1)
