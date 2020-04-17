@@ -48,6 +48,13 @@ def ExtractPoseFromMessage(Pose):
 
 	return x, y, z, yaw
 
+def ExtractPitchFromMessage(Pose):
+	#print(Pose
+	q = Pose.pose.orientation
+	roll, pitch, yaw = tf.transformations.euler_from_quaternion((q.x, q.y, q.z, q.w))
+
+	return pitch
+
 
 
 def relative_pose(stamped_pose, reference_pose, reference_frame='reference'):
@@ -109,6 +116,7 @@ class DatasetCreator:
 					#print(t)
 					if key == ord('s'):
 						start_frame = t
+						print("start choosen")
 				else:
 					if (bebop_id > (bebop_msgs_count -200)) and (end_frame is None):
 						cv2.imshow("hand", cv_image)
@@ -578,7 +586,7 @@ class DatasetCreator:
 		self.SaveInfoFile(datasetName, topic_list)
 
 
-	def CreateHimaxDataset(self, delay, datasetName, camera_topic_himax, drone_topic, tracking_topic_list, start = None, end = None, pose = False):
+	def CreateHimaxDataset(self, delay, datasetName, camera_topic_himax, drone_topic, tracking_topic_list, start = None, end = None):
 
 		"""Converts rosbag to format suitable for training/testing. 
 		if start_frame, end_frame are unknown, FrameSelector will help you choose how to trim the video
@@ -640,6 +648,7 @@ class DatasetCreator:
 		bridge = CvBridge()
 
 		x_dataset = []
+		p_dataset = []
 		y_dataset = [None] * len(tracking_topic_list)
 		z_dataset = []
 		t_dataset = []
@@ -676,8 +685,10 @@ class DatasetCreator:
 					y_dataset[id].append([x, y, z, yaw]) 
 				
 				x, y, z, yaw = ExtractPoseFromMessage(drone_msgs[drone_id])
+				pitch = ExtractPitchFromMessage(drone_msgs[drone_id])
 				z_dataset.append([x, y, z, yaw])	
 				t_dataset.append(t)
+				p_dataset.append(pitch)
 			
 		height = cv_image.shape[0]
 		width = cv_image.shape[1]
@@ -692,7 +703,15 @@ class DatasetCreator:
 		    'h' : height
 		}, index=[0])
 
-		data = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset})
+		#compensate for delay
+		x_dataset = x_dataset[1:]
+		y_dataset[0] = y_dataset[0][:-1]
+		z_dataset = z_dataset[:-1]
+		t_dataset = t_dataset[:-1]
+		p_dataset = p_dataset[:-1]
+
+
+		data = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset[0], 'z' : z_dataset, 't': t_dataset, 'p':p_dataset})
 		df = pd.concat([data, sizes], axis=1) 		
 		print("dataframe ready, frames: {}".format(len(x_dataset)))
 		df.to_pickle(datasetName)
@@ -870,6 +889,7 @@ class DatasetCreator:
 		y_dataset = []
 		z_dataset = []
 		t_dataset = []
+		p_dataset = []
 
 		for file in fileList:
 			dataset = pd.read_pickle(folderPath + file)
@@ -878,6 +898,7 @@ class DatasetCreator:
 			y_dataset.extend(dataset['y'].values)
 			z_dataset.extend(dataset['z'].values)
 			t_dataset.extend(dataset['t'].values)
+			p_dataset.extend(dataset['p'].values)
 
 	
 		channels = dataset['c'].values[0]
@@ -890,7 +911,7 @@ class DatasetCreator:
 		    'h' : height
 		}, index=[0])
 
-		data = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset, 'z' : z_dataset, 't': t_dataset})
+		data = pd.DataFrame(data={'x': x_dataset, 'y': y_dataset, 'z' : z_dataset, 't': t_dataset, 'p':p_dataset})
 		df = pd.concat([data, sizes], axis=1) 		
 		df.to_pickle(datasetName)
 
