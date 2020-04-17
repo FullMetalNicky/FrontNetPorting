@@ -36,7 +36,7 @@ class DataProcessor:
 
         h, w, c = DataManipulator.GetSizeDataFromDataFrame(train_set)
 
-        np.random.seed()
+        np.random.seed(1749)
         # split between train and test sets:
         x_train = train_set['x'].values
         x_train = np.vstack(x_train[:]).astype(np.float32)
