@@ -29,6 +29,15 @@ def _frame(stamped_pose):
 	translation = PyKDL.Vector(p.x, p.y, p.z)
 	return PyKDL.Frame(rotation, translation)
 
+def _leveled_frame(stamped_pose):
+	q = stamped_pose.pose.orientation
+	roll, pitch, yaw = tf.transformations.euler_from_quaternion((q.x, q.y, q.z, q.w))
+	q = tf.transformations.quaternion_from_euler(0, 0, yaw)
+	p = stamped_pose.pose.position
+	rotation = PyKDL.Rotation.Quaternion(q[0], q[1], q[2], q[3])
+	translation = PyKDL.Vector(p.x, p.y, p.z)
+	return PyKDL.Frame(rotation, translation)
+
 def _pose(frame, reference_frame='reference'):
     pose = PoseStamped()
     pose.pose.position.x = frame[(0, 3)]
@@ -59,7 +68,7 @@ def ExtractPitchFromMessage(Pose):
 
 def relative_pose(stamped_pose, reference_pose, reference_frame='reference'):
 	frame = _frame(stamped_pose)
-	ref_frame = _frame(reference_pose)
+	ref_frame = _leveled_frame(reference_pose)
 	rel_frame = ref_frame.Inverse() * frame
 	res = _pose(rel_frame, reference_frame)
 
