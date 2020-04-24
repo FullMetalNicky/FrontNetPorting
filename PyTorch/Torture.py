@@ -22,29 +22,35 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    pickle_folder = "/Users/usi/PycharmProjects/data/16_4_2020/HeightChange/"
+    pickle_folder = "/Users/usi/PycharmProjects/data/16_4_2020/Pitch/"
     files = os.listdir(pickle_folder)
 
-    train_dir = pickle_folder + "Train/"
-    test_dir = pickle_folder + "Test/"
-    if not os.path.exists(train_dir):
-        os.makedirs(train_dir)
-    if not os.path.exists(test_dir):
-        os.makedirs(test_dir)
+    # train_dir = pickle_folder + "Train/"
+    # test_dir = pickle_folder + "Test/"
+    # if not os.path.exists(train_dir):
+    #     os.makedirs(train_dir)
+    # if not os.path.exists(test_dir):
+    #     os.makedirs(test_dir)
+    #
+    #
+    # train_pickle_list=[]
+    # test_pickle_list = []
+    #
+    # for f in files:
+    #     if ".pickle" in f:
+    #         DataManipulator.DivideDataset(pickle_folder+f, train_dir+f, test_dir+f, 0.7)
+    #         train_pickle_list.append(train_dir+f)
+    #         test_pickle_list.append(test_dir + f)
+    #
+    # DataManipulator.JoinDatasetFromList(train_pickle_list, train_dir + "160x160HimaxHeightTrain16_4_2020.pickle")
+    # DataManipulator.JoinDatasetFromList(test_pickle_list, test_dir + "160x160HimaxHeightTest16_4_2020.pickle")
 
-
-    train_pickle_list=[]
-    test_pickle_list = []
-
+    pickle_list = []
     for f in files:
         if ".pickle" in f:
-            DataManipulator.DivideDataset(pickle_folder+f, train_dir+f, test_dir+f, 0.7)
-            train_pickle_list.append(train_dir+f)
-            test_pickle_list.append(test_dir + f)
+            pickle_list.append(pickle_folder + f)
 
-    DataManipulator.JoinDatasetFromList(train_pickle_list, train_dir + "160x160HimaxHeightTrain16_4_2020.pickle")
-    DataManipulator.JoinDatasetFromList(test_pickle_list, test_dir + "160x160HimaxHeightTest16_4_2020.pickle")
-
+    DataManipulator.JoinDatasetFromList(pickle_list, pickle_folder + "160x160HimaxPitch16_4_2020.pickle")
 
 
 if __name__ == '__main__':

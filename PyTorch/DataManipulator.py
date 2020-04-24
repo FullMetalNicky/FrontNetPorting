@@ -51,7 +51,7 @@ class DataManipulator:
         #r_set =  dataset['r'].values
         #o_train = train_set['o'].values
 
-        data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set})
+        #data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set})
         data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
         df = pd.concat([data, sizes], axis=1)
         df.to_pickle(file_name)
@@ -410,6 +410,7 @@ class DataManipulator:
         p_augset = []
 
         vertical_range = h - desiresSize[0]
+        hor_offset = int((w - desiresSize[1])/2)
 
         for i in range(len(x_set)):
 
@@ -422,8 +423,13 @@ class DataManipulator:
             for p in range(factor):
 
                 crop_offset = np.random.randint(0, vertical_range)
-                img = x[crop_offset:(crop_offset + desiresSize[0]), 0:w]
-                img = it.ApplyVignette(img, np.random.randint(25, 50))
+                img = it.ApplyVignette(x, np.random.randint(25, 50))
+                img = img[crop_offset:(crop_offset + desiresSize[0]), hor_offset:desiresSize[1]]
+
+                # crop_offset = np.random.randint(20, 80)
+                # img = it.ApplyVignette(x, np.random.randint(25, 50))
+                # img = img[crop_offset:(crop_offset + desiresSize[0]), hor_offset:(hor_offset+desiresSize[1])]
+
 
                 if np.random.choice([True, False]):
                     img = it.ApplyBlur(img, 3)
@@ -642,3 +648,111 @@ class DataManipulator:
         data = pd.DataFrame(data={'x': x_set, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
         df2 = pd.concat([data, sizes], axis=1)
         df2.to_pickle(new_path)
+
+    @staticmethod
+    def DownsampleDataset(pickle_path, ds_size, ds_type, new_path):
+        """Downsample Dataset
+
+              Parameters
+            ----------
+            pickle_path : str
+                The file location of the first .pickle
+            ds_size: (int height, int width)
+                target size after downsampling
+            ds_type: cv2 interpolation flag
+                the method of downsampling
+            new_path : str
+                The name/path of the newly created dataset
+
+           """
+
+        dataset = pd.read_pickle(pickle_path)
+        logging.info('[DataManipulator] dataset shape: ' + str(dataset.shape))
+
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset)
+        sizes = DataManipulator.CreateSizeDataFrame(ds_size[0], ds_size[1], c)
+
+        x_set = dataset['x'].values
+        y_set = dataset['y'].values
+        z_set = dataset['z'].values
+        t_set = dataset['t'].values
+        p_set = dataset['p'].values
+
+        x_set = np.vstack(x_set[:])
+        x_set = np.reshape(x_set, (-1, h, w, c))
+
+        x_ds= []
+
+        for i in range(len(x_set)):
+            img = x_set[i]
+            img = cv2.resize(img, (ds_size[1], ds_size[0]), ds_type)
+            x_ds.append(img)
+
+
+        data = pd.DataFrame(data={'x': x_ds, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
+        #data = pd.DataFrame(data={'x': x_ds, 'y': y_set, 'z': z_set, 't': t_set})
+        df = pd.concat([data, sizes], axis=1)
+        df.to_pickle(new_path)
+
+    @staticmethod
+    def FoveateDataset(pickle_path, new_path):
+        """Foveate Dataset
+
+            This function is hardocded  because the computations here are headache that I don't need to deal with right now.
+            ok?ok.
+
+              Parameters
+            ----------
+            pickle_path : str
+                The file location of the .pickle of size 160x90
+            new_path : str
+                The name/path of the newly created dataset which is 108x60
+
+           """
+
+        dataset = pd.read_pickle(pickle_path)
+        logging.info('[DataManipulator] dataset shape: ' + str(dataset.shape))
+
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset)
+        sizes = DataManipulator.CreateSizeDataFrame(60, 108, c)
+
+        x_set = dataset['x'].values
+        y_set = dataset['y'].values
+        z_set = dataset['z'].values
+        t_set = dataset['t'].values
+        p_set = dataset['p'].values
+
+        x_set = np.vstack(x_set[:])
+        x_set = np.reshape(x_set, (-1, h, w, c))
+
+        x_fov = []
+
+        for i in range(len(x_set)):
+            img = x_set[i]
+            img = np.reshape(img, (h, w)).astype("uint8")
+            fov_img = np.zeros((60, 108), dtype="uint8")
+
+            #in  corners res is half on both axes
+
+            fov_img[0:15, 0:27] = cv2.resize(img[0:30, 0:53], (27, 15), cv2.INTER_LINEAR)
+            fov_img[-15:, 0:27] = cv2.resize(img[-30:, 0:53], (27, 15), cv2.INTER_LINEAR)
+            fov_img[0:15, -27:] = cv2.resize(img[0:30, -53:], (27, 15), cv2.INTER_LINEAR)
+            fov_img[-15:, -27:] = cv2.resize(img[-30:, -53:], (27, 15), cv2.INTER_LINEAR)
+
+            #top/bottom center - every second row
+            fov_img[0:15, 27:81] = cv2.resize(img[0:30, 53:107], (54, 15), cv2.INTER_LINEAR)
+            fov_img[-15:, 27:81] = cv2.resize(img[-30:, 53:107], (54, 15), cv2.INTER_LINEAR)
+
+            # left/right center - everey second column
+            fov_img[15:45, 0:27] = cv2.resize(img[30:60, 0:53], (27, 30), cv2.INTER_LINEAR)
+            fov_img[15:45, -27:] = cv2.resize(img[30:60, -53:], (27, 30), cv2.INTER_LINEAR)
+
+            # center is full res
+            fov_img[15:45, 27:81] = img[30:60, 53:107]
+
+            x_fov.append(fov_img)
+
+        data = pd.DataFrame(data={'x': x_fov, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
+        #data = pd.DataFrame(data={'x': x_fov, 'y': y_set, 'z': z_set, 't': t_set})
+        df = pd.concat([data, sizes], axis=1)
+        df.to_pickle(new_path)

@@ -59,10 +59,11 @@ def Test():
 
 def TestInference():
 
+    #logging.disable(logging.INFO)
     frame = cv2.imread("../Deployment/dataset/87.pgm", 0)
-    frame = np.reshape(frame, (96, 160, 1))
+    frame = np.reshape(frame, (60, 108, 1))
     model = Dronet(PreActBlock, [1, 1, 1], True)
-    ModelManager.Read("Models/DronetHimax160x96.pt", model)
+    ModelManager.Read("Models/DronetHimax108x60.pt", model)
     trainer = ModelTrainer(model)
     v1_pred = trainer.InferSingleSample(frame)
     print("output")
@@ -140,13 +141,13 @@ def ConvertToGray():
 
 def CropDataset():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
-    DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x96/"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x90/"
 
-    DataManipulator.CropCenteredDataset(DATA_PATH + "160x160HimaxMixedTest_12_03_20.pickle", [96, 160], DATA_PATH2 + "160x96HimaxMixedTest_12_03_20.pickle")
+    DataManipulator.CropCenteredDataset(DATA_PATH + "160x160HimaxTest16_4_2020.pickle", [90, 160], DATA_PATH2 + "160x90HimaxTest16_4_2020.pickle")
 
 def Shift():
-    DATA_PATH = "/Users/usi/PycharmProjects/data/Hand/"
-    DataManipulator.ShiftVideoDataset(DATA_PATH + "160x160HimaxHand_12_03_20.pickle", DATA_PATH + "160x160HimaxHand_12_03_20.pickle")
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
+    DataManipulator.ShiftVideoDataset(DATA_PATH + "160x160Himax.pickle", DATA_PATH + "160x160Pitch.pickle")
 
 def MixAndMatch():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
@@ -173,21 +174,21 @@ def AddColumnsToDataSet(picklename, height, width, channels):
 
 
 def Augment():
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
-    train = DATA_PATH + "160x90HimaxMixedTrain_12_03_20.pickle"
-    DataManipulator.Augment(train, DATA_PATH +"160x90HimaxMixedTrain_12_03_20Augmented.pickle", 10)
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
+    train = DATA_PATH + "160x160HimaxTrain16_4_2020.pickle"
+    DataManipulator.Augment(train, DATA_PATH +"160x160HimaxTrain16_4_2020Aug.pickle", 10)
 
 
 def CropRandomTest():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
-    train = DATA_PATH + "160x160HimaxMixedTest_12_03_20.pickle"
-    DataManipulator.CropDataset(train, "/Users/usi/PycharmProjects/data/160x96/" + "160x96HimaxMixedTest_12_03_20Cropped70.pickle", [96, 160], 70)
+    train = DATA_PATH + "160x160HimaxTest16_4_2020.pickle"
+    DataManipulator.CropDataset(train, "/Users/usi/PycharmProjects/data/160x96/" + "160x96HimaxTest16_4_2020Cropped64.pickle", [96, 160], 64)
 
 def AugmentAndCrop():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
-    train = DATA_PATH + "160x160HimaxMixedTrain_12_03_20.pickle"
-    DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x96/"
-    DataManipulator.AugmentAndCrop(train, DATA_PATH + "160x96HimaxMixedTrain_12_03_20AugCrop.pickle", [96, 160], 10)
+    train = DATA_PATH + "160x160HimaxTrain16_4_2020.pickle"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x90/"
+    DataManipulator.AugmentAndCrop(train, DATA_PATH2 + "160x90HimaxTrain16_4_2020AugCrop.pickle", [90, 160], 10)
 
 def Rotate():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
@@ -216,9 +217,29 @@ def JoinDatasets():
     DataManipulator.JoinDataset(DATA_PATH+train1, DATA_PATH2+train2, DATA_PATH2+train)
 
 def ExrtactImages():
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
-    test = "160x96HimaxMixedTest_12_03_20.pickle"
+    DATA_PATH = "/Users/usi/PycharmProjects/data/108x60/"
+    test = "108x60HimaxMixedTrainFoveate.pickle"
     DataProcessor.ExtractValidationLabels(DATA_PATH+test)
+
+
+def Downsample():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/108x60/"
+    pickle = DATA_PATH + "160x90HimaxTest16_4_2020.pickle"
+    new = DATA_PATH2 + "108x60HimaxMixedTestNearest.pickle"
+
+    # cv2.INTER_NEAREST , cv2.INTER_LINEAR (bilinear)
+    DataManipulator.DownsampleDataset(pickle, [60, 108], cv2.INTER_NEAREST, new)
+
+
+def Foveate():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/108x60/"
+    pickle = DATA_PATH + "160x90HimaxTest16_4_2020.pickle"
+    new = DATA_PATH2 + "108x60HimaxMixedTestFoveate.pickle"
+
+    DataManipulator.FoveateDataset(pickle, new)
+
 
 
 def main():
@@ -240,11 +261,12 @@ def main():
     #ConvertToGray()
     #MergeDatasets()
     #Train()
-    TestInference()
+    #TestInference()
     #DumpImages()
     #Filter()
     #CropDataset()
     #Shift()
+    #Augment()
     #AddColumnsToDataSet("train_grey.pickle", 60, 108, 1)
     #MixAndMatch()
     #CropRandomTest()
@@ -252,6 +274,9 @@ def main():
     #Rotate()
     #Divide()
     #JoinDatasets()
+    #ExrtactImages()
+    Downsample()
+    #Foveate()
     #ExrtactImages()
 
 
