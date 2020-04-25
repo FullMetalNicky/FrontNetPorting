@@ -31,12 +31,14 @@ class HannaNet(nn.Module):
             self.conv = nn.Conv2d(3, self.inplanes, kernel_size=5, stride=2, padding=2, bias=False)
 
         self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.bn = nn.BatchNorm2d(self.inplanes)
+        self.relu1 = nn.ReLU()
 
         self.layer1 = ConvBlock(32, 32, stride=2)
         self.layer2 = ConvBlock(32, 64, stride=2)
         self.layer3 = ConvBlock(64, 128, stride=2)
 
-        self.relu = nn.ReLU()
+        self.relu2 = nn.ReLU()
         self.dropout = nn.Dropout()
 
         fcSize = 1920
@@ -49,15 +51,15 @@ class HannaNet(nn.Module):
     def forward(self, x):
 
         conv5x5 = self.conv(x)
-        max_pool = self.maxpool(conv5x5)
+        relu1 = self.relu2(conv5x5)
+        max_pool = self.maxpool(relu1)
 
         l1 = self.layer1(max_pool)
         l2 = self.layer2(l1)
         l3 = self.layer3(l2)
         flat = l3.view(l3.size(0), -1)
-        relu = self.relu(flat)
 
-        drop = self.dropout(relu)
+        drop = self.dropout(flat)
         x = self.fc_x(drop)
         y = self.fc_y(drop)
         z = self.fc_z(drop)

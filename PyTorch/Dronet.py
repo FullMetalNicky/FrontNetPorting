@@ -72,7 +72,7 @@ class Dronet(nn.Module):
 
         return [x, y, z, phi]
 
-    
+
 
 def PrintRelu(layer, name):
     logger = logging.getLogger('')
