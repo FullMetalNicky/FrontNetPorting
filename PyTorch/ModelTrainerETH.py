@@ -45,6 +45,7 @@ class ModelTrainer:
 
         # [NeMO] This call "transforms" the model into a quantization-aware one, which is printed immediately afterwards.
        # self.model = nemo.transform.quantize_pact(self.model, dummy_input=torch.randn(1, 1, 60, 108))
+
         self.model = nemo.transform.quantize_pact(self.model, dummy_input=torch.randn(1, 1, h, w))
         logging.info("[ModelTrainer] Model: %s", self.model)
         # [NeMO] NeMO re-training usually converges better using an Adam optimizer, and a smaller learning rate
@@ -106,6 +107,8 @@ class ModelTrainer:
             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
         self.model.unset_statistics_act()
+
+        #self.model.reset_alpha_act(use_max=False, nb_std=15)
         self.model.reset_alpha_act()
         logging.info("[ModelTrainer] statistics %.2f" % acc)
 
@@ -129,11 +132,17 @@ class ModelTrainer:
         print("[ModelTrainer]: After export: %f" % acc)
 
         #Francesco did that and I'm too scared to change it
+
+        logging.disable(logging.NOTSET)
+
         import cv2 
         frame = cv2.imread("../Deployment/dataset/87.pgm", 0)
         # frame = frame[92:152, 108:216]
         frame = np.reshape(frame, (h, w, 1))
         output = self.InferSingleSample(frame)
+
+        logging.disable(logging.INFO)
+
         print("infer results: {}".format(output))
         act = nemo.utils.get_intermediate_activations(self.model, self.InferSingleSample, frame)
 

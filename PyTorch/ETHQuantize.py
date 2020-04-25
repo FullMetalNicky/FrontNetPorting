@@ -10,7 +10,9 @@ from Dataset import Dataset
 from torch.utils import data
 from ModelManager import ModelManager
 import torch
-import cv2
+
+from ConvBlock import ConvBlock
+from HannaNet import HannaNet
 
 import argparse
 import json
@@ -120,7 +122,7 @@ def main():
                 regime[k] = rr[k]
 
     if args.gray is not None:
-        model = Dronet(PreActBlock, [1, 1, 1], True)
+        model = HannaNet(ConvBlock, [1, 1, 1], True)
     else:
         model = Dronet(PreActBlock, [1, 1, 1], False)
 
@@ -136,6 +138,14 @@ def main():
 
     if args.save_model is not None:
         ModelManager.Write(trainer.GetModel(), 100, args.save_model)
+
+        # state_dict = torch.load(args.save_model, map_location='cpu')
+        # qmodel = state_dict["model"]
+        # for key, value in qmodel.items():
+        #     if "weight" in key:
+        #         value = value.reshape(-1)
+        #         value = list(value.numpy())
+        #         logging.info("{}={}".format(key, value))
 
 
 if __name__ == '__main__':
