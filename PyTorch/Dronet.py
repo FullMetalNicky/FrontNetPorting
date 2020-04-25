@@ -48,28 +48,38 @@ class Dronet(nn.Module):
 
     def forward(self, x):
 
-        out = self.conv(x)
-        out = self.maxpool(out)
-        #printRes(out, "5x5ConvMax_1")
-        out = self.layer1(out)
-        #printRes(out, "Add_1")
-        out = self.layer2(out)
-        #printRes(out, "Add_2")
-        out = self.layer3(out)
-        out = out.view(out.size(0), -1)
-        out = self.relu(out)
-        #logging.info("AddReLU_3")
-        #logging.info(list(out.numpy()))
-        out = self.dropout(out)
-        x = self.fc_x(out)
-        #logging.info("Dense1={}".format(x.numpy()))
-        y = self.fc_y(out)
-        #logging.info("Dense2={}".format(y.numpy()))
-        z = self.fc_z(out)
-        #logging.info("Dense3={}".format(z.numpy()))
-        phi = self.fc_phi(out)
-        #logging.info("Dense4={}".format(phi.numpy()))
+        conv5x5 = self.conv(x)
+        max_pool = self.maxpool(conv5x5)
+
+        l1 = self.layer1(max_pool)
+        l2 = self.layer2(l1)
+        l3 = self.layer3(l2)
+        flat = l3.view(l3.size(0), -1)
+        relu = self.relu(flat)
+
+        drop = self.dropout(relu)
+        x = self.fc_x(drop)
+        y = self.fc_y(drop)
+        z = self.fc_z(drop)
+        phi = self.fc_phi(drop)
+
+        # PrintFC(x, "Dense1")
+        # PrintFC(y, "Dense2")
+        # PrintFC(z, "Dense3")
+        # PrintFC(phi, "Dense4")
 
         return [x, y, z, phi]
 
 
+def PrintRelu(layer, name):
+    logger = logging.getLogger('')
+    enable = logger.isEnabledFor(logging.INFO)
+    if (enable == True):
+        tmp = layer.reshape(-1)
+        logging.info("{}={}".format(name, list(tmp.numpy())))
+
+def PrintFC(layer, name):
+    logger = logging.getLogger('')
+    enable = logger.isEnabledFor(logging.INFO)
+    if (enable == True):
+        logging.info("{}={}".format(name, layer.numpy()))
