@@ -36,150 +36,296 @@ class ModelTrainer:
     def GetModel(self):
         return self.model
 
+
+
     def Quantize(self, validation_loader, h, w):
 
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-             validation_loader)
+            validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-        print("[ModelTrainer]: Before quantization process: %f" % acc)
+        logging.info("[ModelTrainer]: Before quantization process: %f" % acc)
 
         # [NeMO] This call "transforms" the model into a quantization-aware one, which is printed immediately afterwards.
-       # self.model = nemo.transform.quantize_pact(self.model, dummy_input=torch.randn(1, 1, 60, 108))
-
-        self.model = nemo.transform.quantize_pact(self.model, dummy_input=torch.randn(1, 1, h, w))
+        self.model = nemo.transform.quantize_pact(self.model,
+                                                  dummy_input=torch.ones((1, 1, h, w)).to(self.device))  # .cuda()
         logging.info("[ModelTrainer] Model: %s", self.model)
-        # [NeMO] NeMO re-training usually converges better using an Adam optimizer, and a smaller learning rate
-        # optimizer = torch.optim.Adam(self.model.parameters(), lr=float(self.regime['lr']),
-        #                              weight_decay=float(self.regime['weight_decay']))
 
-        # [NeMO] DNNs that do not employ batch normalization layers nor have clipped activations (e.g. ReLU6) require
-        # an initial calibration to transfer to a quantization-aware version. This is used to calibrate the scaling
-        # parameters of quantization-aware activation layers to the point defined by the maximum activation value
-        # seen during a validation run. DNNs that employ BN or ReLU6 (or both) do not require this operation, as their
-        # activations are already statistically bounded in terms of dynamic range.
-        # logging.info("[ModelTrainer] Gather statistics for non batch-normed activations")
-    
-        # this is with original-Dronet non-fixed PreActBlock
-        self.model.fold_bn({
-             'conv':            'layer1.bn1',
-             'layer1.conv1':    'layer1.bn2',
-        }, {
-             'layer1.bn1':      'layer1.shortcut',
-        })
-        self.model.fold_bn({
-             'layer1.shortcut': 'layer2.bn1',
-             'layer1.conv2':    'layer2.bn1',
-             'layer2.conv1':    'layer2.bn2',
-        }, {
-             'layer2.bn1':      'layer2.shortcut',
-        })
-        self.model.fold_bn({
-             'layer2.shortcut': 'layer3.bn1',
-             'layer2.conv2':    'layer3.bn1',
-             'layer3.conv1':    'layer3.bn2',
-        }, {
-             'layer3.bn1':      'layer3.shortcut',
-        })
 
-        # # this is with fixed PreActBlock
-        # self.model.fold_bn({
-        #     'conv':            'layer1.bn1',
-        #     'layer1.conv1':    'layer1.bn2',
-        #     'layer1.shortcut': 'layer2.bn1',
-        #     'layer1.conv2':    'layer2.bn1',
-        #     'layer2.conv1':    'layer2.bn2',
-        #     'layer2.shortcut': 'layer3.bn1',
-        #     'layer2.conv2':    'layer3.bn1',
-        #     'layer3.conv1':    'layer3.bn2',
-        # })
 
-        # import IPython; IPython.embed()
-
+        self.model.equalize_weights_unfolding({
+            'conv': 'bn32_1',
+            'layer1.conv1': 'layer1.bn2',
+            'layer1.conv2': 'bn32_2',
+            'layer2.conv1': 'layer2.bn2',
+            'layer2.conv2': 'bn64',
+            'layer3.conv1': 'layer3.bn2',
+        }, verbose=True)
         self.model.reset_alpha_weights()
-        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-             validation_loader)
-        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-        print("[ModelTrainer]: After BN folding: %f" % acc)
-
 
         self.model.set_statistics_act()
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+        logging.info("[ModelTrainer]: After set stat process: %f" % acc)
+
+
         self.model.unset_statistics_act()
-
-        #self.model.reset_alpha_act(use_max=False, nb_std=15)
         self.model.reset_alpha_act()
-        logging.info("[ModelTrainer] statistics %.2f" % acc)
 
-        precision_rule = self.regime['relaxation']
+        self.model.change_precision(bits=16, reset_alpha=True)
+        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+            validation_loader)
+        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+        logging.info("[ModelTrainer]: Percision 16: %f" % acc)
+
+
+
+        self.model.change_precision(bits=12, reset_alpha=True)
+        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+            validation_loader)
+        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+        logging.info("[ModelTrainer]: Percision 12: %f" % acc)
+
+
+        self.model.change_precision(bits=9, reset_alpha=True)
+        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+            validation_loader)
+        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+        logging.info("[ModelTrainer]: Percision 9: %f" % acc)
 
         # [NeMO] Change precision and reset weight clipping parameters
-        self.model.change_precision(bits=16)
-        self.model.reset_alpha_weights()
+        self.model.change_precision(bits=7, reset_alpha=True, min_prec_dict={'conv': {'W_bits': 7}})
+        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+            validation_loader)
+        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+        logging.info("[ModelTrainer]: Percision 7: %f" % acc)
+
+        nemo.transform.bn_quantizer(self.model)
+
+        self.model.harden_weights()
+
+        b_in_harden, b_out_harden, acc = nemo.utils.get_intermediate_activations(self.model,
+                                                                                 self.ValidateSingleEpoch,
+                                                                                 validation_loader)
+        '''bidx = 0
+        for n,m in self.model.named_modules():
+            try:
+                actbuf = b_in[n][0][bidx].permute((1,2,0))
+            except RuntimeError:
+                actbuf = b_in[n][0][bidx]
+            except Exception as e:
+                print(e)
+                continue
+            np.savetxt("frontnet/before_deploy/before_deploy_input_%s.txt" % n, actbuf.cpu().numpy().flatten(), header="input (shape %s)" % (list(actbuf.shape)), fmt="%.3f", delimiter=',', newline=',\n')
+        for n,m in self.model.named_modules():
+            try:
+                actbuf = b_out[n][bidx].permute((1,2,0))
+            except RuntimeError:
+                actbuf = b_out[n][bidx]
+            except Exception as e:
+                print(e)
+                continue
+            np.savetxt("frontnet/before_deploy/before_deploy_%s.txt" % n, actbuf.cpu().numpy().flatten(), header="%s (shape %s)" % (n, list(actbuf.shape)), fmt="%.3f", delimiter=',', newline=',\n')
+'''
+
+        # self.model.bn32_1.lamda[:] *= 0
+        logging.info("[ModelTrainer] Setting deployment mode with eps_in=1.0/255...")
+        self.model.set_deployment(eps_in=1.0 / 255)
+
+        #self.PrintClassifierAccuracy("[MNIST] After deployment mode: %.2f%%", test_loader)
 
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-        print("[ModelTrainer]: Before export: %f" % acc)
+        logging.info("[ModelTrainer]: set_deployment: %f" % acc)
 
-        # [NeMO] Export legacy-style INT-16 weights. Clipping parameters are changed!
-        self.model.export_weights_legacy_int16(save_binary=True, folder_name="frontnet_weights", x_alpha_safety_factor=1)
-        # [NeMO] Re-check validation accuracy
+
+
+        b_in_deploy, b_out_deploy, acc = nemo.utils.get_intermediate_activations(self.model,
+                                                                                 self.ValidateSingleEpoch,
+                                                                                 validation_loader)
+
+        '''for n,m in self.model.named_modules():
+            try:
+                actbuf = b_in[n][0][bidx].permute((1,2,0))
+            except RuntimeError:
+                actbuf = b_in[n][0][bidx]
+            except Exception as e:
+                print(e)
+                continue
+            np.savetxt("frontnet/after_deploy/after_deploy_input_%s.txt" % n, actbuf.cpu().numpy().flatten(), header="input (shape %s)" % (list(actbuf.shape)), fmt="%.3f", delimiter=',', newline=',\n')
+        for n,m in self.model.named_modules():
+            try:
+                actbuf = b_out[n][bidx].permute((1,2,0))
+            except RuntimeError:
+                actbuf = b_out[n][bidx]
+            except Exception as e:
+                print(e)
+                continue
+            np.savetxt("frontnet/after_deploy/after_deploy_%s.txt" % n, actbuf.cpu().numpy().flatten(), header="%s (shape %s)" % (n, list(actbuf.shape)), fmt="%.3f", delimiter=',', newline=',\n')
+'''
+
+        logging.info("[ModelTrainer] Integerizing with eps_in=1.0/255...")
+        self.model = nemo.transform.integerize_pact(self.model, 1.)  # .0/255)
+        # self.model.print = True
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-             validation_loader)
+            validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-        print("[ModelTrainer]: After export: %f" % acc)
+        logging.info("[ModelTrainer]: After integration: %f" % acc)
 
-        #Francesco did that and I'm too scared to change it
 
-        logging.disable(logging.NOTSET)
+        b_in_integer, b_out_integer, acc = nemo.utils.get_intermediate_activations(self.model,
+                                                                                   self.ValidateSingleEpoch,
+                                                                                   validation_loader)
 
-        import cv2 
-        frame = cv2.imread("../Deployment/dataset/87.pgm", 0)
-        # frame = frame[92:152, 108:216]
-        frame = np.reshape(frame, (h, w, 1))
-        output = self.InferSingleSample(frame)
+        # import pdb; pdb.set_trace()
 
-        logging.disable(logging.INFO)
 
-        print("infer results: {}".format(output))
-        act = nemo.utils.get_intermediate_activations(self.model, self.InferSingleSample, frame)
-
-        # golden model
-        try:
-            os.makedirs("frontnet_golden")
-        except Exception:
-            pass
-        bidx = 0
-
-        name_map = {
-            'maxpool'         : '5x5ConvMax_1'  ,
-            'layer1.relu1'    : 'ReLU_1'        ,
-            'layer1.relu2'    : '3x3ConvReLU_2' ,
-            'layer1.conv2'    : '3x3Conv_3'     ,
-            'layer1.shortcut' : '1x1Conv_4'     ,
-            'layer1'          : 'Add_1'         ,
-            'layer2.relu1'    : 'ReLU_2'        ,
-            'layer2.relu2'    : '3x3ConvReLU_5' ,
-            'layer2.conv2'    : '3x3Conv_6'     ,
-            'layer2.shortcut' : '1x1Conv_7'     ,
-            'layer2'          : 'Add_2'         ,
-            'layer3.relu1'    : 'ReLU_3'        ,
-            'layer3.relu2'    : '3x3ConvReLU_8' ,
-            'layer3.conv2'    : '3x3Conv_9'     ,
-            'layer3.shortcut' : '1x1Conv_10'    ,
-            'relu'            : 'AddReLU_3'     ,
-            'fc_x'            : 'Dense_1'       ,
-            'fc_y'            : 'Dense_2'       ,
-            'fc_z'            : 'Dense_3'       ,
-            'fc_phi'          : 'Dense_4'       ,
-        }
-
-        np.savetxt("frontnet_golden/golden_Input.txt", act[0]['conv'][0][bidx].numpy().flatten(), fmt="%f", newline='\n')
-        for n in name_map.keys():
-            actbuf = act[1][n][bidx]
-            np.savetxt("frontnet_golden/golden_%s.txt" % name_map[n], actbuf.numpy().flatten(), fmt="%f", newline='\n')
+    #
+    # def Quantize(self, validation_loader, h, w):
+    #
+    #     valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+    #          validation_loader)
+    #     acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+    #     print("[ModelTrainer]: Before quantization process: %f" % acc)
+    #
+    #     # [NeMO] This call "transforms" the model into a quantization-aware one, which is printed immediately afterwards.
+    #
+    #     self.model = nemo.transform.quantize_pact(self.model, dummy_input=torch.randn(1, 1, h, w))
+    #     logging.info("[ModelTrainer] Model: %s", self.model)
+    #
+    #     # [NeMO] NeMO re-training usually converges better using an Adam optimizer, and a smaller learning rate
+    #     # optimizer = torch.optim.Adam(self.model.parameters(), lr=float(self.regime['lr']),
+    #     #                              weight_decay=float(self.regime['weight_decay']))
+    #
+    #     # [NeMO] DNNs that do not employ batch normalization layers nor have clipped activations (e.g. ReLU6) require
+    #     # an initial calibration to transfer to a quantization-aware version. This is used to calibrate the scaling
+    #     # parameters of quantization-aware activation layers to the point defined by the maximum activation value
+    #     # seen during a validation run. DNNs that employ BN or ReLU6 (or both) do not require this operation, as their
+    #     # activations are already statistically bounded in terms of dynamic range.
+    #     logging.info("[ModelTrainer] Gather statistics for non batch-normed activations")
+    #
+    #     # this is with original-Dronet non-fixed PreActBlock
+    #     self.model.fold_bn({
+    #          'conv':            'layer1.bn1',
+    #          'layer1.conv1':    'layer1.bn2',
+    #     }, {
+    #          'layer1.bn1':      'layer1.shortcut',
+    #     })
+    #     self.model.fold_bn({
+    #          'layer1.shortcut': 'layer2.bn1',
+    #          'layer1.conv2':    'layer2.bn1',
+    #          'layer2.conv1':    'layer2.bn2',
+    #     }, {
+    #          'layer2.bn1':      'layer2.shortcut',
+    #     })
+    #     self.model.fold_bn({
+    #          'layer2.shortcut': 'layer3.bn1',
+    #          'layer2.conv2':    'layer3.bn1',
+    #          'layer3.conv1':    'layer3.bn2',
+    #     }, {
+    #          'layer3.bn1':      'layer3.shortcut',
+    #     })
+    #
+    #     # # this is with fixed PreActBlock
+    #     # self.model.fold_bn({
+    #     #     'conv':            'layer1.bn1',
+    #     #     'layer1.conv1':    'layer1.bn2',
+    #     #     'layer1.shortcut': 'layer2.bn1',
+    #     #     'layer1.conv2':    'layer2.bn1',
+    #     #     'layer2.conv1':    'layer2.bn2',
+    #     #     'layer2.shortcut': 'layer3.bn1',
+    #     #     'layer2.conv2':    'layer3.bn1',
+    #     #     'layer3.conv1':    'layer3.bn2',
+    #     # })
+    #
+    #     # import IPython; IPython.embed()
+    #
+    #     self.model.reset_alpha_weights()
+    #     valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+    #          validation_loader)
+    #     acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+    #     print("[ModelTrainer]: After BN folding: %f" % acc)
+    #
+    #
+    #     self.model.set_statistics_act()
+    #     valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+    #         validation_loader)
+    #     acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+    #     self.model.unset_statistics_act()
+    #
+    #     #self.model.reset_alpha_act(use_max=False, nb_std=15)
+    #     self.model.reset_alpha_act()
+    #     logging.info("[ModelTrainer] statistics %.2f" % acc)
+    #
+    #     precision_rule = self.regime['relaxation']
+    #
+    #     # [NeMO] Change precision and reset weight clipping parameters
+    #     self.model.change_precision(bits=16)
+    #     self.model.reset_alpha_weights()
+    #
+    #     valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+    #         validation_loader)
+    #     acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+    #     print("[ModelTrainer]: Before export: %f" % acc)
+    #
+    #     # [NeMO] Export legacy-style INT-16 weights. Clipping parameters are changed!
+    #     self.model.export_weights_legacy_int16(save_binary=True, folder_name="frontnet_weights", x_alpha_safety_factor=1)
+    #     # [NeMO] Re-check validation accuracy
+    #     valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+    #          validation_loader)
+    #     acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+    #     print("[ModelTrainer]: After export: %f" % acc)
+    #
+    #     #Francesco did that and I'm too scared to change it
+    #
+    #     logging.disable(logging.NOTSET)
+    #
+    #     import cv2
+    #     frame = cv2.imread("../Deployment/dataset/87.pgm", 0)
+    #     # frame = frame[92:152, 108:216]
+    #     frame = np.reshape(frame, (h, w, 1))
+    #     output = self.InferSingleSample(frame)
+    #
+    #     logging.disable(logging.INFO)
+    #
+    #     print("infer results: {}".format(output))
+    #     act = nemo.utils.get_intermediate_activations(self.model, self.InferSingleSample, frame)
+    #
+    #     # golden model
+    #     try:
+    #         os.makedirs("frontnet_golden")
+    #     except Exception:
+    #         pass
+    #     bidx = 0
+    #
+    #     name_map = {
+    #         'maxpool'         : '5x5ConvMax_1'  ,
+    #         'layer1.relu1'    : 'ReLU_1'        ,
+    #         'layer1.relu2'    : '3x3ConvReLU_2' ,
+    #         'layer1.conv2'    : '3x3Conv_3'     ,
+    #         'layer1.shortcut' : '1x1Conv_4'     ,
+    #         'layer1'          : 'Add_1'         ,
+    #         'layer2.relu1'    : 'ReLU_2'        ,
+    #         'layer2.relu2'    : '3x3ConvReLU_5' ,
+    #         'layer2.conv2'    : '3x3Conv_6'     ,
+    #         'layer2.shortcut' : '1x1Conv_7'     ,
+    #         'layer2'          : 'Add_2'         ,
+    #         'layer3.relu1'    : 'ReLU_3'        ,
+    #         'layer3.relu2'    : '3x3ConvReLU_8' ,
+    #         'layer3.conv2'    : '3x3Conv_9'     ,
+    #         'layer3.shortcut' : '1x1Conv_10'    ,
+    #         'relu'            : 'AddReLU_3'     ,
+    #         'fc_x'            : 'Dense_1'       ,
+    #         'fc_y'            : 'Dense_2'       ,
+    #         'fc_z'            : 'Dense_3'       ,
+    #         'fc_phi'          : 'Dense_4'       ,
+    #     }
+    #
+    #     np.savetxt("frontnet_golden/golden_Input.txt", act[0]['conv'][0][bidx].numpy().flatten(), fmt="%f", newline='\n')
+    #     for n in name_map.keys():
+    #         actbuf = act[1][n][bidx]
+    #         np.savetxt("frontnet_golden/golden_%s.txt" % name_map[n], actbuf.numpy().flatten(), fmt="%f", newline='\n')
 
     def TrainSingleEpoch(self, training_generator):
 
