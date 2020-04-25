@@ -11,6 +11,8 @@ import torch
 
 from ConvBlock import ConvBlock
 from HannaNet import HannaNet
+import nemo
+import os
 
 import argparse
 import json
@@ -82,12 +84,12 @@ def LoadData(args):
     return train_loader, validation_loader
 
 
-def ExportONXX(model, model_inner, val_loader, validate):
+def ExportONXX(model, model_inner, val_loader, validate, h, w):
     # print(model)
     # model_inner = model
     # print("before export")
     # model.graph.print_jit_graph()
-    nemo.utils.export_onnx("frontnet/model_int.onnx", model, model_inner, (1, 60, 108), perm=None)
+    nemo.utils.export_onnx("HannaNet/model_int.onnx", model, model_inner, (1, h, w), perm=None)
     # print("After export")
     # model.graph.print_jit_graph()
     b_in, b_out, acc = nemo.utils.get_intermediate_activations(model_inner, validate, val_loader)
@@ -114,14 +116,14 @@ def ExportONXX(model, model_inner, val_loader, validate):
             actbuf = b_in[n][0][bidx].permute((1, 2, 0))
         except RuntimeError:
             actbuf = b_in[n][0][bidx]
-        np.savetxt("frontnet/golden/golden_input_%s.txt" % n, actbuf.cpu().numpy().flatten(),
+        np.savetxt("HannaNet/golden/golden_input_%s.txt" % n, actbuf.cpu().numpy().flatten(),
                    header="input (shape %s)" % (list(actbuf.shape)), fmt="%.3f", delimiter=',', newline=',\n')
     for n, m in model_inner.named_modules():
         try:
             actbuf = b_out[n][bidx].permute((1, 2, 0))
         except RuntimeError:
             actbuf = b_out[n][bidx]
-        np.savetxt("frontnet/golden/golden_%s.txt" % n, actbuf.cpu().numpy().flatten(),
+        np.savetxt("HannaNet/golden/golden_%s.txt" % n, actbuf.cpu().numpy().flatten(),
                    header="%s (shape %s)" % (n, list(actbuf.shape)), fmt="%.3f", delimiter=',', newline=',\n')
 
 
@@ -175,7 +177,7 @@ def main():
     if args.quantize:
         trainer.Quantize(validation_loader, 96, 160)
         print(model)
-        ExportONXX(model, model, validation_loader, trainer.ValidateSingleEpoch)
+        ExportONXX(model, model, validation_loader, trainer.ValidateSingleEpoch, 96, 160)
 
 
     if args.save_model is not None:
