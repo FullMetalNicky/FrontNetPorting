@@ -38,7 +38,6 @@ class HannaNet(nn.Module):
         self.layer2 = ConvBlock(32, 64, stride=2)
         self.layer3 = ConvBlock(64, 128, stride=2)
 
-        self.relu2 = nn.ReLU()
         self.dropout = nn.Dropout()
 
         fcSize = 1920
@@ -52,19 +51,19 @@ class HannaNet(nn.Module):
 
         conv5x5 = self.conv(x)
         btn = self.bn(conv5x5)
-        relu1 = self.relu2(btn)
+        relu1 = self.relu1(btn)
         max_pool = self.maxpool(relu1)
 
         l1 = self.layer1(max_pool)
         l2 = self.layer2(l1)
         l3 = self.layer3(l2)
-        flat = l3.view(l3.size(0), -1)
+        out = l3.view(l3.size(0), -1)
 
-        drop = self.dropout(flat)
-        x = self.fc_x(drop)
-        y = self.fc_y(drop)
-        z = self.fc_z(drop)
-        phi = self.fc_phi(drop)
+        out = self.dropout(out)
+        x = self.fc_x(out)
+        y = self.fc_y(out)
+        z = self.fc_z(out)
+        phi = self.fc_phi(out)
 
         # PrintFC(x, "Dense1")
         # PrintFC(y, "Dense2")

@@ -171,7 +171,7 @@ class ModelTrainer:
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-        logging.info("[ModelTrainer]: After integration: %f" % acc)
+        logging.info("[ModelTrainer]: After Integerization: %f" % acc)
 
 
         b_in_integer, b_out_integer, acc = nemo.utils.get_intermediate_activations(self.model,
@@ -180,6 +180,85 @@ class ModelTrainer:
 
         # import pdb; pdb.set_trace()
 
+
+    def TrainQuantized(self, train_loader, validation_loader, h, w):
+
+        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+            validation_loader)
+        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+        logging.info("[ModelTrainer]: Before quantization process: %f" % acc)
+
+        # [NeMO] This call "transforms" the model into a quantization-aware one, which is printed immediately afterwards.
+        self.model = nemo.transform.quantize_pact(self.model,
+                                                  dummy_input=torch.ones((1, 1, h, w)).to(self.device))  # .cuda()
+        logging.info("[ModelTrainer] Model: %s", self.model)
+
+
+        # [NeMO] NeMO re-training usually converges better using an Adam optimizer, and a smaller learning rate
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=float(self.regime['lr']),
+                                     weight_decay=float(self.regime['weight_decay']))
+
+        self.model.equalize_weights_unfolding({
+            'conv': 'bn',
+            'layer1.conv1': 'layer1.bn1',
+            'layer1.conv2': 'layer1.bn2',
+            'layer2.conv1': 'layer2.bn1',
+            'layer2.conv2': 'layer2.bn2',
+            'layer3.conv1': 'layer3.bn1',
+        }, verbose=True)
+        self.model.reset_alpha_weights()
+
+        self.model.set_statistics_act()
+
+        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+            validation_loader)
+        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+        logging.info("[ModelTrainer]: set_statistics_act: %f" % acc)
+
+        self.model.unset_statistics_act()
+        self.model.reset_alpha_act()
+
+        self.model.change_precision(bits=16, reset_alpha=True)
+        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+            validation_loader)
+        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+        logging.info("[ModelTrainer]: est accuracy before quantization process: %f" % acc)
+
+        # [NeMO] Change precision and reset weight clipping parameters
+        self.model.change_precision(bits=8, reset_alpha=True, min_prec_dict={'conv': {'W_bits': 8}})
+
+        precision_rule = self.regime['relaxation']
+
+        # evale = nemo.evaluation.EvaluationEngine(self.model, precision_rule=precision_rule, validate_fn=self.ValidateSingleEpoch, validate_data=validation_loader)
+        # while evale.step():
+        #     loss, y_pred, gt_labels = self.ValidateSingleEpoch(validation_loader)
+        #     acc = float(1) / loss
+        #     evale.report(acc)
+        #     logging.info("[MNIST] %.1f-bit W, %.1f-bit x: %.2f%%" % (evale.wgrid[evale.idx], evale.xgrid[evale.idx], 100*acc))
+        # Wbits, xbits = evale.get_next_config(upper_threshold=0.97)
+        precision_rule['0']['W_bits'] = 8
+        precision_rule['0']['x_bits'] = 8
+        logging.info("[MNIST] Choosing %.1f-bit W, %.1f-bit x for first step" % (
+        precision_rule['0']['W_bits'], precision_rule['0']['x_bits']))
+
+        # [NeMO] The relaxation engine can be stepped to automatically change the DNN precisions and end training if the final
+        # target has been achieved.
+        relax = nemo.relaxation.RelaxationEngine(self.model, optimizer, criterion=None, trainloader=None,
+                                                 precision_rule=precision_rule, reset_alpha_weights=False,
+                                                 min_prec_dict=None, evaluator=None)
+
+        loss_epoch_m1 = 1e3
+        for epoch in range(1, 3):
+
+            change_prec = False
+            ended = False
+            change_prec, ended = relax.step(loss_epoch_m1, epoch)
+            if ended:
+                break
+
+            loss_epoch_m1 = self.TrainSingleEpoch(train_loader)
+            acc, y_pred, gt_labels = self.ValidateSingleEpoch(validation_loader)
+            logging.info("[ModelTrainer] Epoch: %d Train loss: %.2f Accuracy: %.2f%%" % (epoch, loss_epoch_m1, acc * 100.))
 
     #
     # def Quantize(self, validation_loader, h, w):

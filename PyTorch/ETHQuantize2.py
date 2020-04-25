@@ -173,11 +173,16 @@ def main():
         ModelManager.Read(args.load_model, model)
 
 
+    h = 96
+    w = 160
     trainer = ModelTrainer(model, args, regime)
     if args.quantize:
-        trainer.Quantize(validation_loader, 96, 160)
+        trainer.Quantize(validation_loader, h, w)
+        #trainer.TrainQuantized(train_loader, validation_loader, h, w)
+        #trainer.Train(train_loader, validation_loader)
+
         print(model)
-        ExportONXX(model, model, validation_loader, trainer.ValidateSingleEpoch, 96, 160)
+        ExportONXX(model, model, validation_loader, trainer.ValidateSingleEpoch, h, w)
 
 
     if args.save_model is not None:
