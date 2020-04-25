@@ -2,6 +2,11 @@ from __future__ import print_function
 from PreActBlock import PreActBlock
 from FrontNet import FrontNet
 from Dronet import Dronet
+
+from ConvBlock import ConvBlock
+from HannaNet import HannaNet
+
+
 import numpy as np
 
 from DataProcessor import DataProcessor
@@ -72,7 +77,7 @@ def LoadData(args):
 
     # Parameters
     # num_workers - 0 for debug in Mac+PyCharm, 6 for everything else
-    num_workers = 0
+    num_workers = 1
     params = {'batch_size': args.batch_size,
               'shuffle': True,
               'num_workers': num_workers}
@@ -121,7 +126,7 @@ def main():
                 regime[k] = rr[k]
 
     if args.gray is not None:
-        model = Dronet(PreActBlock, [1, 1, 1], isGray=True)
+        model = HannaNet(ConvBlock, [1, 1, 1], isGray=True)
     else:
         model = Dronet(PreActBlock, [1, 1, 1], False)
 
