@@ -151,6 +151,11 @@ PyTorch/validation
 *.zip
 *.bag
 *.active
+PyTorch/Models/*.pt
+PyTorch/*.pt
+PyTorch/*.txt
+PyTorch/*.csv
+PyTorch/*.png
 
 
 
