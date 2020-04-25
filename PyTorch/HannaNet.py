@@ -51,7 +51,8 @@ class HannaNet(nn.Module):
     def forward(self, x):
 
         conv5x5 = self.conv(x)
-        relu1 = self.relu2(conv5x5)
+        btn = self.bn(conv5x5)
+        relu1 = self.relu2(btn)
         max_pool = self.maxpool(relu1)
 
         l1 = self.layer1(max_pool)
