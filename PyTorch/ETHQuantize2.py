@@ -97,7 +97,7 @@ def ExportONXX(model, model_inner, val_loader, validate, h, w):
         logging.info("After integerize: %.2f%%" % (100 * acc[0]))
 
     try:
-        os.makedirs('frontnet/golden')
+        os.makedirs('HannaNet/golden')
     except Exception:
         pass
 
@@ -177,8 +177,8 @@ def main():
     w = 160
     trainer = ModelTrainer(model, args, regime)
     if args.quantize:
+        trainer.TrainQuantized(train_loader, validation_loader, h, w)
         trainer.Quantize(validation_loader, h, w)
-        #trainer.TrainQuantized(train_loader, validation_loader, h, w)
         #trainer.Train(train_loader, validation_loader)
 
         print(model)

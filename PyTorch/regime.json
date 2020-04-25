@@ -21,7 +21,8 @@
         "delta_loss_running_std_stale": 5e-3,
         "abs_loss_stale": 0.02,
         "scale_lr": true,
-        "lr_scaler": 1.4142135624
+        "lr_scaler": 1.4142135624,
+        "divergence_abs_threshold": 1000.0
     }
 }
 
