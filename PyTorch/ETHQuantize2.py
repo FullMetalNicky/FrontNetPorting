@@ -177,12 +177,12 @@ def main():
     w = 160
     trainer = ModelTrainer(model, args, regime)
     if args.quantize:
-        trainer.TrainQuantized(train_loader, validation_loader, h, w)
-        #trainer.Quantize(validation_loader, h, w)
+        #trainer.TrainQuantized(train_loader, validation_loader, h, w, args.epochs)
+        trainer.Quantize(validation_loader, h, w)
         #trainer.Train(train_loader, validation_loader)
 
-        print(model)
-        ExportONXX(model, model, validation_loader, trainer.ValidateSingleEpoch, h, w, args.epochs)
+        #print(model)
+        ExportONXX(model, model, validation_loader, trainer.ValidateSingleEpoch, h, w)
 
 
     if args.save_model is not None:
