@@ -177,8 +177,8 @@ def main():
     w = 160
     trainer = ModelTrainer(model, args, regime)
     if args.quantize:
-        #trainer.TrainQuantized(train_loader, validation_loader, h, w)
-        trainer.Quantize(validation_loader, h, w)
+        trainer.TrainQuantized(train_loader, validation_loader, h, w)
+        #trainer.Quantize(validation_loader, h, w)
         #trainer.Train(train_loader, validation_loader)
 
         print(model)

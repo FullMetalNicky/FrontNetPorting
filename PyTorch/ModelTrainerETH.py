@@ -216,14 +216,14 @@ class ModelTrainer:
         self.model.unset_statistics_act()
         self.model.reset_alpha_act()
 
-        self.model.change_precision(bits=16, reset_alpha=True)
-        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-            validation_loader)
-        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-        logging.info("[ModelTrainer]: est accuracy before quantization process: %f" % acc)
+        # self.model.change_precision(bits=16, reset_alpha=True)
+        # valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+        #     validation_loader)
+        # acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+        # logging.info("[ModelTrainer]: est accuracy before quantization process: %f" % acc)
 
-        # [NeMO] Change precision and reset weight clipping parameters
-        self.model.change_precision(bits=8, reset_alpha=True, min_prec_dict={'conv': {'W_bits': 8}})
+        # # [NeMO] Change precision and reset weight clipping parameters
+        # self.model.change_precision(bits=8, reset_alpha=True, min_prec_dict={'conv': {'W_bits': 8}})
 
         precision_rule = self.regime['relaxation']
 
@@ -234,8 +234,16 @@ class ModelTrainer:
         #     evale.report(acc)
         #     logging.info("[MNIST] %.1f-bit W, %.1f-bit x: %.2f%%" % (evale.wgrid[evale.idx], evale.xgrid[evale.idx], 100*acc))
         # Wbits, xbits = evale.get_next_config(upper_threshold=0.97)
-        precision_rule['0']['W_bits'] = 8
-        precision_rule['0']['x_bits'] = 8
+        precision_rule['0']['W_bits'] = 12
+        precision_rule['0']['x_bits'] = 12
+        precision_rule['1']['W_bits'] = 11
+        precision_rule['1']['x_bits'] = 11
+        precision_rule['2']['W_bits'] = 10
+        precision_rule['2']['x_bits'] = 10
+        precision_rule['3']['W_bits'] = 9
+        precision_rule['3']['x_bits'] = 9
+        precision_rule['4']['W_bits'] = 8
+        precision_rule['4']['x_bits'] = 8
         logging.info("[MNIST] Choosing %.1f-bit W, %.1f-bit x for first step" % (
         precision_rule['0']['W_bits'], precision_rule['0']['x_bits']))
 
@@ -246,7 +254,7 @@ class ModelTrainer:
                                                  min_prec_dict=None, evaluator=None)
 
         loss_epoch_m1 = 1e3
-        for epoch in range(1, 3):
+        for epoch in range(1, 10):
 
             change_prec = False
             ended = False
