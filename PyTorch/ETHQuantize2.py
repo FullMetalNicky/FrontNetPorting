@@ -167,10 +167,10 @@ def main():
     if args.gray is not None:
         model = HannaNet(ConvBlock, [1, 1, 1], True)
 
-
+    prec_dict = None
     # [NeMO] This used to preload the model with pretrained weights.
     if args.load_model is not None:
-        ModelManager.Read(args.load_model, model)
+        epochs, prec_dict = ModelManager.ReadQ(args.load_model, model)
 
 
     h = 96
@@ -178,7 +178,10 @@ def main():
     trainer = ModelTrainer(model, args, regime)
     if args.quantize:
         #trainer.TrainQuantized(train_loader, validation_loader, h, w, args.epochs)
-        trainer.Quantize(validation_loader, h, w)
+        if prec_dict is not None:
+            trainer.Quantize(validation_loader, h, w, prec_dict)
+        else:
+            trainer.Quantize(validation_loader, h, w)
         #trainer.Train(train_loader, validation_loader)
 
         #print(model)

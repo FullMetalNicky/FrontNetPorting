@@ -38,7 +38,7 @@ class ModelTrainer:
 
 
 
-    def Quantize(self, validation_loader, h, w):
+    def Quantize(self, validation_loader, h, w, prec_dict=None):
 
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             validation_loader)
@@ -72,33 +72,33 @@ class ModelTrainer:
         self.model.unset_statistics_act()
         self.model.reset_alpha_act()
 
-        self.model.change_precision(bits=16, reset_alpha=True)
-        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-            validation_loader)
-        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-        logging.info("[ModelTrainer]: Precision 16: %f" % acc)
 
+        if prec_dict is None:
 
-#min_prec_dict={'fc_x': {'W_bits': 20},  'fc_y': {'W_bits': 20}, 'fc_z': {'W_bits': 20}, 'fc_phi': {'W_bits': 20}
-        self.model.change_precision(bits=12, reset_alpha=True)
-        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-            validation_loader)
-        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-        logging.info("[ModelTrainer]: Precision 12: %f" % acc)
+            self.model.change_precision(bits=16, reset_alpha=True)
+            valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(validation_loader)
+            acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+            logging.info("[ModelTrainer]: Precision 16: %f" % acc)
 
+    #min_prec_dict={'fc_x': {'W_bits': 20},  'fc_y': {'W_bits': 20}, 'fc_z': {'W_bits': 20}, 'fc_phi': {'W_bits': 20}
+            self.model.change_precision(bits=12, reset_alpha=True)
+            valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(validation_loader)
+            acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+            logging.info("[ModelTrainer]: Precision 12: %f" % acc)
 
-        self.model.change_precision(bits=9, reset_alpha=True)
-        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-            validation_loader)
-        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-        logging.info("[ModelTrainer]: Precision 9: %f" % acc)
+            self.model.change_precision(bits=9, reset_alpha=True)
+            valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(validation_loader)
+            acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+            logging.info("[ModelTrainer]: Precision 9: %f" % acc)
 
-        # [NeMO] Change precision and reset weight clipping parameters
-        self.model.change_precision(bits=7, reset_alpha=True)
-        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-            validation_loader)
-        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-        logging.info("[ModelTrainer]: Precision 7: %f" % acc)
+            # [NeMO] Change precision and reset weight clipping parameters
+            self.model.change_precision(bits=7, reset_alpha=True)
+            valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(validation_loader)
+            acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+            logging.info("[ModelTrainer]: Precision 7: %f" % acc)
+
+        else:
+            self.model.change_precision(bits=1, reset_alpha=False, min_prec_dict=prec_dict)
 
         nemo.transform.bn_quantizer(self.model)
 
@@ -107,26 +107,6 @@ class ModelTrainer:
         b_in_harden, b_out_harden, acc = nemo.utils.get_intermediate_activations(self.model,
                                                                                  self.ValidateSingleEpoch,
                                                                                  validation_loader)
-        '''bidx = 0
-        for n,m in self.model.named_modules():
-            try:
-                actbuf = b_in[n][0][bidx].permute((1,2,0))
-            except RuntimeError:
-                actbuf = b_in[n][0][bidx]
-            except Exception as e:
-                print(e)
-                continue
-            np.savetxt("frontnet/before_deploy/before_deploy_input_%s.txt" % n, actbuf.cpu().numpy().flatten(), header="input (shape %s)" % (list(actbuf.shape)), fmt="%.3f", delimiter=',', newline=',\n')
-        for n,m in self.model.named_modules():
-            try:
-                actbuf = b_out[n][bidx].permute((1,2,0))
-            except RuntimeError:
-                actbuf = b_out[n][bidx]
-            except Exception as e:
-                print(e)
-                continue
-            np.savetxt("frontnet/before_deploy/before_deploy_%s.txt" % n, actbuf.cpu().numpy().flatten(), header="%s (shape %s)" % (n, list(actbuf.shape)), fmt="%.3f", delimiter=',', newline=',\n')
-'''
 
         # self.model.bn32_1.lamda[:] *= 0
         logging.info("[ModelTrainer] Setting deployment mode with eps_in=1.0/255...")

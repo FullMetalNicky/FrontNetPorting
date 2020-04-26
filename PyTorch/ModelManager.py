@@ -20,10 +20,39 @@ class ModelManager:
             """
 
         state_dict = torch.load(filename, map_location='cpu')
-        model.load_state_dict(state_dict['model'])
+        model.load_state_dict(state_dict['model'], strict=False)
         epoch = state_dict['epoch']
 
+
         return epoch
+
+    @staticmethod
+    def ReadQ(filename, model):
+        """Reads model file
+
+            Parameters
+            ----------
+            filename : str
+                location of the model file
+            model : NN class
+                A PyTorch NN object
+
+            Returns
+            -------
+            int
+                the number of epochs this model was trained
+            """
+
+        state_dict = torch.load(filename, map_location='cpu')
+        epoch = state_dict['epoch']
+        prec_dict = state_dict['precision']
+
+        try:
+            model.load_state_dict(state_dict['state_dict'], strict=False)
+        except KeyError:
+            model.load_state_dict(state_dict, strict=False)
+
+        return prec_dict, prec_dict
 
     @staticmethod
     def Write(model, epoch, filename):
