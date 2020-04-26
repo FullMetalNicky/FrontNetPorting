@@ -179,7 +179,7 @@ class ModelTrainer:
         # import pdb; pdb.set_trace()
 
 
-    def TrainQuantized(self, train_loader, validation_loader, h, w):
+    def TrainQuantized(self, train_loader, validation_loader, h, w, epochs=100):
 
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             validation_loader)
@@ -234,6 +234,8 @@ class ModelTrainer:
         #     evale.report(acc)
         #     logging.info("[MNIST] %.1f-bit W, %.1f-bit x: %.2f%%" % (evale.wgrid[evale.idx], evale.xgrid[evale.idx], 100*acc))
         # Wbits, xbits = evale.get_next_config(upper_threshold=0.97)
+
+        #Hanna's brilliant idea!!
         precision_rule['0']['W_bits'] = 12
         precision_rule['0']['x_bits'] = 12
         precision_rule['1']['W_bits'] = 11
@@ -254,7 +256,7 @@ class ModelTrainer:
                                                  min_prec_dict=None, evaluator=None)
 
         loss_epoch_m1 = 1e3
-        for epoch in range(1, 10):
+        for epoch in range(1, epochs):
 
             change_prec = False
             ended = False

@@ -182,7 +182,7 @@ def main():
         #trainer.Train(train_loader, validation_loader)
 
         print(model)
-        ExportONXX(model, model, validation_loader, trainer.ValidateSingleEpoch, h, w)
+        ExportONXX(model, model, validation_loader, trainer.ValidateSingleEpoch, h, w, args.epochs)
 
 
     if args.save_model is not None:
