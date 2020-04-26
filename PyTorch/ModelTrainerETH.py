@@ -76,29 +76,29 @@ class ModelTrainer:
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-        logging.info("[ModelTrainer]: Percision 16: %f" % acc)
+        logging.info("[ModelTrainer]: Precision 16: %f" % acc)
 
 
-
-        self.model.change_precision(bits=12, reset_alpha=True, min_prec_dict={'fc_x': {'W_bits': 20},  'fc_y': {'W_bits': 20}, 'fc_z': {'W_bits': 20}, 'fc_phi': {'W_bits': 20}})
+#min_prec_dict={'fc_x': {'W_bits': 20},  'fc_y': {'W_bits': 20}, 'fc_z': {'W_bits': 20}, 'fc_phi': {'W_bits': 20}
+        self.model.change_precision(bits=12, reset_alpha=True)
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-        logging.info("[ModelTrainer]: Percision 12: %f" % acc)
+        logging.info("[ModelTrainer]: Precision 12: %f" % acc)
 
 
-        self.model.change_precision(bits=9, reset_alpha=True, min_prec_dict={'fc_x': {'W_bits': 20},  'fc_y': {'W_bits': 20}, 'fc_z': {'W_bits': 20}, 'fc_phi': {'W_bits': 20}})
+        self.model.change_precision(bits=9, reset_alpha=True)
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-        logging.info("[ModelTrainer]: Percision 9: %f" % acc)
+        logging.info("[ModelTrainer]: Precision 9: %f" % acc)
 
         # [NeMO] Change precision and reset weight clipping parameters
-        self.model.change_precision(bits=7, reset_alpha=True, min_prec_dict={'fc_x': {'W_bits': 20},  'fc_y': {'W_bits': 20}, 'fc_z': {'W_bits': 20}, 'fc_phi': {'W_bits': 20}})
+        self.model.change_precision(bits=7, reset_alpha=True)
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             validation_loader)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-        logging.info("[ModelTrainer]: Percision 7: %f" % acc)
+        logging.info("[ModelTrainer]: Precision 7: %f" % acc)
 
         nemo.transform.bn_quantizer(self.model)
 
@@ -269,8 +269,7 @@ class ModelTrainer:
 
             valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels  = self.ValidateSingleEpoch(validation_loader)
             acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-            #logging.info("[ModelTrainer] Epoch: %d  Accuracy: %.2f%%" % (epoch, acc * 100.))
-            logging.info("[MNIST] Epoch: %d Train loss: %.2f Accuracy: %.2f%%" % (epoch, loss_epoch_m1, acc * 100.))
+            logging.info("[ModelTrainer] Epoch: %d Train loss: %.2f Accuracy: %.2f%%" % (epoch, loss_epoch_m1, acc * 100.))
 
     #
     # def Quantize(self, validation_loader, h, w):
