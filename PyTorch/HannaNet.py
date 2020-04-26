@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch
 from ConvBlock import ConvBlock
 from ConvBlock import printRes
 import numpy as np
@@ -41,10 +42,7 @@ class HannaNet(nn.Module):
         self.dropout = nn.Dropout()
 
         fcSize = 1920
-        self.fc_x = nn.Linear(fcSize, 1)
-        self.fc_y = nn.Linear(fcSize, 1)
-        self.fc_z = nn.Linear(fcSize, 1)
-        self.fc_phi = nn.Linear(fcSize, 1)
+        self.fc = nn.Linear(fcSize, 4)
 
 
     def forward(self, x):
@@ -57,14 +55,18 @@ class HannaNet(nn.Module):
         l1 = self.layer1(max_pool)
         l2 = self.layer2(l1)
         l3 = self.layer3(l2)
-        out = l3.view(l3.size(0), -1)
+        out = l3.flatten(1)
 
         out = self.dropout(out)
-        x = self.fc_x(out)
-        y = self.fc_y(out)
-        z = self.fc_z(out)
-        phi = self.fc_phi(out)
-
+        out = self.fc(out)
+        x = out[:, 0]
+        y = out[:, 1]
+        z = out[:, 2]
+        phi = out[:, 3]
+        x = x.unsqueeze(1)
+        y = y.unsqueeze(1)
+        z = z.unsqueeze(1)
+        phi = phi.unsqueeze(1)
         # PrintFC(x, "Dense1")
         # PrintFC(y, "Dense2")
         # PrintFC(z, "Dense3")

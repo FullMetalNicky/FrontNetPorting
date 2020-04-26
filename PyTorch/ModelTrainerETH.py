@@ -417,6 +417,8 @@ class ModelTrainer:
             loss_z = self.criterion(outputs[2], (batch_targets[:, 2]).view(-1, 1))
             loss_phi = self.criterion(outputs[3], (batch_targets[:, 3]).view(-1, 1))
             loss = loss_x + loss_y + loss_z + loss_phi
+            #loss = self.criterion(outputs, batch_targets)
+
 
             # Backward and optimize
             self.optimizer.zero_grad()
