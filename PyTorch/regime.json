@@ -7,6 +7,30 @@
     "lr_decay": 0.98,
     "relaxation": {
         "0": {
+            "W_bits": 12.0,
+            "W_scale": 1.0,
+            "x_bits": 12.0,
+            "x_scale": 2.0
+        },
+        "1": {
+            "W_bits": 11.0,
+            "W_scale": 1.0,
+            "x_bits": 11.0,
+            "x_scale": 2.0
+        },
+        "2": {
+            "W_bits": 10.0,
+            "W_scale": 1.0,
+            "x_bits": 10.0,
+            "x_scale": 2.0
+        },
+        "3": {
+            "W_bits": 9.0,
+            "W_scale": 1.0,
+            "x_bits": 9.0,
+            "x_scale": 2.0
+        },
+        "3": {
             "W_bits": 8.0,
             "W_scale": 1.0,
             "x_bits": 8.0,
