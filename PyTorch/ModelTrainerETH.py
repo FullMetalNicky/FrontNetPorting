@@ -26,7 +26,7 @@ class ModelTrainer:
 
         # Loss and optimizer
         self.criterion = nn.L1Loss()
-        if self.args.quantize:
+        if self.args.quantize or args.trainq:
             self.optimizer = torch.optim.Adam(model.parameters(), lr=float(regime['lr']), weight_decay=float(regime['weight_decay']))
         else:
             self.optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -154,7 +154,6 @@ class ModelTrainer:
                                                                                    self.ValidateSingleEpoch,
                                                                                    validation_loader)
 
-        # import pdb; pdb.set_trace()
 
 
     def TrainQuantized(self, train_loader, validation_loader, h, w, epochs=100):
@@ -169,10 +168,6 @@ class ModelTrainer:
                                                   dummy_input=torch.ones((1, 1, h, w)).to(self.device))  # .cuda()
         logging.info("[ModelTrainer] Model: %s", self.model)
 
-
-        # [NeMO] NeMO re-training usually converges better using an Adam optimizer, and a smaller learning rate
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=float(self.regime['lr']),
-                                     weight_decay=float(self.regime['weight_decay']))
 
         self.model.equalize_weights_unfolding({
             'conv': 'bn',
@@ -194,24 +189,8 @@ class ModelTrainer:
         self.model.unset_statistics_act()
         self.model.reset_alpha_act()
 
-        # self.model.change_precision(bits=16, reset_alpha=True)
-        # valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-        #     validation_loader)
-        # acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-        # logging.info("[ModelTrainer]: est accuracy before quantization process: %f" % acc)
-
-        # # [NeMO] Change precision and reset weight clipping parameters
-        # self.model.change_precision(bits=8, reset_alpha=True, min_prec_dict={'conv': {'W_bits': 8}})
-
         precision_rule = self.regime['relaxation']
 
-        # evale = nemo.evaluation.EvaluationEngine(self.model, precision_rule=precision_rule, validate_fn=self.ValidateSingleEpoch, validate_data=validation_loader)
-        # while evale.step():
-        #     loss, y_pred, gt_labels = self.ValidateSingleEpoch(validation_loader)
-        #     acc = float(1) / loss
-        #     evale.report(acc)
-        #     logging.info("[MNIST] %.1f-bit W, %.1f-bit x: %.2f%%" % (evale.wgrid[evale.idx], evale.xgrid[evale.idx], 100*acc))
-        # Wbits, xbits = evale.get_next_config(upper_threshold=0.97)
 
         #Hanna's brilliant idea!!
         precision_rule['0']['W_bits'] = 12
@@ -224,12 +203,12 @@ class ModelTrainer:
         precision_rule['3']['x_bits'] = 9
         precision_rule['4']['W_bits'] = 8
         precision_rule['4']['x_bits'] = 8
-        logging.info("[MNIST] Choosing %.1f-bit W, %.1f-bit x for first step" % (
+        logging.info("[ModelTrainer] Choosing %.1f-bit W, %.1f-bit x for first step" % (
         precision_rule['0']['W_bits'], precision_rule['0']['x_bits']))
 
         # [NeMO] The relaxation engine can be stepped to automatically change the DNN precisions and end training if the final
         # target has been achieved.
-        relax = nemo.relaxation.RelaxationEngine(self.model, optimizer, criterion=None, trainloader=None,
+        relax = nemo.relaxation.RelaxationEngine(self.model, self.optimizer, criterion=None, trainloader=None,
                                                  precision_rule=precision_rule, reset_alpha_weights=False,
                                                  min_prec_dict=None, evaluator=None)
 

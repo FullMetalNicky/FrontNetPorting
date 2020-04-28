@@ -20,7 +20,7 @@ class ModelManager:
             """
 
         state_dict = torch.load(filename, map_location='cpu')
-        model.load_state_dict(state_dict['model'], strict=False)
+        model.load_state_dict(state_dict['model'])
         epoch = state_dict['epoch']
 
 
@@ -48,11 +48,11 @@ class ModelManager:
         prec_dict = state_dict['precision']
 
         try:
-            model.load_state_dict(state_dict['state_dict'], strict=False)
+            model.load_state_dict(state_dict['state_dict'], strict=True)
         except KeyError:
             model.load_state_dict(state_dict, strict=False)
 
-        return prec_dict, prec_dict
+        return epoch, prec_dict
 
     @staticmethod
     def Write(model, epoch, filename):

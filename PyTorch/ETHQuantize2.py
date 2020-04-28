@@ -54,6 +54,10 @@ def Parse(parser):
     # [NeMO] If `quantize` is False, the script operates like the original PyTorch example
     parser.add_argument('--quantize', default=False, action="store_true",
                         help='for loading the model')
+
+    # [NeMO] If `TrainQ` is True, finetune/relax
+    parser.add_argument('--trainq', default=False, action="store_true",
+                        help='for loading the model')
     # [NeMO] The training regime (in JSON) used to store all NeMO configuration.
     parser.add_argument('--regime', default=None, type=str,
                         help='for loading the model')
@@ -74,7 +78,7 @@ def LoadData(args):
 
     # Parameters
     # num_workers - 0 for debug in Mac+PyCharm, 6 for everything else
-    num_workers = 0
+    num_workers = 6
     params = {'batch_size': args.batch_size,
               'shuffle': True,
               'num_workers': num_workers}
@@ -85,13 +89,9 @@ def LoadData(args):
 
 
 def ExportONXX(model, model_inner, val_loader, validate, h, w):
-    # print(model)
-    # model_inner = model
-    # print("before export")
-    # model.graph.print_jit_graph()
+
     nemo.utils.export_onnx("HannaNet/model_int.onnx", model, model_inner, (1, h, w), perm=None)
-    # print("After export")
-    # model.graph.print_jit_graph()
+
     b_in, b_out, acc = nemo.utils.get_intermediate_activations(model_inner, validate, val_loader)
     if acc != None:
         logging.info("After integerize: %.2f%%" % (100 * acc[0]))
@@ -103,16 +103,11 @@ def ExportONXX(model, model_inner, val_loader, validate, h, w):
 
     from collections import OrderedDict
     dory_dict = OrderedDict([])
-    # for key, value in b_in.items():
-    #    print(key, value)
-    # save super-node outputs as CSV files as golden reference
     bidx = 0
-    # for x in model_inner.named_modules():
-    #    print(x)
+
     for n, m in model_inner.named_modules():
         try:
-            # print("n:%s" % n)
-            # print("bidx:%d" % bidx)
+
             actbuf = b_in[n][0][bidx].permute((1, 2, 0))
         except RuntimeError:
             actbuf = b_in[n][0][bidx]
@@ -164,31 +159,27 @@ def main():
             except ValueError:
                 regime[k] = rr[k]
 
-    if args.gray is not None:
-        model = HannaNet(ConvBlock, [1, 1, 1], True)
+
+    model = HannaNet(ConvBlock, [1, 1, 1], True)
 
     h = 96
     w = 160
 
-    prec_dict = None
-    # [NeMO] This used to preload the model with pretrained weights.
-    if args.load_model is not None:
+    if args.trainq:
+        epoch = ModelManager.Read(args.load_model, model)
+        trainer = ModelTrainer(model, args, regime)
+        trainer.TrainQuantized(train_loader, validation_loader, h, w, args.epochs)
 
-    # only use for running Quantize not TrainQuantized!!!!!
-        model = nemo.transform.quantize_pact(model, dummy_input=torch.ones((1, 1, h, w)).to("cpu"))  # .cuda()
-        logging.info("[ETHQ2] Model: %s", model)
-        epochs, prec_dict = ModelManager.ReadQ(args.load_model, model)
-
-
-
-    trainer = ModelTrainer(model, args, regime)
     if args.quantize:
-        #trainer.TrainQuantized(train_loader, validation_loader, h, w, args.epochs)
-        if prec_dict is not None:
-            trainer.Quantize(validation_loader, h, w, prec_dict)
+        if torch.cuda.is_available():
+            device = "cuda"
         else:
-            trainer.Quantize(validation_loader, h, w)
-
+            device = "cpu"
+        model = nemo.transform.quantize_pact(model, dummy_input=torch.ones((1, 1, h, w)).to(device))  # .cuda()
+        logging.info("[ETHQ2] Model: %s", model)
+        epoch, prec_dict = ModelManager.ReadQ(args.load_model, model)
+        trainer = ModelTrainer(model, args, regime)
+        trainer.Quantize(validation_loader, h, w, prec_dict)
         ExportONXX(model, model, validation_loader, trainer.ValidateSingleEpoch, h, w)
 
 
