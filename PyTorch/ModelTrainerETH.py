@@ -45,35 +45,33 @@ class ModelTrainer:
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
         logging.info("[ModelTrainer]: Before quantization process: %f" % acc)
 
-        # [NeMO] This call "transforms" the model into a quantization-aware one, which is printed immediately afterwards.
-        self.model = nemo.transform.quantize_pact(self.model,
-                                                  dummy_input=torch.ones((1, 1, h, w)).to(self.device))  # .cuda()
-        logging.info("[ModelTrainer] Model: %s", self.model)
-
-
-
-        self.model.equalize_weights_unfolding({
-            'conv': 'bn',
-            'layer1.conv1': 'layer1.bn1',
-            'layer1.conv2': 'layer1.bn2',
-            'layer2.conv1': 'layer2.bn1',
-            'layer2.conv2': 'layer2.bn2',
-            'layer3.conv1': 'layer3.bn1',
-        }, verbose=True)
-        self.model.reset_alpha_weights()
-
-        self.model.set_statistics_act()
-        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-            validation_loader)
-        acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
-        logging.info("[ModelTrainer]: After set stat process: %f" % acc)
-
-
-        self.model.unset_statistics_act()
-        self.model.reset_alpha_act()
-
 
         if prec_dict is None:
+
+            # [NeMO] This call "transforms" the model into a quantization-aware one, which is printed immediately afterwards.
+            self.model = nemo.transform.quantize_pact(self.model,
+                                                      dummy_input=torch.ones((1, 1, h, w)).to(self.device))  # .cuda()
+            logging.info("[ModelTrainer] Model: %s", self.model)
+
+            self.model.equalize_weights_unfolding({
+                'conv': 'bn',
+                'layer1.conv1': 'layer1.bn1',
+                'layer1.conv2': 'layer1.bn2',
+                'layer2.conv1': 'layer2.bn1',
+                'layer2.conv2': 'layer2.bn2',
+                'layer3.conv1': 'layer3.bn1',
+            }, verbose=True)
+            self.model.reset_alpha_weights()
+
+            self.model.set_statistics_act()
+            valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
+                validation_loader)
+            acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
+            logging.info("[ModelTrainer]: After set stat process: %f" % acc)
+
+            self.model.unset_statistics_act()
+            self.model.reset_alpha_act()
+
 
             self.model.change_precision(bits=16, reset_alpha=True)
             valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(validation_loader)

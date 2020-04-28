@@ -167,14 +167,20 @@ def main():
     if args.gray is not None:
         model = HannaNet(ConvBlock, [1, 1, 1], True)
 
+    h = 96
+    w = 160
+
     prec_dict = None
     # [NeMO] This used to preload the model with pretrained weights.
     if args.load_model is not None:
+
+    # only use for running Quantize not TrainQuantized!!!!!
+        model = nemo.transform.quantize_pact(model, dummy_input=torch.ones((1, 1, h, w)).to("cpu"))  # .cuda()
+        logging.info("[ETHQ2] Model: %s", model)
         epochs, prec_dict = ModelManager.ReadQ(args.load_model, model)
 
 
-    h = 96
-    w = 160
+
     trainer = ModelTrainer(model, args, regime)
     if args.quantize:
         #trainer.TrainQuantized(train_loader, validation_loader, h, w, args.epochs)
@@ -182,9 +188,7 @@ def main():
             trainer.Quantize(validation_loader, h, w, prec_dict)
         else:
             trainer.Quantize(validation_loader, h, w)
-        #trainer.Train(train_loader, validation_loader)
 
-        #print(model)
         ExportONXX(model, model, validation_loader, trainer.ValidateSingleEpoch, h, w)
 
 
