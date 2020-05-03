@@ -72,16 +72,16 @@ class ModelTrainer:
 
         # export model
         try:
-            os.makedirs('PenguiNet')
+            os.makedirs(self.model.name)
         except Exception:
             pass
-        nemo.utils.export_onnx("PenguiNet/model_int.onnx", self.model, self.model, (1, h, w), perm=None)
+        nemo.utils.export_onnx(self.model.name + "/model_int.onnx", self.model, self.model, (1, h, w), perm=None)
 
         # export golden outputs
         b_in = bin_id
         b_out = bout_id
         try:
-            os.makedirs('PenguiNet/golden')
+            os.makedirs(self.model.name + '/golden')
         except Exception:
             pass
         from collections import OrderedDict
@@ -93,20 +93,22 @@ class ModelTrainer:
                 actbuf = b_in[n][0][bidx].permute((1, 2, 0))
             except RuntimeError:
                 actbuf = b_in[n][0][bidx]
-            np.savetxt("PenguiNet/golden/golden_input_%s.txt" % n, actbuf.cpu().numpy().flatten(),
+            np.savetxt(self.model.name + "/golden/golden_input_%s.txt" % n, actbuf.cpu().numpy().flatten(),
                        header="input (shape %s)" % (list(actbuf.shape)), fmt="%.3f", delimiter=',', newline=',\n')
         for n, m in self.model.named_modules():
             try:
                 actbuf = b_out[n][bidx].permute((1, 2, 0))
             except RuntimeError:
                 actbuf = b_out[n][bidx]
-            np.savetxt("PenguiNet/golden/golden_%s.txt" % n, actbuf.cpu().numpy().flatten(),
+            np.savetxt(self.model.name + "/golden/golden_%s.txt" % n, actbuf.cpu().numpy().flatten(),
                        header="%s (shape %s)" % (n, list(actbuf.shape)), fmt="%.3f", delimiter=',', newline=',\n')
 
 
 #Francesco's code from https://github.com/FrancescoConti/FrontNetPorting/
 
     def TrainQuantized(self, train_loader, validation_loader, h, w, epochs=100, relaxation=False):
+
+        print(self.model.name)
 
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             validation_loader)
@@ -164,6 +166,7 @@ class ModelTrainer:
         logging.info("[ModelTrainer]: Before fine-tuning: %f" % acc)
 
         loss_epoch_m1 = 1e3
+        #loss_epoch_m1 = acc
 
         train_qnt = False
 
@@ -175,11 +178,15 @@ class ModelTrainer:
 
 
             train_qnt = not train_qnt
+            print(self.model.name)
 
             change_prec = False
             ended = False
             if relaxation:
-                change_prec, ended = relax.step(loss_epoch_m1, epoch)
+                change_prec, ended = relax.step(loss_epoch_m1, epoch, checkpoint_name=self.model.name)
+                # If I try to run with Relaxation = True, I get exception here. This is because loss_epoch_m1 > self.precision_rule['divergence_abs_threshold']
+                # and the code tries to load a checkpoint that does not exist.....
+                # Setting loss_epoch_m1 = acc solves it, but who knows if it's correct
             else:
                 self.optimizer.param_groups[0]['lr'] *= float(self.regime['lr_decay'])
                 self.optimizer.param_groups[1]['lr'] *= float(self.regime['lr_decay'])
@@ -195,14 +202,14 @@ class ModelTrainer:
                 "[ModelTrainer] Epoch: %d Train loss: %.2f Accuracy: %.2f%%" % (epoch, loss_epoch_m1, acc * 100.))
 
             if acc > best:
-                nemo.utils.save_checkpoint(self.model, self.optimizer, epoch, acc, checkpoint_name='PenguiNet_',
+                nemo.utils.save_checkpoint(self.model, self.optimizer, epoch, acc, checkpoint_name=self.model.name,
                                            checkpoint_suffix='best')
                 best = acc
 
             if self.ipython:
                 import IPython;
                 IPython.embed()
-        nemo.utils.save_checkpoint(self.model, self.optimizer, epoch, acc, checkpoint_name='PenguiNet_',
+        nemo.utils.save_checkpoint(self.model, self.optimizer, epoch, acc, checkpoint_name=self.model.name,
                                    checkpoint_suffix='final')
 
     def TrainSingleEpoch(self, training_generator):

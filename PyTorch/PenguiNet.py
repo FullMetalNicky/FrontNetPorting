@@ -17,7 +17,7 @@ class PenguiNet(nn.Module):
         super(PenguiNet, self).__init__()
 
         if isGray ==True:
-            self.name = "PenguiNetGray"
+            self.name = "PenguiNet"
         else:
             self.name = "PenguiNetRGB"
         self.inplanes = 32
