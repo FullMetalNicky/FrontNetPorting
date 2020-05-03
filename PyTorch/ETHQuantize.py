@@ -134,14 +134,10 @@ def main():
     if args.trainq:
         epoch = ModelManager.Read(args.load_model, model)
         trainer = ModelTrainer(model, args, regime)
-        trainer.TrainQuantized(train_loader, validation_loader, h, w, args.epochs, True)
+        trainer.TrainQuantized(train_loader, validation_loader, h, w, args.epochs)
 
     if args.quantize and not args.trainq:
-        if torch.cuda.is_available():
-            device = "cuda"
-        else:
-            device = "cpu"
-        model = nemo.transform.quantize_pact(model, dummy_input=torch.ones((1, 1, h, w)).to(device))  # .cuda()
+        model = nemo.transform.quantize_pact(model, dummy_input=torch.ones((1, 1, h, w)).to("cpu")) 
         logging.info("[ETHQ] Model: %s", model)
         epoch, prec_dict = ModelManager.ReadQ(args.load_model, model)
         trainer = ModelTrainer(model, args, regime)
