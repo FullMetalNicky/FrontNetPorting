@@ -39,8 +39,8 @@ class ModelTrainer:
                     {'params': qnt_params, 'lr': float(regime['lr']), 'weight_decay': float(regime['weight_decay'])},
                     {'params': fp_params, 'lr': float(regime['lr']), 'weight_decay': float(regime['weight_decay'])}
                 ))
-
         else:
+            self.optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
             self.num_epochs = 100
 
         self.folderPath = "Models/"
@@ -257,33 +257,17 @@ class ModelTrainer:
 
         return train_loss_x.value, train_loss_y.value, train_loss_z.value, train_loss_phi.value
 
-    # Francesco's code from https://github.com/FrancescoConti/FrontNetPorting/.
 
     def ValidateSingleEpoch(self, validation_generator, integer=False):
 
         self.model.eval()
 
-        valid_loss = {
-            'tot': RunningAverage(),
-            'x': RunningAverage(),
-            'y': RunningAverage(),
-            'z': RunningAverage(),
-            'phi': RunningAverage()
-        }
-        mse_loss = {
-            'tot': RunningAverage(),
-            'x': RunningAverage(),
-            'y': RunningAverage(),
-            'z': RunningAverage(),
-            'phi': RunningAverage()
-        }
-        mae_loss = {
-            'tot': RunningAverage(),
-            'x': RunningAverage(),
-            'y': RunningAverage(),
-            'z': RunningAverage(),
-            'phi': RunningAverage()
-        }
+        valid_loss = RunningAverage()
+        valid_loss_x = RunningAverage()
+        valid_loss_y = RunningAverage()
+        valid_loss_z = RunningAverage()
+        valid_loss_phi = RunningAverage()
+
 
         y_pred = []
         gt_labels = []
@@ -300,61 +284,31 @@ class ModelTrainer:
                     outputs = [(o - self.model.fc.bias[i]) * eps_fcout + self.model.fc.bias[i] for i, o in
                                enumerate(outputs)]
 
+                
+
                 loss_x = self.criterion(outputs[0], (batch_targets[:, 0]).view(-1, 1))
                 loss_y = self.criterion(outputs[1], (batch_targets[:, 1]).view(-1, 1))
                 loss_z = self.criterion(outputs[2], (batch_targets[:, 2]).view(-1, 1))
                 loss_phi = self.criterion(outputs[3], (batch_targets[:, 3]).view(-1, 1))
-                loss = loss_x + loss_y + loss_z + loss_phi  # does it make sense for SmoothL1Loss?
-                valid_loss['tot'].update(loss)
-                valid_loss['x'].update(loss_x)
-                valid_loss['y'].update(loss_y)
-                valid_loss['z'].update(loss_z)
-                valid_loss['phi'].update(loss_phi)
-
-                loss_x = nn.functional.l1_loss(outputs[0], (batch_targets[:, 0]).view(-1, 1))
-                loss_y = nn.functional.l1_loss(outputs[1], (batch_targets[:, 1]).view(-1, 1))
-                loss_z = nn.functional.l1_loss(outputs[2], (batch_targets[:, 2]).view(-1, 1))
-                loss_phi = nn.functional.l1_loss(outputs[3], (batch_targets[:, 3]).view(-1, 1))
                 loss = loss_x + loss_y + loss_z + loss_phi
-                mae_loss['tot'].update(loss)
-                mae_loss['x'].update(loss_x)
-                mae_loss['y'].update(loss_y)
-                mae_loss['z'].update(loss_z)
-                mae_loss['phi'].update(loss_phi)
 
-                loss_x = nn.functional.mse_loss(outputs[0], (batch_targets[:, 0]).view(-1, 1))
-                loss_y = nn.functional.mse_loss(outputs[1], (batch_targets[:, 1]).view(-1, 1))
-                loss_z = nn.functional.mse_loss(outputs[2], (batch_targets[:, 2]).view(-1, 1))
-                loss_phi = nn.functional.mse_loss(outputs[3], (batch_targets[:, 3]).view(-1, 1))
-                loss = loss_x + loss_y + loss_z + loss_phi
-                mse_loss['tot'].update(loss)
-                mse_loss['x'].update(loss_x)
-                mse_loss['y'].update(loss_y)
-                mse_loss['z'].update(loss_z)
-                mse_loss['phi'].update(loss_phi)
+                valid_loss.update(loss)
+                valid_loss_x.update(loss_x)
+                valid_loss_y.update(loss_y)
+                valid_loss_z.update(loss_z)
+                valid_loss_phi.update(loss_phi)
 
                 outputs = torch.stack(outputs, 0)
                 outputs = torch.squeeze(outputs)
                 outputs = torch.t(outputs)
                 y_pred.extend(outputs.cpu().numpy())
 
-            logging.info("[ModelTrainer] Mean validation loss {:2f}: x={:2f}, y={:2f}, z={:2f}, phi={:2f}".format(
-                valid_loss['tot'].value, valid_loss['x'].value, valid_loss['y'].value,
-                valid_loss['z'].value,
-                valid_loss['phi'].value))
-            logging.info("[ModelTrainer] MSE {:2f}: x={:2f}, y={:2f}, z={:2f}, phi={:2f}".format(mse_loss['tot'].value,
-                                                                                                 mse_loss['x'].value,
-                                                                                                 mse_loss['y'].value,
-                                                                                                 mse_loss['z'].value,
-                                                                                                 mse_loss['phi'].value))
-            logging.info("[ModelTrainer] MAE {:2f}: x={:2f}, y={:2f}, z={:2f}, phi={:2f}".format(mae_loss['tot'].value,
-                                                                                                 mae_loss['x'].value,
-                                                                                                 mae_loss['y'].value,
-                                                                                                 mae_loss['z'].value,
-                                                                                                 mae_loss['phi'].value))
+        logging.info("[ModelTrainer] Average validation loss {}, {}, {}, {}".format(valid_loss_x.value, valid_loss_y.value,
+                                                                  valid_loss_z.value,
+                                                                  valid_loss_phi.value))
 
-        return valid_loss['x'].value, valid_loss['y'].value, valid_loss['z'].value, valid_loss[
-            'phi'].value, y_pred, gt_labels
+
+        return valid_loss_x.value, valid_loss_y.value, valid_loss_z.value, valid_loss_phi.value, y_pred, gt_labels
 
 
     def Train(self, training_generator, validation_generator):
