@@ -199,6 +199,8 @@ class ModelTrainer:
             if ended:
                 break
 
+            train_loss_x, train_loss_y, train_loss_z, train_loss_phi = self.TrainSingleEpoch(train_loader)
+            loss_epoch_m1 = train_loss_x + train_loss_y + train_loss_z + train_loss_phi
 
             valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
                 validation_loader)
