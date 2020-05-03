@@ -10,7 +10,7 @@ from ModelManager import ModelManager
 import torch
 
 from ConvBlock import ConvBlock
-from HannaNet import HannaNet
+from PenguiNet import PenguiNet
 import nemo
 import os
 
@@ -126,7 +126,7 @@ def main():
                 regime[k] = rr[k]
 
 
-    model = HannaNet(ConvBlock, [1, 1, 1], True)
+    model = PenguiNet(ConvBlock, [1, 1, 1], True)
 
     h = 96
     w = 160
@@ -134,7 +134,7 @@ def main():
     if args.trainq:
         epoch = ModelManager.Read(args.load_model, model)
         trainer = ModelTrainer(model, args, regime)
-        trainer.TrainQuantized(train_loader, validation_loader, h, w, args.epochs)
+        trainer.TrainQuantized(train_loader, validation_loader, h, w, args.epochs, True)
 
     if args.quantize and not args.trainq:
         if torch.cuda.is_available():

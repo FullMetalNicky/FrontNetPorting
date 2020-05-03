@@ -26,7 +26,7 @@ class ModelTrainer:
 
         # Loss and optimizer
         self.criterion = nn.L1Loss()
-        if self.args.quantize or self.args.trainq:
+        if self.args.quantize:
             param = dict(self.model.named_parameters())
             fp_params = list({k: v for k, v in param.items() if k[:3] == "fc."}.values())
             qnt_params = list({k: v for k, v in param.items() if k[:3] != "fc."}.values())
@@ -72,16 +72,16 @@ class ModelTrainer:
 
         # export model
         try:
-            os.makedirs('HannaNet')
+            os.makedirs('PenguiNet')
         except Exception:
             pass
-        nemo.utils.export_onnx("HannaNet/model_int.onnx", self.model, self.model, (1, h, w), perm=None)
+        nemo.utils.export_onnx("PenguiNet/model_int.onnx", self.model, self.model, (1, h, w), perm=None)
 
         # export golden outputs
         b_in = bin_id
         b_out = bout_id
         try:
-            os.makedirs('HannaNet/golden')
+            os.makedirs('PenguiNet/golden')
         except Exception:
             pass
         from collections import OrderedDict
@@ -93,14 +93,14 @@ class ModelTrainer:
                 actbuf = b_in[n][0][bidx].permute((1, 2, 0))
             except RuntimeError:
                 actbuf = b_in[n][0][bidx]
-            np.savetxt("HannaNet/golden/golden_input_%s.txt" % n, actbuf.cpu().numpy().flatten(),
+            np.savetxt("PenguiNet/golden/golden_input_%s.txt" % n, actbuf.cpu().numpy().flatten(),
                        header="input (shape %s)" % (list(actbuf.shape)), fmt="%.3f", delimiter=',', newline=',\n')
         for n, m in self.model.named_modules():
             try:
                 actbuf = b_out[n][bidx].permute((1, 2, 0))
             except RuntimeError:
                 actbuf = b_out[n][bidx]
-            np.savetxt("HannaNet/golden/golden_%s.txt" % n, actbuf.cpu().numpy().flatten(),
+            np.savetxt("PenguiNet/golden/golden_%s.txt" % n, actbuf.cpu().numpy().flatten(),
                        header="%s (shape %s)" % (n, list(actbuf.shape)), fmt="%.3f", delimiter=',', newline=',\n')
 
 
@@ -195,14 +195,14 @@ class ModelTrainer:
                 "[ModelTrainer] Epoch: %d Train loss: %.2f Accuracy: %.2f%%" % (epoch, loss_epoch_m1, acc * 100.))
 
             if acc > best:
-                nemo.utils.save_checkpoint(self.model, self.optimizer, epoch, acc, checkpoint_name='HannaNet_',
+                nemo.utils.save_checkpoint(self.model, self.optimizer, epoch, acc, checkpoint_name='PenguiNet_',
                                            checkpoint_suffix='best')
                 best = acc
 
             if self.ipython:
                 import IPython;
                 IPython.embed()
-        nemo.utils.save_checkpoint(self.model, self.optimizer, epoch, acc, checkpoint_name='HannaNet_',
+        nemo.utils.save_checkpoint(self.model, self.optimizer, epoch, acc, checkpoint_name='PenguiNet_',
                                    checkpoint_suffix='final')
 
     def TrainSingleEpoch(self, training_generator):

@@ -12,14 +12,14 @@ def conv1x1(in_planes, out_planes, stride=1):
     """1x1 convolution"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
-class HannaNet(nn.Module):
+class PenguiNet(nn.Module):
     def __init__(self, block, layers, isGray=False):
-        super(HannaNet, self).__init__()
+        super(PenguiNet, self).__init__()
 
         if isGray ==True:
-            self.name = "HannaNetGray"
+            self.name = "PenguiNetGray"
         else:
-            self.name = "HannaNetRGB"
+            self.name = "PenguiNetRGB"
         self.inplanes = 32
         self.dilation = 1
         self._norm_layer = nn.BatchNorm2d
