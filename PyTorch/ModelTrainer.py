@@ -24,6 +24,8 @@ class ModelTrainer:
 
         # Loss and optimizer
         self.criterion = nn.L1Loss()
+        self.optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
         if args is not None:
             self.args = args
             self.regime = regime
@@ -37,8 +39,8 @@ class ModelTrainer:
                     {'params': qnt_params, 'lr': float(regime['lr']), 'weight_decay': float(regime['weight_decay'])},
                     {'params': fp_params, 'lr': float(regime['lr']), 'weight_decay': float(regime['weight_decay'])}
                 ))
+
         else:
-            self.optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
             self.num_epochs = 100
 
         self.folderPath = "Models/"
