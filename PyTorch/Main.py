@@ -1,7 +1,10 @@
 from __future__ import print_function
 from PreActBlock import PreActBlock
+from ConvBlock import ConvBlock
 from FrontNet import FrontNet
 from Dronet import Dronet
+from PenguiNet import PenguiNet
+
 
 from DataProcessor import DataProcessor
 from ModelTrainer import ModelTrainer
@@ -110,18 +113,18 @@ def Train():
 
 
 def TrainGray():
-    model = Dronet(PreActBlock, [1, 1, 1], True)
-    summary(model, (1, 90, 160))
+    model = PenguiNet(ConvBlock, [1, 1, 1], True)
+    summary(model, (1, 96, 160))
     trainer = ModelTrainer(model)
 
-    DATA_PATH = "/Users/usi/PycharmProjects/data/"
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
     [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
-        DATA_PATH + "160x160HimaxDynamic_12_03_20.pickle")
+        DATA_PATH + "160x96HimaxMixedTrain_12_03_20AugCrop.pickle")
 
     training_set = Dataset(x_train, y_train, True)
     params = {'batch_size': 64,
               'shuffle': True,
-              'num_workers': 0}
+              'num_workers': 6}
     training_generator = data.DataLoader(training_set, **params)
 
     validation_set = Dataset(x_validation, y_validation)
@@ -141,9 +144,9 @@ def ConvertToGray():
 
 def CropDataset():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
-    DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x90/"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x96/"
 
-    DataManipulator.CropCenteredDataset(DATA_PATH + "160x160HimaxTest16_4_2020.pickle", [90, 160], DATA_PATH2 + "160x90HimaxTest16_4_2020.pickle")
+    DataManipulator.CropCenteredDataset(DATA_PATH + "160x160HimaxMixedTest_12_03_20.pickle", [96, 160], DATA_PATH2 + "160x96HimaxMixedTest_12_03_20.pickle")
 
 def Shift():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
@@ -181,8 +184,8 @@ def Augment():
 
 def CropRandomTest():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
-    train = DATA_PATH + "160x160HimaxTest16_4_2020.pickle"
-    DataManipulator.CropDataset(train, "/Users/usi/PycharmProjects/data/160x96/" + "160x96HimaxTest16_4_2020Cropped64.pickle", [96, 160], 64)
+    train = DATA_PATH + "160x160HimaxMixedTest_12_03_20.pickle"
+    DataManipulator.CropDataset(train, "/Users/usi/PycharmProjects/data/160x96/" + "160x96HimaxMixedTest_12_03_20Crop64.pickle", [96, 160], 64)
 
 def AugmentAndCrop():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
@@ -218,7 +221,7 @@ def JoinDatasets():
 
 def ExrtactImages():
     DATA_PATH = "/Users/usi/PycharmProjects/data/108x60/"
-    test = "108x60HimaxMixedTrainFoveate.pickle"
+    test = "108x60HimaxTrainCrop.pickle"
     DataProcessor.ExtractValidationLabels(DATA_PATH+test)
 
 
@@ -226,7 +229,7 @@ def Downsample():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
     DATA_PATH2 = "/Users/usi/PycharmProjects/data/108x60/"
     pickle = DATA_PATH + "160x90HimaxTest16_4_2020.pickle"
-    new = DATA_PATH2 + "108x60HimaxMixedTestNearest.pickle"
+    new = DATA_PATH2 + "108x60HimaxTestNearest.pickle"
 
     # cv2.INTER_NEAREST , cv2.INTER_LINEAR (bilinear)
     DataManipulator.DownsampleDataset(pickle, [60, 108], cv2.INTER_NEAREST, new)
@@ -236,9 +239,18 @@ def Foveate():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
     DATA_PATH2 = "/Users/usi/PycharmProjects/data/108x60/"
     pickle = DATA_PATH + "160x90HimaxTest16_4_2020.pickle"
-    new = DATA_PATH2 + "108x60HimaxMixedTestFoveate.pickle"
+    new = DATA_PATH2 + "108x60HimaxTestFoveate.pickle"
 
     DataManipulator.FoveateDataset(pickle, new)
+
+def SamplingBlur():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/"
+    orig = "160x96/160x96HimaxMixedTest_12_03_20.pickle"
+    DataManipulator.BlurBySamplingDataset(DATA_PATH+orig, (48, 80), DATA_PATH+"Sizes/80x48TestNicky.pickle")
+    DataManipulator.BlurBySamplingDataset(DATA_PATH+orig, (24, 40), DATA_PATH+"Sizes/40x24TestNicky.pickle")
+    DataManipulator.BlurBySamplingDataset(DATA_PATH+orig, (12, 20), DATA_PATH+"Sizes/20x12TestNicky.pickle")
+
+
 
 
 
@@ -257,7 +269,7 @@ def main():
     logging.getLogger('').addHandler(console)
 
     #Test()
-    #TrainGray()
+    TrainGray()
     #ConvertToGray()
     #MergeDatasets()
     #Train()
@@ -275,9 +287,10 @@ def main():
     #Divide()
     #JoinDatasets()
     #ExrtactImages()
-    Downsample()
+    #Downsample()
     #Foveate()
     #ExrtactImages()
+    SamplingBlur()
 
 
 if __name__ == '__main__':

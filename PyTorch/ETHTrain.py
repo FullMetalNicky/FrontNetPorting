@@ -10,7 +10,7 @@ from PenguiNet import PenguiNet
 import numpy as np
 
 from DataProcessor import DataProcessor
-from ModelTrainerETH import ModelTrainer
+from ModelTrainer import ModelTrainer
 from Dataset import Dataset
 from torch.utils import data
 from ModelManager import ModelManager
