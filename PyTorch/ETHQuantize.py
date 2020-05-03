@@ -1,7 +1,5 @@
 from __future__ import print_function
-from PreActBlock import PreActBlock
-from FrontNet import FrontNet
-from Dronet import Dronet
+
 import numpy as np
 
 from DataProcessor import DataProcessor
@@ -13,6 +11,8 @@ import torch
 
 from ConvBlock import ConvBlock
 from HannaNet import HannaNet
+import nemo
+import os
 
 import argparse
 import json
@@ -54,6 +54,10 @@ def Parse(parser):
     # [NeMO] If `quantize` is False, the script operates like the original PyTorch example
     parser.add_argument('--quantize', default=False, action="store_true",
                         help='for loading the model')
+
+    # [NeMO] If `TrainQ` is True, finetune/relax
+    parser.add_argument('--trainq', default=False, action="store_true",
+                        help='for loading the model')
     # [NeMO] The training regime (in JSON) used to store all NeMO configuration.
     parser.add_argument('--regime', default=None, type=str,
                         help='for loading the model')
@@ -75,7 +79,7 @@ def LoadData(args):
     # Parameters
     # num_workers - 0 for debug in Mac+PyCharm, 6 for everything else
     num_workers = 0
-    params = {'batch_size': args.batch_size,
+    params = {'batch_size':args.batch_size,
               'shuffle': True,
               'num_workers': num_workers}
     train_loader = data.DataLoader(training_set, **params)
@@ -98,12 +102,12 @@ def main():
                         filename="log.txt",
                         filemode='w')
 
-
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
     formatter = logging.Formatter('%(message)s')
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
+
 
     train_loader, validation_loader = LoadData(args)
 
@@ -121,31 +125,34 @@ def main():
             except ValueError:
                 regime[k] = rr[k]
 
-    if args.gray is not None:
-        model = HannaNet(ConvBlock, [1, 1, 1], True)
-    else:
-        model = Dronet(PreActBlock, [1, 1, 1], False)
 
-    # [NeMO] This used to preload the model with pretrained weights.
-    if args.load_model is not None:
-        ModelManager.Read(args.load_model, model)
+    model = HannaNet(ConvBlock, [1, 1, 1], True)
 
-    trainer = ModelTrainer(model, args, regime)
-    if args.quantize:
-        #logging.disable(logging.INFO)
-        trainer.Quantize(validation_loader, 96, 160)
+    h = 96
+    w = 160
+
+    if args.trainq:
+        epoch = ModelManager.Read(args.load_model, model)
+        trainer = ModelTrainer(model, args, regime)
+        trainer.TrainQuantized(train_loader, validation_loader, h, w, args.epochs)
+
+    if args.quantize and not args.trainq:
+        if torch.cuda.is_available():
+            device = "cuda"
+        else:
+            device = "cpu"
+        model = nemo.transform.quantize_pact(model, dummy_input=torch.ones((1, 1, h, w)).to(device))  # .cuda()
+        logging.info("[ETHQ] Model: %s", model)
+        epoch, prec_dict = ModelManager.ReadQ(args.load_model, model)
+        trainer = ModelTrainer(model, args, regime)
+        trainer.Deploy(validation_loader, h, w, prec_dict)
 
 
     if args.save_model is not None:
+        # torch.save(trainer.model.state_dict(), args.save_model)
         ModelManager.Write(trainer.GetModel(), 100, args.save_model)
 
-        # state_dict = torch.load(args.save_model, map_location='cpu')
-        # qmodel = state_dict["model"]
-        # for key, value in qmodel.items():
-        #     if "weight" in key:
-        #         value = value.reshape(-1)
-        #         value = list(value.numpy())
-        #         logging.info("{}={}".format(key, value))
+    print(model)
 
 
 if __name__ == '__main__':
