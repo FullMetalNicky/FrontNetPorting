@@ -225,13 +225,13 @@ def Plot2Models(r_test, name, base_r2_score):
     fig, ax = plt.subplots(2, 2, figsize=(16, 12))
     fig.suptitle("R2 Score as a function of Roll")
 
-    name1 = "DronetHimax160x90AugCropResultsRot.pickle"
+    name1 = "pickles/DronetHimax160x90AugCropResultsRot.pickle"
     outputs, gt_labels = LoadPerformanceResults(name1)
-    range_p = VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, r_test, 'b', 'new')
+    range_p = VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, r_test, 'b', 'pitch-augmented')
 
-    name2 = "DronetHimax160x90AugmentedResultsRot.pickle"
+    name2 = "pickles/DronetHimax160x90AugmentedResultsRot.pickle"
     outputs, gt_labels = LoadPerformanceResults(name2)
-    range_p = VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, r_test, 'g', 'old')
+    range_p = VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, r_test, 'g', 'non-augmented')
 
     PlotBasePoint(ax, base_r2_score, (range_p + 1) / 2)
 
@@ -288,9 +288,6 @@ def main():
 
     picklename = "160x90HimaxMixedTest_12_03_20Rot.pickle"
     r_test = DataProcessor.GetRollFromTestData(DATA_PATH + picklename)
-
-    print(r_test)
-
 
     if picklename.find(".pickle"):
         picklename = picklename.replace(".pickle", '')

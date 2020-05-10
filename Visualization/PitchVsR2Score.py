@@ -191,11 +191,11 @@ def PlotModelR2Score(ax, y_values, x_values, x_labels, len, skip, color, title, 
     ax.set_xticklabels(x_labels, rotation=30, fontsize=8)
     ax.set_xlabel('pitch')
     ax.set_ylabel('R2')
+    ax.set_ylim([0, 1])
 
 
 
 def VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, p_test, color, model_label):
-
     min_p = np.min(p_test)
     max_p = np.max(p_test)
 
@@ -208,7 +208,6 @@ def VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, p_test, color, model_label
     len_labels = len(tot_pitch) + 5
 
     tot_x_r2, tot_y_r2, tot_z_r2, tot_phi_r2 = CalculateR2ForPitch(outputs, gt_labels, range_p)
-
 
     PlotModelR2Score(ax[0][0], tot_x_r2, tot_pitch, pitch_labels, len_labels, skip, color, "x", model_label)
     PlotModelR2Score(ax[0][1], tot_y_r2, tot_pitch, pitch_labels, len_labels, skip, color, "y", model_label)
@@ -225,13 +224,13 @@ def Plot2Models(p_test, name, base_r2_score):
     fig, ax = plt.subplots(2, 2, figsize=(16, 12))
     fig.suptitle("R2 Score as a function of Pitch")
 
-    name1 = "DronetHimax160x90AugCropResults.pickle"
+    name1 = "pickles/DronetHimax160x90AugCropResults.pickle"
     outputs, gt_labels = LoadPerformanceResults(name1)
-    range_p = VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, p_test, 'b', 'new')
+    range_p = VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, p_test, 'b', 'pitch-augmented')
 
-    name2 = "DronetHimax160x90AugmentedResults.pickle"
+    name2 = "pickles/DronetHimax160x90AugmentedResults.pickle"
     outputs, gt_labels = LoadPerformanceResults(name2)
-    range_p = VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, p_test, 'g', 'old')
+    range_p = VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, p_test, 'g', 'non-augmented')
 
     PlotBasePoint(ax, base_r2_score, (range_p + 1) / 2)
 
@@ -241,12 +240,18 @@ def Plot2Models(p_test, name, base_r2_score):
     plt.show()
 
 
-def Plot1Model(outputs, gt_labels, p_test, name):
+def Plot1Model(p_test, name, base_r2_score):
 
     fig, ax = plt.subplots(2, 2, figsize=(16, 12))
     fig.suptitle("R2 Score as a function of Pitch")
 
+    name1 = "Others160x96HimaxTest16_4_2020Cropped64.pickle"
+    outputs, gt_labels = LoadPerformanceResults(name1)
+
     range_p = VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, p_test, 'b', 'new')
+
+
+    PlotBasePoint(ax, base_r2_score, (range_p + 1) / 2)
 
     if name.find(".pickle"):
         name = name.replace(".pickle", '')
@@ -270,11 +275,14 @@ def main():
     logging.getLogger('').addHandler(console)
 
 
+    #DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
 
     # Get baseline results
 
+    #picklename = "160x96HimaxPitch16_4_2020.pickle"
     picklename = "160x90HimaxMixedTest_12_03_20.pickle"
+    p_test = DataProcessor.GetPitchFromTestData(DATA_PATH + picklename)
     [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + picklename)
     test_set = Dataset(x_test, y_test)
     params = {'batch_size': 1, 'shuffle': False, 'num_workers': 1}
@@ -282,7 +290,7 @@ def main():
     model = Dronet(PreActBlock, [1, 1, 1], True)
     ModelManager.Read('../PyTorch/Models/DronetHimax160x90AugCrop.pt', model)
     trainer = ModelTrainer(model)
-    MSE2, MAE2, r2_score2, outputs2, gt_labels2 = trainer.Test(test_generator)
+    MSE2, MAE2, r2_score2, outputs, gt_labels = trainer.Test(test_generator)
 
     # Get pitch values
 
@@ -295,7 +303,7 @@ def main():
 
 
     Plot2Models(p_test, picklename, r2_score2)
-    #Plot1Model(outputs, gt_labels, p_test, picklename)
+    #Plot1Model(p_test, picklename, [0.8445, 0.8240, 0.6652, 0.4508])
 
 
 if __name__ == '__main__':
