@@ -47,12 +47,12 @@ class DataManipulator:
         y_set = dataset['y'].values
         z_set = dataset['z'].values
         t_set = dataset['t'].values
-        p_set = dataset['p'].values
+        #p_set = dataset['p'].values
         #r_set =  dataset['r'].values
         #o_train = train_set['o'].values
 
-        #data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set})
-        data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
+        data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set})
+        #data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
         df = pd.concat([data, sizes], axis=1)
         df.to_pickle(file_name)
 
@@ -685,7 +685,8 @@ class DataManipulator:
 
         for i in range(len(x_set)):
             img = x_set[i]
-            img = cv2.resize(img, (ds_size[1], ds_size[0]), ds_type)
+            img = cv2.resize(img, (ds_size[1], ds_size[0]), interpolation=ds_type)
+            img = img.astype(np.uint8)
             x_ds.append(img)
 
 
@@ -754,5 +755,51 @@ class DataManipulator:
 
         data = pd.DataFrame(data={'x': x_fov, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
         #data = pd.DataFrame(data={'x': x_fov, 'y': y_set, 'z': z_set, 't': t_set})
+        df = pd.concat([data, sizes], axis=1)
+        df.to_pickle(new_path)
+
+    @staticmethod
+    def BlurBySamplingDataset(pickle_path, ds_size, new_path):
+        """Downsample Dataset
+
+              Parameters
+            ----------
+            pickle_path : str
+                The file location of the first .pickle
+            ds_size: (int height, int width)
+                target size after downsampling
+            ds_type: cv2 interpolation flag
+                the method of downsampling
+            new_path : str
+                The name/path of the newly created dataset
+
+           """
+
+        dataset = pd.read_pickle(pickle_path)
+        logging.info('[DataManipulator] dataset shape: ' + str(dataset.shape))
+
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset)
+        sizes = DataManipulator.CreateSizeDataFrame(h, w, c)
+
+        x_set = dataset['x'].values
+        y_set = dataset['y'].values
+        z_set = dataset['z'].values
+        t_set = dataset['t'].values
+       # p_set = dataset['p'].values
+
+        x_set = np.vstack(x_set[:])
+        x_set = np.reshape(x_set, (-1, h, w, c))
+
+        x_ds = []
+
+        for i in range(len(x_set)):
+            img = x_set[i]
+            img = cv2.resize(img, (ds_size[1], ds_size[0]), interpolation=cv2.INTER_LINEAR)
+            img = cv2.resize(img, (w, h), interpolation=cv2.INTER_LINEAR)
+            img = img.astype(np.uint8)
+            x_ds.append(img)
+
+       # data = pd.DataFrame(data={'x': x_ds, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
+        data = pd.DataFrame(data={'x': x_ds, 'y': y_set, 'z': z_set, 't': t_set})
         df = pd.concat([data, sizes], axis=1)
         df.to_pickle(new_path)
