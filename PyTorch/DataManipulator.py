@@ -42,6 +42,7 @@ class DataManipulator:
         for i in range(len(x_set)):
             img = x_set[i]
             img = img[dh:(dh+desiredSize[0]), dw:(dw+desiredSize[1])]
+            img = img.astype("uint8")
             x_cropped.append(img)
 
         y_set = dataset['y'].values
@@ -755,6 +756,69 @@ class DataManipulator:
 
         data = pd.DataFrame(data={'x': x_fov, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
         #data = pd.DataFrame(data={'x': x_fov, 'y': y_set, 'z': z_set, 't': t_set})
+        df = pd.concat([data, sizes], axis=1)
+        df.to_pickle(new_path)
+
+    @staticmethod
+    def FoveateDataset80x48(pickle_path, new_path):
+        """Foveate Dataset
+
+            This function is hardocded  because the computations here are headache that I don't need to deal with right now.
+            ok?ok.
+
+              Parameters
+            ----------
+            pickle_path : str
+                The file location of the .pickle of size 160x90
+            new_path : str
+                The name/path of the newly created dataset which is 80x48
+
+           """
+
+        dataset = pd.read_pickle(pickle_path)
+        logging.info('[DataManipulator] dataset shape: ' + str(dataset.shape))
+
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset)
+        sizes = DataManipulator.CreateSizeDataFrame(48, 80, c)
+
+        x_set = dataset['x'].values
+        y_set = dataset['y'].values
+        z_set = dataset['z'].values
+        t_set = dataset['t'].values
+        p_set = dataset['p'].values
+
+        x_set = np.vstack(x_set[:])
+        x_set = np.reshape(x_set, (-1, h, w, c))
+
+        x_fov = []
+
+        for i in range(len(x_set)):
+            img = x_set[i]
+            img = np.reshape(img, (h, w)).astype("uint8")
+            fov_img = np.zeros((48, 80), dtype="uint8")
+
+            # in  corners res is half on both axes
+
+            fov_img[0:8, 0:13] = cv2.resize(img[0:32, 0:53], (13, 8), cv2.INTER_LINEAR)
+            fov_img[-8:, 0:13] = cv2.resize(img[-32:, 0:53], (13, 8), cv2.INTER_LINEAR)
+            fov_img[0:8, -13:] = cv2.resize(img[0:32, -53:], (13, 8), cv2.INTER_LINEAR)
+            fov_img[-8:, -13:] = cv2.resize(img[-32:, -53:], (13, 8), cv2.INTER_LINEAR)
+
+            # top/bottom center - every second row
+            fov_img[0:8, 13:67] = cv2.resize(img[0:32, 53:107], (54, 8), cv2.INTER_LINEAR)
+            fov_img[-8:, 13:67] = cv2.resize(img[-32:, 53:107], (54, 8), cv2.INTER_LINEAR)
+
+            # left/right center - everey second column
+            fov_img[8:40, 0:13] = cv2.resize(img[32:64, 0:53], (13, 32), cv2.INTER_LINEAR)
+            fov_img[8:40, -13:] = cv2.resize(img[32:64, -53:], (13, 32), cv2.INTER_LINEAR)
+
+            # center is full res
+            fov_img[8:40, 13:67] = img[32:64, 53:107]
+
+            x_fov.append(fov_img)
+
+        data = pd.DataFrame(data={'x': x_fov, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
+        # data = pd.DataFrame(data={'x': x_fov, 'y': y_set, 'z': z_set, 't': t_set})
         df = pd.concat([data, sizes], axis=1)
         df.to_pickle(new_path)
 

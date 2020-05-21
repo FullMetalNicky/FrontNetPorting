@@ -113,13 +113,13 @@ def Train():
 
 
 def TrainGray():
-    model = PenguiNet(ConvBlock, [1, 1, 1], True)
-    summary(model, (1, 96, 160))
+    model = Dronet(PreActBlock, [1, 1, 1], True)
+    summary(model, (1, 48, 80))
     trainer = ModelTrainer(model)
 
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
+    DATA_PATH = "/Users/usi/PycharmProjects/data/80x48/"
     [x_train, x_validation, y_train, y_validation] = DataProcessor.ProcessTrainData(
-        DATA_PATH + "160x96HimaxMixedTrain_12_03_20AugCrop.pickle")
+        DATA_PATH + "80x48HimaxTrain.pickle")
 
     training_set = Dataset(x_train, y_train, True)
     params = {'batch_size': 64,
@@ -143,10 +143,10 @@ def ConvertToGray():
     DataManipulator.CreateGreyPickle(DATA_PATH + "BebopPatterns_06_03_20.pickle", 60, 108, "GreyBebopPatterns_06_03_20.pickle")
 
 def CropDataset():
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
-    DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x96/"
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/80x48/"
 
-    DataManipulator.CropCenteredDataset(DATA_PATH + "160x160HimaxMixedTest_12_03_20.pickle", [96, 160], DATA_PATH2 + "160x96HimaxMixedTest_12_03_20.pickle")
+    DataManipulator.CropCenteredDataset(DATA_PATH + "160x96HimaxTrain16_4_2020AugCrop.pickle", [48, 80], DATA_PATH2 + "80x48HimaxTrainCrop.pickle")
 
 def Shift():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
@@ -221,27 +221,27 @@ def JoinDatasets():
 
 def ExrtactImages():
     DATA_PATH = "/Users/usi/PycharmProjects/data/108x60/"
-    test = "108x60HimaxTrainCrop.pickle"
+    test = "108x60HimaxTrainNearest.pickle"
     DataProcessor.ExtractValidationLabels(DATA_PATH+test)
 
 
 def Downsample():
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
-    DATA_PATH2 = "/Users/usi/PycharmProjects/data/108x60/"
-    pickle = DATA_PATH + "160x90HimaxTest16_4_2020.pickle"
-    new = DATA_PATH2 + "108x60HimaxTestNearest.pickle"
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/80x48/"
+    pickle = DATA_PATH + "160x96HimaxTrain16_4_2020AugCrop.pickle"
+    new = DATA_PATH2 + "80x48HimaxTrainNearest.pickle"
 
     # cv2.INTER_NEAREST , cv2.INTER_LINEAR (bilinear)
-    DataManipulator.DownsampleDataset(pickle, [60, 108], cv2.INTER_NEAREST, new)
+    DataManipulator.DownsampleDataset(pickle, [48, 80], cv2.INTER_NEAREST, new)
 
 
 def Foveate():
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
-    DATA_PATH2 = "/Users/usi/PycharmProjects/data/108x60/"
-    pickle = DATA_PATH + "160x90HimaxTest16_4_2020.pickle"
-    new = DATA_PATH2 + "108x60HimaxTestFoveate.pickle"
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/80x48/"
+    pickle = DATA_PATH + "160x96HimaxTrain16_4_2020AugCrop.pickle"
+    new = DATA_PATH2 + "80x48HimaxTraintFoveate.pickle"
 
-    DataManipulator.FoveateDataset(pickle, new)
+    DataManipulator.FoveateDataset80x48(pickle, new)
 
 def SamplingBlur():
     DATA_PATH = "/Users/usi/PycharmProjects/data/"
@@ -250,6 +250,17 @@ def SamplingBlur():
     DataManipulator.BlurBySamplingDataset(DATA_PATH+orig, (24, 40), DATA_PATH+"Sizes/40x24TestNicky.pickle")
     DataManipulator.BlurBySamplingDataset(DATA_PATH+orig, (12, 20), DATA_PATH+"Sizes/20x12TestNicky.pickle")
 
+def Test():
+    img = cv2.imread('original.jpg', 0)
+    linear = cv2.resize(img, (108,60), interpolation=cv2.INTER_LINEAR)
+    nearest = cv2.resize(img, (108,60), interpolation=cv2.INTER_NEAREST)
+    cv2.imwrite('nearest.jpg', nearest)
+    cv2.imwrite('linear.jpg', linear)
+    np.mean(nearest - linear)
+
+def Summary():
+    model = Dronet(PreActBlock, [1, 1, 1], True)
+    summary(model, (1, 96, 160))
 
 
 
@@ -269,14 +280,14 @@ def main():
     logging.getLogger('').addHandler(console)
 
     #Test()
-    TrainGray()
+    #TrainGray()
     #ConvertToGray()
     #MergeDatasets()
     #Train()
     #TestInference()
     #DumpImages()
     #Filter()
-    #CropDataset()
+    CropDataset()
     #Shift()
     #Augment()
     #AddColumnsToDataSet("train_grey.pickle", 60, 108, 1)
@@ -290,7 +301,8 @@ def main():
     #Downsample()
     #Foveate()
     #ExrtactImages()
-    SamplingBlur()
+    #SamplingBlur()
+    #Summary()
 
 
 if __name__ == '__main__':
