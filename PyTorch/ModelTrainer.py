@@ -61,7 +61,7 @@ class ModelTrainer:
 
         # qd_stage requires NEMO>=0.0.3
         # input is in [0,255], so eps_in=1 (smallest representable amount in the input) and there is no input bias
-        self.model.qd_stage(eps_in=1.0)
+        self.model.qd_stage(eps_in=1.0, precision=nemo.precision.Precision(bits=12))
         bin_qd, bout_qd, (valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred,
                           gt_labels) = nemo.utils.get_intermediate_activations(self.model, self.ValidateSingleEpoch,
                                                                                validation_loader)
@@ -69,12 +69,15 @@ class ModelTrainer:
         logging.info("[ModelTrainer]: QuantizedDeployable network: %f" % acc)
 
         # id_stage requires NEMO>=0.0.3
-        self.model.id_stage()
+        self.model.id_stage(requantization_factor=32)
         bin_id, bout_id, (valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred,
                           gt_labels) = nemo.utils.get_intermediate_activations(self.model, self.ValidateSingleEpoch,
                                                                                validation_loader, integer=True)
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
         logging.info("[ModelTrainer]: IntegerDeployable: %f" % acc)
+        eps_fcin = (self.model.layer3.relu2.alpha / (2**self.model.layer3.relu2.precision.get_bits()-1))
+        eps_fcout = self.model.fc.get_output_eps(eps_fcin)
+        logging.info("[ModelTrainer]: output quantum is eps_out=%.5e" % eps_fcout)
 
         # export model
         try:
@@ -285,8 +288,7 @@ class ModelTrainer:
                     # workaround because PACT_Linear is not properly quantizing biases!
                     outputs = [(o - self.model.fc.bias[i]) * eps_fcout + self.model.fc.bias[i] for i, o in
                                enumerate(outputs)]
-
-                
+                    batch_targets = torch.round(batch_targets / eps_fcout) * eps_fcout
 
                 loss_x = self.criterion(outputs[0], (batch_targets[:, 0]).view(-1, 1))
                 loss_y = self.criterion(outputs[1], (batch_targets[:, 1]).view(-1, 1))
