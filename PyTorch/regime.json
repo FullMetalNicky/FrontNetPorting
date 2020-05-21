@@ -1,5 +1,5 @@
 {
-    "lr": 1e-3,
+    "lr": 1e-4,
     "epochs": 50,
     "batch_size": 64,
     "weight_decay": 1e-6,
