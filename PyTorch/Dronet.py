@@ -39,6 +39,7 @@ class Dronet(nn.Module):
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout()
 
+        # 160x96 -> 1920, 108x60 -> 1024, 80x48 -> 768
         fcSize = 1920
         self.fc_x = nn.Linear(fcSize, 1)
         self.fc_y = nn.Linear(fcSize, 1)
