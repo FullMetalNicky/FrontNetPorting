@@ -77,7 +77,9 @@ class ModelTrainer:
         logging.info("[ModelTrainer]: IntegerDeployable: %f" % acc)
         eps_fcin = (self.model.layer3.relu2.alpha / (2**self.model.layer3.relu2.precision.get_bits()-1))
         eps_fcout = self.model.fc.get_output_eps(eps_fcin)
-        logging.info("[ModelTrainer]: output quantum is eps_out=%.5e" % eps_fcout)
+        logging.info("[ModelTrainer]: output quantum is eps_out=%f" % eps_fcout)
+        logging.info("[ModelTrainer]: fc biases are {}".format(self.model.fc.bias))
+
 
         # export model
         try:
@@ -116,8 +118,6 @@ class ModelTrainer:
 #Francesco's code from https://github.com/FrancescoConti/FrontNetPorting/
 
     def TrainQuantized(self, train_loader, validation_loader, h, w, epochs=100, relaxation=False):
-
-        print(self.model.name)
 
         valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
             validation_loader)
@@ -181,8 +181,6 @@ class ModelTrainer:
 
         for epoch in range(1, epochs):
             
-            print(self.model.name)
-
             change_prec = False
             ended = False
             if relaxation:
