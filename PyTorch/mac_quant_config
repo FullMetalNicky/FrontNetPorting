@@ -1,0 +1,5 @@
+--regime regime.json --epochs 100 --gray 1 --load-trainset "/Users/usi/PycharmProjects/data/160x96/160x96HimaxMixedTrain_12_03_20AugCrop.pickle" --load-model "checkpoint/PenguiNetbest.pth" --quantiz
+
+
+
+--regime regime.json --epochs 100 --gray 1 --load-trainset "/Users/usi/PycharmProjects/data/160x96/160x96HimaxMixedTrain_12_03_20AugCrop.pickle" --load-model "Models/PenguiNet160x96.pt" --quantiz --trainq
