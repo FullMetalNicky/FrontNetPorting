@@ -143,10 +143,6 @@ class ModelTrainer:
         acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
         logging.info("[ModelTrainer]: After calibration process: %f" % acc)
 
-        # [NeMO] NeMO re-training usually converges better using an Adam optimizer, and a smaller learning rate
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=float(self.regime['lr']),
-                                     weight_decay=float(self.regime['weight_decay']))
-
         precision_rule = self.regime['relaxation']
 
         # [NeMO] The relaxation engine can be stepped to automatically change the DNN precisions and end training if the final
@@ -165,7 +161,7 @@ class ModelTrainer:
             self.model.change_precision(bits=12, min_prec_dict=prec_dict)
             self.model.change_precision(bits=12, scale_activations=False, min_prec_dict=prec_dict)
         else:
-            self.model.change_precision(bits=7, min_prec_dict=prec_dict)
+            self.model.change_precision(bits=8, min_prec_dict=prec_dict)
             self.model.change_precision(bits=7, scale_activations=False, min_prec_dict=prec_dict)
         self.ipython = False
 
@@ -184,9 +180,7 @@ class ModelTrainer:
         # self.model.enable_prefc = True
 
         for epoch in range(1, epochs):
-
-
-            train_qnt = not train_qnt
+            
             print(self.model.name)
 
             change_prec = False
@@ -210,7 +204,7 @@ class ModelTrainer:
             acc = float(1) / (valid_loss_x + valid_loss_y + valid_loss_z + valid_loss_phi)
 
             logging.info(
-                "[ModelTrainer] Epoch: %d Train loss: %.2f Accuracy: %.2f%%" % (epoch, loss_epoch_m1, acc * 100.))
+                "[ModelTrainer] Epoch: %d Train loss: %.2f Accuracy: %.2f" % (epoch, loss_epoch_m1, acc))
 
             if acc > best:
                 nemo.utils.save_checkpoint(self.model, self.optimizer, epoch, acc, checkpoint_name=self.model.name,
