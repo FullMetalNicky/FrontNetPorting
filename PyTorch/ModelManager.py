@@ -45,7 +45,10 @@ class ModelManager:
 
         state_dict = torch.load(filename, map_location='cpu')
         epoch = state_dict['epoch']
-        prec_dict = state_dict['precision']
+        try:
+            prec_dict = state_dict['precision']
+        except KeyError:
+            prec_dict = None
 
         try:
             model.load_state_dict(state_dict['state_dict'], strict=True)

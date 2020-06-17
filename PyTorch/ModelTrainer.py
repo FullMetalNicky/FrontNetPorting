@@ -61,7 +61,9 @@ class ModelTrainer:
 
         # qd_stage requires NEMO>=0.0.3
         # input is in [0,255], so eps_in=1 (smallest representable amount in the input) and there is no input bias
-        self.model.qd_stage(eps_in=1.0, precision=nemo.precision.Precision(bits=12))
+        def calibrate():
+            _, _, _, _, _, _ = self.ValidateSingleEpoch(validation_loader)
+        self.model.qd_stage(eps_in=1.0) #, bn_calibrate_fn=calibrate)
         bin_qd, bout_qd, (valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred,
                           gt_labels) = nemo.utils.get_intermediate_activations(self.model, self.ValidateSingleEpoch,
                                                                                validation_loader)
@@ -69,7 +71,7 @@ class ModelTrainer:
         logging.info("[ModelTrainer]: QuantizedDeployable network: %f" % acc)
 
         # id_stage requires NEMO>=0.0.3
-        self.model.id_stage(requantization_factor=32)
+        self.model.id_stage()
         bin_id, bout_id, (valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred,
                           gt_labels) = nemo.utils.get_intermediate_activations(self.model, self.ValidateSingleEpoch,
                                                                                validation_loader, integer=True)
@@ -80,6 +82,11 @@ class ModelTrainer:
         logging.info("[ModelTrainer]: output quantum is eps_out=%f" % eps_fcout)
         logging.info("[ModelTrainer]: fc biases are {}".format(self.model.fc.bias))
 
+        with open(self.model.name + "/output_dequant.txt", "w") as f:
+            f.write("FLOAT_X   = INT_X   * %.5e + %.5e\n" % (eps_fcout, self.model.fc.bias[0]))
+            f.write("FLOAT_Y   = INT_Y   * %.5e + %.5e\n" % (eps_fcout, self.model.fc.bias[1]))
+            f.write("FLOAT_Z   = INT_Z   * %.5e + %.5e\n" % (eps_fcout, self.model.fc.bias[2]))
+            f.write("FLOAT_PHI = INT_PHI * %.5e + %.5e\n" % (eps_fcout, self.model.fc.bias[3]))
 
         # export model
         try:
@@ -87,6 +94,9 @@ class ModelTrainer:
         except Exception:
             pass
         nemo.utils.export_onnx(self.model.name + "/model_int.onnx", self.model, self.model, (1, h, w), perm=None)
+        
+        # workaround because PACT_Linear is not properly quantizing biases!
+        self.model.fc.bias.data[:] = 0
 
         # export golden outputs
         b_in = bin_id
@@ -104,16 +114,15 @@ class ModelTrainer:
                 actbuf = b_in[n][0][bidx].permute((1, 2, 0))
             except RuntimeError:
                 actbuf = b_in[n][0][bidx]
-            np.savetxt(self.model.name + "/golden/golden_input_%s.txt" % n, actbuf.cpu().numpy().flatten(),
+            np.savetxt(self.model.name + "/golden/golden_input_%s.txt" % n, actbuf.cpu().detach().numpy().flatten(),
                        header="input (shape %s)" % (list(actbuf.shape)), fmt="%.3f", delimiter=',', newline=',\n')
         for n, m in self.model.named_modules():
             try:
                 actbuf = b_out[n][bidx].permute((1, 2, 0))
             except RuntimeError:
                 actbuf = b_out[n][bidx]
-            np.savetxt(self.model.name + "/golden/golden_%s.txt" % n, actbuf.cpu().numpy().flatten(),
+            np.savetxt(self.model.name + "/golden/golden_%s.txt" % n, actbuf.cpu().detach().numpy().flatten(),
                        header="%s (shape %s)" % (n, list(actbuf.shape)), fmt="%.3f", delimiter=',', newline=',\n')
-
 
 #Francesco's code from https://github.com/FrancescoConti/FrontNetPorting/
 
