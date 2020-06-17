@@ -12,6 +12,7 @@ import torch
 from ConvBlock import ConvBlock
 from PenguiNet import PenguiNet
 import nemo
+import cv2
 import os
 
 import argparse
@@ -58,6 +59,9 @@ def Parse(parser):
     # [NeMO] If `TrainQ` is True, finetune/relax
     parser.add_argument('--trainq', default=False, action="store_true",
                         help='for loading the model')
+    # [NeMO] If `testq` is True, test q model
+    parser.add_argument('--testq', default=False, action="store_true",
+                        help='for loading the model')
     # [NeMO] The training regime (in JSON) used to store all NeMO configuration.
     parser.add_argument('--regime', default=None, type=str,
                         help='for loading the model')
@@ -82,6 +86,7 @@ def LoadData(args):
         num_workers = 0
     else:
         num_workers = 6
+    num_workers = 1
     params = {'batch_size':args.batch_size,
               'shuffle': True,
               'num_workers': num_workers}
@@ -145,6 +150,17 @@ def main():
         epoch, prec_dict = ModelManager.ReadQ(args.load_model, model)
         trainer = ModelTrainer(model, args, regime)
         trainer.Deploy(validation_loader, h, w, prec_dict)
+
+    if args.testq:
+        model = nemo.transform.quantize_pact(model, dummy_input=torch.ones((1, 1, h, w)).to("cpu"))
+        logging.info("[ETHQ] Model: %s", model)
+        epoch, prec_dict = ModelManager.ReadQ(args.load_model, model)
+        trainer = ModelTrainer(model, args, regime)
+        frame = cv2.imread("../Deployment/dataset/87.pgm", 0)
+        frame = np.reshape(frame, (h, w, 1))
+        v1_pred = trainer.InferSingleSample(frame)
+        print("output")
+        print(v1_pred)
 
 
     if args.save_model is not None:
