@@ -457,6 +457,95 @@ class DataManipulator:
         df = pd.concat([data, sizes], axis=1)
         df.to_pickle(pickle_name)
 
+    @staticmethod
+    def AugmentAndCropMirko(path, pickle_name, desiresSize, factor=1):
+        """Augment dataset
+
+              Parameters
+            ----------
+            path : str
+                The file location of the .pickle
+            desiresSize: (int height, int width)
+                The desired size after cropping
+            factor: int
+                How many augmented variations will be created for each frame
+
+           """
+        dataset = pd.read_pickle(path)
+        logging.info('[DataManipulator] dataset shape: ' + str(dataset.shape))
+
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset)
+        sizes = DataManipulator.CreateSizeDataFrame(desiresSize[0], desiresSize[1], c)
+
+        x_set = dataset['x'].values
+        y_set = dataset['y'].values
+        z_set = dataset['z'].values
+        t_set = dataset['t'].values
+
+        it = ImageTransformer()
+        x_set = np.vstack(x_set[:])
+        x_set = np.reshape(x_set, (-1, h, w, c))
+        np.random.seed()
+
+        x_augset = []
+        y_augset = []
+        z_augset = []
+        t_augset = []
+        p_augset = []
+        aug_id = []
+        frame_id = []
+
+        vertical_range = h - desiresSize[0]
+        hor_offset = int((w - desiresSize[1]) / 2)
+
+        for p in range(factor):
+
+            Blur = np.random.choice([True, False])
+            Exposure = np.random.choice([True, False])
+            Exposure_param = np.random.uniform(0.7, 2.0)
+            Gamma = np.random.choice([True, False])
+            DR = np.random.choice([True, False])
+            DR_high = np.random.uniform(0.7, 0.9)
+            DR_low = np.random.uniform(0.0, 0.2)
+            vignette = np.random.randint(25, 50)
+            crop_offset = np.random.randint(0, vertical_range)
+
+            for i in range(len(x_set)):
+                y = y_set[i]
+                z = z_set[i]
+                t = t_set[i]
+                x = x_set[i]
+                x = np.reshape(x, (h, w)).astype("uint8")
+
+                img = it.ApplyVignette(x, vignette)
+                img = img[crop_offset:(crop_offset + desiresSize[0]), hor_offset:(hor_offset + desiresSize[1])]
+
+                if Blur:
+                    img = it.ApplyBlur(img, 3)
+                if Exposure:
+                    img = it.ApplyExposure(img, Exposure_param)
+                if Gamma:
+                    img = it.ApplyGamma(img, 0.4, 2.0)
+                elif DR:
+                    img = it.ApplyDynamicRange(img, DR_high, DR_low)
+
+                img = img.astype("uint8")
+                p_augset.append(crop_offset)
+                x_augset.append(img)
+                y_augset.append(y)
+                z_augset.append(z)
+                t_augset.append(t)
+                aug_id.append(p)
+                frame_id.append(i)
+
+    #     # imv = X.astype("uint8")
+    #     # cv2.imshow("frame", imv)
+    #     # cv2.waitKey()
+
+        data = pd.DataFrame(data={'frame_id': frame_id, 'aug_id': aug_id , 'frame': x_augset, 'timestamp': t_augset, 'pitch': p_augset, 'rel_pose' :y_augset, 'drone_pose': z_augset})
+        df = pd.concat([data, sizes], axis=1)
+        df.to_pickle(pickle_name)
+
 
     @staticmethod
     def Rotate(path, pickle_name, factor=1):
