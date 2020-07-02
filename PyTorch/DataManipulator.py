@@ -331,6 +331,7 @@ class DataManipulator:
         p_augset = []
 
         vertical_range = h - desiresSize[0]
+        hor_offset = int((w - desiresSize[1]) / 2)
 
         for i in range(len(x_set)):
 
@@ -343,7 +344,7 @@ class DataManipulator:
             for p in range(factor):
                 #crop_offset = np.random.randint(0, vertical_range)
                 crop_offset = p
-                img = x[crop_offset:(crop_offset + desiresSize[0]), 0:w]
+                img = x[crop_offset:(crop_offset + desiresSize[0]), hor_offset:hor_offset+desiresSize[1]]
 
                 p_augset.append(crop_offset)
                 x_augset.append(img)
@@ -425,7 +426,7 @@ class DataManipulator:
 
                 crop_offset = np.random.randint(0, vertical_range)
                 img = it.ApplyVignette(x, np.random.randint(25, 50))
-                img = img[crop_offset:(crop_offset + desiresSize[0]), hor_offset:desiresSize[1]]
+                img = img[crop_offset:(crop_offset + desiresSize[0]), hor_offset:desiresSize[1]+hor_offset]
 
                 # crop_offset = np.random.randint(20, 80)
                 # img = it.ApplyVignette(x, np.random.randint(25, 50))
