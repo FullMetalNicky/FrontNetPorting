@@ -13,14 +13,16 @@ def conv1x1(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
 class PenguiNet(nn.Module):
-    def __init__(self, block, layers, isGray=False):
+    def __init__(self, block, layers, isGray=False, w=160, h=96, c=32, fc_nodes=1920):
         super(PenguiNet, self).__init__()
 
         if isGray ==True:
             self.name = "PenguiNet"
         else:
             self.name = "PenguiNetRGB"
-        self.inplanes = 32
+        self.inplanes = c
+        self.width = w
+        self.height = h
         self.dilation = 1
         self._norm_layer = nn.BatchNorm2d
 
@@ -35,13 +37,13 @@ class PenguiNet(nn.Module):
         self.bn = nn.BatchNorm2d(self.inplanes)
         self.relu1 = nn.ReLU()
 
-        self.layer1 = ConvBlock(32, 32, stride=2)
-        self.layer2 = ConvBlock(32, 64, stride=2)
-        self.layer3 = ConvBlock(64, 128, stride=2)
+        self.layer1 = ConvBlock(self.inplanes, self.inplanes, stride=2)
+        self.layer2 = ConvBlock(self.inplanes, self.inplanes*2, stride=2)
+        self.layer3 = ConvBlock(self.inplanes*2, self.inplanes*4, stride=2)
 
         self.dropout = nn.Dropout()
 
-        fcSize = 1920
+        fcSize = fc_nodes
         self.fc = nn.Linear(fcSize, 4)
 
 

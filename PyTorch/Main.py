@@ -4,6 +4,8 @@ from ConvBlock import ConvBlock
 from FrontNet import FrontNet
 from Dronet import Dronet
 from PenguiNet import PenguiNet
+import Utils as utils
+import nemo
 
 
 from DataProcessor import DataProcessor
@@ -45,32 +47,42 @@ def Filter():
 
 
 def Test():
-    model = Dronet(PreActBlock, [1, 1, 1], True)
-    ModelManager.Read("Models/DronetHimax160x90.pt", model)
+    model = PenguiNet(ConvBlock, [1, 1, 1], True)
+    ModelManager.Read("Models/PenguiNet160x96.pt", model)
 
     trainer = ModelTrainer(model)
 
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
+    test = "160x96HimaxTrain16_4_2020AugCrop.pickle"
     #ModelManager.Read("Models/FrontNetGray.pt", model)
-    [x_test, y_test] = DataProcessor.ProcessTestData("/Users/usi/PycharmProjects/data/160x90HimaxStatic_12_03_20.pickle")
+    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH+test)
+    t_test = DataProcessor.GetTimeStampsFromTestData(DATA_PATH+test)
     test_set = Dataset(x_test, y_test)
 
     params = {'batch_size': 64,
               'shuffle': False,
               'num_workers': 1}
     test_loader = data.DataLoader(test_set, **params)
-    trainer.Predict(test_loader)
+    MSE, MAE, r2_score, outputs, labels = trainer.Test(test_loader)
+    utils.SaveResultsToCSV(labels, outputs, t_test, "results.csv")
 
 def TestInference():
 
     #logging.disable(logging.INFO)
     frame = cv2.imread("../Deployment/dataset/87.pgm", 0)
-    frame = np.reshape(frame, (60, 108, 1))
-    model = Dronet(PreActBlock, [1, 1, 1], True)
-    ModelManager.Read("Models/DronetHimax108x60.pt", model)
+    zeros = np.zeros((96, 162))
+    zeros[:, 1:161] = frame
+    frame = np.reshape(frame, (96, 160, 1))
+    zeros = np.reshape(zeros, (96, 162, 1))
+
+    model = PenguiNet(ConvBlock, [1, 1, 1], True)
+    ModelManager.Read("Models/PenguiNet160x96_32c.pt", model)
     trainer = ModelTrainer(model)
     v1_pred = trainer.InferSingleSample(frame)
+    v2_pred = trainer.InferSingleSample(zeros)
     print("output")
     print(v1_pred)
+    print(v2_pred)
 
 
 def MergeDatasets():
@@ -138,15 +150,15 @@ def DumpImages():
 
 
 def ConvertToGray():
-    DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    DataManipulator.CreateGreyPickle(DATA_PATH + "BebopFlightSim_06_03_20.pickle", 60, 108, "GreyBebopFlightSim_06_03_20.pickle")
-    DataManipulator.CreateGreyPickle(DATA_PATH + "BebopPatterns_06_03_20.pickle", 60, 108, "GreyBebopPatterns_06_03_20.pickle")
+    DATA_PATH = "/Users/usi/PycharmProjects/data/108x60/old/"
+    DataManipulator.CreateGreyPickle(DATA_PATH + "trainRGB.pickle", 60, 108, "bebop_train_grey.pickle")
+    DataManipulator.CreateGreyPickle(DATA_PATH + "testRGB.pickle", 60, 108, "bebop_test_grey.pickle")
 
 def CropDataset():
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
-    DATA_PATH2 = "/Users/usi/PycharmProjects/data/80x48/"
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x96/"
 
-    DataManipulator.CropCenteredDataset(DATA_PATH + "160x96HimaxTrain16_4_2020AugCrop.pickle", [48, 80], DATA_PATH2 + "80x48HimaxTrainCrop.pickle")
+    DataManipulator.CropCenteredDataset(DATA_PATH + "160x160PaperTestset.pickle", [96, 160], DATA_PATH2 + "160x96PaperTestset.pickle")
 
 def Shift():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
@@ -176,10 +188,11 @@ def AddColumnsToDataSet(picklename, height, width, channels):
     new.to_pickle(DATA_PATH + "train_grey2.pickle")
 
 
+
 def Augment():
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
-    train = DATA_PATH + "160x160HimaxTrain16_4_2020.pickle"
-    DataManipulator.Augment(train, DATA_PATH +"160x160HimaxTrain16_4_2020Aug.pickle", 10)
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
+    train = DATA_PATH + "160x96HimaxTest16_4_2020.pickle"
+    DataManipulator.Augment(train, DATA_PATH +"160x96HimaxTest16_4_2020Aug.pickle", 10)
 
 
 def CropRandomTest():
@@ -189,17 +202,17 @@ def CropRandomTest():
 
 def AugmentAndCrop():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
-    train = DATA_PATH + "160x160HimaxTrain16_4_2020.pickle"
+    train = DATA_PATH + "160x96HimaxTest16_4_2020.pickle"
     DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x90/"
     DataManipulator.AugmentAndCrop(train, DATA_PATH2 + "160x90HimaxTrain16_4_2020AugCrop.pickle", [90, 160], 10)
 
 def Rotate():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
-    test = DATA_PATH + "160x160HimaxMixedTest_12_03_20.pickle"
-    DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x90/"
+    test = DATA_PATH + "160x160HimaxTest16_4_2020.pickle"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/160x96/"
 
-    DataManipulator.Rotate(test, DATA_PATH + "160x160HimaxMixedTest_12_03_20Rot.pickle", 29)
-    DataManipulator.CropCenteredDataset(DATA_PATH + "160x160HimaxMixedTest_12_03_20Rot.pickle", [90, 160], DATA_PATH2 + "160x90HimaxMixedTest_12_03_20Rot.pickle")
+    DataManipulator.Rotate(test, DATA_PATH + "160x160HimaxTest16_4_2020Rot.pickle", 29)
+    DataManipulator.CropCenteredDataset(DATA_PATH + "160x160HimaxTest16_4_2020Rot.pickle", [96, 160], DATA_PATH2 + "160x96HimaxTest16_4_2020Rot.pickle")
 
 def Divide():
     DATA_PATH = "/Users/usi/PycharmProjects/data/Hand/"
@@ -220,19 +233,19 @@ def JoinDatasets():
     DataManipulator.JoinDataset(DATA_PATH+train1, DATA_PATH2+train2, DATA_PATH2+train)
 
 def ExrtactImages():
-    DATA_PATH = "/Users/usi/PycharmProjects/data/108x60/"
-    test = "108x60HimaxTrainNearest.pickle"
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
+    test = "160x96HimaxMixedTest_12_03_20.pickle"
     DataProcessor.ExtractValidationLabels(DATA_PATH+test)
 
 
 def Downsample():
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
-    DATA_PATH2 = "/Users/usi/PycharmProjects/data/80x48/"
-    pickle = DATA_PATH + "160x96HimaxTrain16_4_2020AugCrop.pickle"
-    new = DATA_PATH2 + "80x48HimaxTrainNearest.pickle"
+    DATA_PATH2 = "/Users/usi/PycharmProjects/data/108x60/"
+    pickle = DATA_PATH + "160x96PaperTestsetPrune2.pickle"
+    new = DATA_PATH2 + "108x60PaperTestsetPrune2.pickle"
 
     # cv2.INTER_NEAREST , cv2.INTER_LINEAR (bilinear)
-    DataManipulator.DownsampleDataset(pickle, [48, 80], cv2.INTER_NEAREST, new)
+    DataManipulator.DownsampleDataset(pickle, [60, 108], cv2.INTER_NEAREST, new)
 
 
 def Foveate():
@@ -250,19 +263,56 @@ def SamplingBlur():
     DataManipulator.BlurBySamplingDataset(DATA_PATH+orig, (24, 40), DATA_PATH+"Sizes/40x24TestNicky.pickle")
     DataManipulator.BlurBySamplingDataset(DATA_PATH+orig, (12, 20), DATA_PATH+"Sizes/20x12TestNicky.pickle")
 
-def Test():
-    img = cv2.imread('original.jpg', 0)
-    linear = cv2.resize(img, (108,60), interpolation=cv2.INTER_LINEAR)
-    nearest = cv2.resize(img, (108,60), interpolation=cv2.INTER_NEAREST)
-    cv2.imwrite('nearest.jpg', nearest)
-    cv2.imwrite('linear.jpg', linear)
-    np.mean(nearest - linear)
 
 def Summary():
     model = Dronet(PreActBlock, [1, 1, 1], True)
     summary(model, (1, 96, 160))
 
+def GetStats():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/108x60/"
+    #file = "108x60HimaxTrainLinear.pickle"
+    #file = "old/bebop_train_grey.pickle"
+    DataProcessor.GetDatasetStatisics(DATA_PATH+file)
 
+def TestQ():
+    frame = cv2.imread("../Deployment/dataset/87.pgm", 0)
+    model = PenguiNet(ConvBlock, [1, 1, 1], True, c=16, fc_nodes=960)
+    # frame = cv2.resize(frame, dsize=(80, 48), interpolation=cv2.INTER_LINEAR)
+    # frame = np.reshape(frame, (48, 80, 1))
+    # model = nemo.transform.quantize_pact(model, dummy_input=torch.ones((1, 1, 48, 80)).to("cpu"))
+   # epoch, prec_dict = ModelManager.ReadQ("Models/Q/PenguiNetfinal80x48x32.pth", model)
+    frame = np.reshape(frame, (96, 160, 1))
+    model = nemo.transform.quantize_pact(model, dummy_input=torch.ones((1, 1, 96, 160)).to("cpu"))
+    epoch, prec_dict = ModelManager.ReadQ("Models/Q/PenguiNetfinal160x96x16.pth", model)
+    trainer = ModelTrainer(model)
+    v1_pred = trainer.InferSingleSample(frame)
+    print("output")
+    print(v1_pred)
+
+
+def ToInt():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
+    pickle = "160x96HimaxTrain16_4_2020AugCrop.pickle"
+    DataManipulator.ConvertToInt(DATA_PATH + pickle, DATA_PATH + "160x96HimaxTrain16_4_2020AugCrop2.pickle")
+
+def Prune():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
+    pickle = "160x96PaperTestset.pickle"
+    DataManipulator.PruneBadFrames(DATA_PATH + pickle, DATA_PATH + "160x96PaperTestsetPrune.pickle")
+    #DataManipulator.TrimDataset(DATA_PATH + "KrstoPrune.pickle", DATA_PATH + "KrstoFinal.pickle", start=330, end=2190)
+
+def Trim():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
+    pickle = "160x96PaperTestsetPrune.pickle"
+    DataManipulator.TrimDataset(DATA_PATH + pickle, DATA_PATH + "160x96PaperTestsetPrune2.pickle")
+
+
+
+def JoinSeveralDataets():
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
+    pathlist = [DATA_PATH + "KrstoFinal.pickle", DATA_PATH + "GabryFinal.pickle",DATA_PATH + "JamalFinal.pickle",DATA_PATH + "BorisFinal.pickle"]
+    new_path = DATA_PATH + "160x160PaperTestset.pickle"
+    DataManipulator.JoinDatasetFromList(pathlist, new_path)
 
 
 def main():
@@ -279,6 +329,9 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
+    #JoinSeveralDataets()
+    #Prune()
+    #TestQ()
     #Test()
     #TrainGray()
     #ConvertToGray()
@@ -287,7 +340,7 @@ def main():
     #TestInference()
     #DumpImages()
     #Filter()
-    CropDataset()
+    #CropDataset()
     #Shift()
     #Augment()
     #AddColumnsToDataSet("train_grey.pickle", 60, 108, 1)
@@ -298,11 +351,15 @@ def main():
     #Divide()
     #JoinDatasets()
     #ExrtactImages()
-    #Downsample()
+    Downsample()
     #Foveate()
     #ExrtactImages()
     #SamplingBlur()
     #Summary()
+    #GetStats()
+    #Rotate()
+    #ToInt()
+    #Trim()
 
 
 if __name__ == '__main__':
