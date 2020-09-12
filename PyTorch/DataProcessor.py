@@ -116,6 +116,49 @@ class DataProcessor:
         return [x_test, y_test]
 
     @staticmethod
+    def ProcessTestDataAsRGB(testPath, isExtended=False):
+        """Reads the .pickle file and converts it into a format suitable fot testing
+
+            Parameters
+            ----------
+            testPath : str
+                The file location of the .pickle
+            isExtended : bool, optional
+                True if the dataset contains both head and hand pose and you wish to retrieve both
+
+
+            Returns
+            -------
+            list
+                list of video frames and list of labels (poses)
+            """
+
+        test_set = pd.read_pickle(testPath)
+        logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(test_set)
+
+        x_test = test_set['x'].values
+        x_test = np.vstack(x_test[:]).astype(np.float32)
+        x_test = np.reshape(x_test, (-1, h, w, c))
+        x_testRGB = []
+
+        for i in range(len(x_test)):
+            img = cv2.cvtColor(x_test[i],cv2.COLOR_GRAY2RGB)
+            x_testRGB.append(img)
+
+        x_test = np.swapaxes(x_testRGB, 1, 3)
+        x_test = np.swapaxes(x_test, 2, 3)
+        y_test = test_set['y'].values
+        y_test = np.vstack(y_test[:]).astype(np.float32)
+
+        if isExtended == True:
+            z_test = test_set['z'].values
+            z_test = np.vstack(z_test[:]).astype(np.float32)
+            return [x_test, y_test, z_test]
+
+        return [x_test, y_test]
+
+    @staticmethod
     def GetTimeStampsFromTestData(testPath):
 
         """Reads the .pickle file and extrects the frames' timestamps
@@ -244,9 +287,9 @@ class DataProcessor:
             data = x_test[i]
             data = np.swapaxes(data, 0, 2)
             data = np.swapaxes(data, 0, 1)
-            img = np.reshape(data, (h, w))
-            #img = np.zeros((244, 324), np.uint8)
-            #img[92:152, 108:216] = data
+            data = np.reshape(data, (h, w))
+            img = np.zeros((244, 324), np.uint8)
+            img[74:170, 82:242] = data
             cv2.imwrite("test/{}.pgm".format(i), img)
             label = y_test[i]
             #f.write("{},{},{},{}\n".format(label[0], label[1],label[2],label[3]))
@@ -288,6 +331,33 @@ class DataProcessor:
 
 
         return [x_test, y_test]
+
+    @staticmethod
+    def GetDatasetStatisics(testPath):
+        """Reads the .pickle file and provides statistic data about the pose values
+
+                    Parameters
+                    ----------
+                    testPath : str
+                        The file location of the .pickle
+
+                   """
+
+        test_set = pd.read_pickle(testPath)
+        logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
+
+        y_test = test_set['y'].values
+        y_test = np.vstack(y_test[:]).astype(np.float32)
+        mean = np.mean(y_test, 0)
+        std = np.std(y_test, 0)
+        min = np.min(y_test, 0)
+        max = np.max(y_test, 0)
+
+        print("mean: {}".format(mean))
+        print("std: {}".format(std))
+        print("min: {}".format(min))
+        print("max: {}".format(max))
+
 
 
 

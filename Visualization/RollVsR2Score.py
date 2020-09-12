@@ -62,13 +62,13 @@ def PlotBaseline(ax, base_r2_score, length):
 
 def PlotBasePoint(ax, base_r2_score, mid):
     ax[0][0].scatter(mid, base_r2_score[0],  c='r', label='Base', marker='^')
-    ax[0][0].legend()
+    ax[0][0].legend(fontsize=15)
     ax[0][1].scatter(mid, base_r2_score[1], c='r', label='Base', marker='^')
-    ax[0][1].legend()
+    ax[0][1].legend(fontsize=15)
     ax[1][0].scatter(mid, base_r2_score[2], c='r', label='Base', marker='^')
-    ax[1][0].legend()
+    ax[1][0].legend(fontsize=15)
     ax[1][1].scatter(mid, base_r2_score[3], c='r', label='Base', marker='^')
-    ax[1][1].legend()
+    ax[1][1].legend(fontsize=15)
 
 
 def PitchvsR2ScoreBinned(outputs, gt_labels, p_test, name, h, vfov, base_r2_score=None):
@@ -110,35 +110,35 @@ def PitchvsR2ScoreBinned(outputs, gt_labels, p_test, name, h, vfov, base_r2_scor
 
 
     fig, ax = plt.subplots(2, 2, figsize=(16, 12))
-    fig.suptitle("R2 Score as a function of Pitch")
+    fig.suptitle("R2 Score as a function of Pitch", fontsize=22)
 
     ax[0][0].plot(tot_pitch, tot_x_r2)
-    ax[0][0].set_title("x")
+    ax[0][0].set_title("x", fontsize=8)
     ax[0][0].set_xticks(np.arange(len(pitch_labels)))
     ax[0][0].set_xticklabels(pitch_labels, rotation=30, fontsize=8)
-    ax[0][0].set_xlabel('pitch')
-    ax[0][0].set_ylabel('R2')
+    ax[0][0].set_xlabel('Pitch', fontsize=8)
+    ax[0][0].set_ylabel('R2', fontsize=8)
 
     ax[0][1].plot(tot_pitch, tot_y_r2)
-    ax[0][1].set_title("y")
+    ax[0][1].set_title("y", fontsize=8)
     ax[0][1].set_xticks(np.arange(len(pitch_labels)))
     ax[0][1].set_xticklabels(pitch_labels, rotation=30, fontsize=8)
-    ax[0][1].set_xlabel('pitch')
-    ax[0][1].set_ylabel('R2')
+    ax[0][1].set_xlabel('Pitch', fontsize=8)
+    ax[0][1].set_ylabel('R2', fontsize=8)
 
     ax[1][0].plot(tot_pitch, tot_z_r2)
-    ax[1][0].set_title("z")
+    ax[1][0].set_title("z", fontsize=8)
     ax[1][0].set_xticks(np.arange(len(pitch_labels)))
     ax[1][0].set_xticklabels(pitch_labels, rotation=30, fontsize=8)
-    ax[1][0].set_xlabel('pitch')
-    ax[1][0].set_ylabel('R2')
+    ax[1][0].set_xlabel('Pitch', fontsize=8)
+    ax[1][0].set_ylabel('R2', fontsize=8)
 
     ax[1][1].plot(tot_pitch, tot_phi_r2)
-    ax[1][1].set_title("phi")
+    ax[1][1].set_title("phi", fontsize=8)
     ax[1][1].set_xticks(np.arange(len(pitch_labels)))
     ax[1][1].set_xticklabels(pitch_labels, rotation=30, fontsize=8)
-    ax[1][1].set_xlabel('pitch')
-    ax[1][1].set_ylabel('R2')
+    ax[1][1].set_xlabel('Pitch', fontsize=8)
+    ax[1][1].set_ylabel('R2', fontsize=8)
 
     if base_r2_score is not None:
         PlotBaseline(ax, base_r2_score, len(pitch_labels))
@@ -186,11 +186,13 @@ def CalculateR2ForPitch(outputs, gt_labels, range_p):
 
 def PlotModelR2Score(ax, y_values, x_values, x_labels, len, skip, color, title, model_label):
     ax.plot(x_values, y_values, color=color, label=model_label)
-    ax.set_title(title)
+    ax.set_title(title, fontsize=18)
     ax.set_xticks(np.arange(0, len, skip))
     ax.set_xticklabels(x_labels, rotation=30, fontsize=8)
-    ax.set_xlabel('Roll')
-    ax.set_ylabel('R2')
+    ax.set_xlabel('Roll', fontsize=18)
+    ax.set_ylabel('R2', fontsize=18)
+    ax.set_ylim([0, 1])
+    ax.set_ymargin(0.4)
 
 
 
@@ -203,17 +205,17 @@ def VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, p_test, color, model_label
     outputs = np.reshape(outputs, (-1, range_p, 4))
     gt_labels = np.reshape(gt_labels, (-1, range_p, 4))
     tot_pitch = list(range(range_p))
-    skip = 5
+    skip = 2
     pitch_labels = np.linspace(-14, 14, 15, endpoint=True)
-    len_labels = len(tot_pitch) + 5
+    len_labels = len(tot_pitch) + 2
 
     tot_x_r2, tot_y_r2, tot_z_r2, tot_phi_r2 = CalculateR2ForPitch(outputs, gt_labels, range_p)
 
 
-    PlotModelR2Score(ax[0][0], tot_x_r2, tot_pitch, pitch_labels, len_labels, skip, color, "x", model_label)
-    PlotModelR2Score(ax[0][1], tot_y_r2, tot_pitch, pitch_labels, len_labels, skip, color, "y", model_label)
-    PlotModelR2Score(ax[1][0], tot_z_r2, tot_pitch, pitch_labels, len_labels, skip, color, "z", model_label)
-    PlotModelR2Score(ax[1][1], tot_phi_r2, tot_pitch, pitch_labels, len_labels, skip, color, "phi", model_label)
+    PlotModelR2Score(ax[0][0], tot_x_r2, tot_pitch, pitch_labels, len_labels, skip, color, "Output variable: x", model_label)
+    PlotModelR2Score(ax[0][1], tot_y_r2, tot_pitch, pitch_labels, len_labels, skip, color, "Output variable: y", model_label)
+    PlotModelR2Score(ax[1][0], tot_z_r2, tot_pitch, pitch_labels, len_labels, skip, color, "Output variable: z", model_label)
+    PlotModelR2Score(ax[1][1], tot_phi_r2, tot_pitch, pitch_labels, len_labels, skip, color, "Output variable: phi", model_label)
 
 
     return range_p
@@ -223,17 +225,19 @@ def Plot2Models(r_test, name, base_r2_score):
 
 
     fig, ax = plt.subplots(2, 2, figsize=(16, 12))
-    fig.suptitle("R2 Score as a function of Roll")
+    fig.suptitle("R2 Score as a function of Roll", fontsize=22)
 
-    name1 = "pickles/DronetHimax160x90AugCropResultsRot.pickle"
+    name1 = "pickles/DronetOthes160x90RollResults.pickle"
     outputs, gt_labels = LoadPerformanceResults(name1)
-    range_p = VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, r_test, 'b', 'pitch-augmented')
+    range_p = VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, r_test, 'b', 'Pitch-augmented')
 
-    name2 = "pickles/DronetHimax160x90AugmentedResultsRot.pickle"
+    name2 = "pickles/DronetOthes160x90NonPitchAugRollResults.pickle"
     outputs, gt_labels = LoadPerformanceResults(name2)
-    range_p = VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, r_test, 'g', 'non-augmented')
+    range_p = VizPitchvsR2ScoreSubPlots(ax, outputs, gt_labels, r_test, 'g', 'Non-augmented')
 
     PlotBasePoint(ax, base_r2_score, (range_p + 1) / 2)
+
+    plt.subplots_adjust(hspace=0.3)
 
     if name.find(".pickle"):
         name = name.replace(".pickle", '')
@@ -270,23 +274,24 @@ def main():
     logging.getLogger('').addHandler(console)
 
 
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
 
     # Get baseline results
 
-    picklename = "160x90HimaxMixedTest_12_03_20.pickle"
-    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + picklename)
-    test_set = Dataset(x_test, y_test)
-    params = {'batch_size': 1, 'shuffle': False, 'num_workers': 1}
-    test_generator = data.DataLoader(test_set, **params)
-    model = Dronet(PreActBlock, [1, 1, 1], True)
-    ModelManager.Read('../PyTorch/Models/DronetHimax160x90AugCrop.pt', model)
-    trainer = ModelTrainer(model)
-    MSE2, MAE2, r2_score2, outputs2, gt_labels2 = trainer.Test(test_generator)
+    # picklename = "160x96HimaxTest16_4_2020.pickle"
+    # [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + picklename)
+    # test_set = Dataset(x_test, y_test)
+    # params = {'batch_size': 1, 'shuffle': False, 'num_workers': 1}
+    # test_generator = data.DataLoader(test_set, **params)
+    # model = Dronet(PreActBlock, [1, 1, 1], True)
+    # ModelManager.Read('../PyTorch/Models/DronetHimax160x96Others.pt', model)
+    # trainer = ModelTrainer(model)
+    # MSE2, MAE2, r2_score2, outputs2, gt_labels2 = trainer.Test(test_generator)
+    r2_score2 = [0.8445, 0.8240, 0.6852, 0.4508]
 
     # Get pitch values
 
-    picklename = "160x90HimaxMixedTest_12_03_20Rot.pickle"
+    picklename = "160x96HimaxTest16_4_2020Rot.pickle"
     r_test = DataProcessor.GetRollFromTestData(DATA_PATH + picklename)
 
     if picklename.find(".pickle"):

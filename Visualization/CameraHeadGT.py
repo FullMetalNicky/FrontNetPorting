@@ -13,7 +13,7 @@ from DataProcessor import DataProcessor
 from Dataset import Dataset
 
 
-def VizDroneBEV(frames, head_labels, isGray=False):
+def VizDroneBEV(frames, head_labels, videoname, isGray=False):
 
     fig = plt.figure(888, figsize=(15, 5))
 
@@ -43,7 +43,7 @@ def VizDroneBEV(frames, head_labels, isGray=False):
     collection = plt.fill(trianglex, triangley, facecolor='lightskyblue')
 
 
-    plot1gthead, = plt.plot([], [], color='green', label='Head GT', linestyle='None', marker='o', markersize=10)
+    plot1gthead, = plt.plot([], [], color='green', label='Head', linestyle='None', marker='o', markersize=10)
     arr1gthead = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='green',
                            animated=True)
 
@@ -123,7 +123,7 @@ def VizDroneBEV(frames, head_labels, isGray=False):
 
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save('himaxtestnew.mp4', writer=writer)
+    ani.save(videoname + '_drone.mp4', writer=writer)
     #ani.save('viz2.gif', dpi=80, writer='imagemagick')
     plt.show()
 
@@ -141,14 +141,18 @@ def main():
     logging.getLogger('').addHandler(console)
 
 
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
+    name = "nicky2_walk1.pickle"
 
-    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + "160x90HimaxMixedTest_12_03_20.pickle")
+    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + name)
     h = x_test.shape[2]
     w = x_test.shape[3]
     x_test = np.reshape(x_test, (-1, h, w))
 
-    VizDroneBEV(x_test, y_test, True)
+    if name.find(".pickle"):
+        name = name.replace(".pickle", '')
+
+    VizDroneBEV(x_test, y_test, name, True)
 
 
 if __name__ == '__main__':

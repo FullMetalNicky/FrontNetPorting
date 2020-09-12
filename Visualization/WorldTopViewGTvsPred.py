@@ -6,11 +6,14 @@ import matplotlib.pyplot as plt
 from torch.utils import data
 import sys
 import matplotlib.patches as patches
+import pandas as pd
 
 sys.path.append("../PyTorch/")
 
 from PreActBlock import PreActBlock
 from Dronet import Dronet
+from ConvBlock import ConvBlock
+from PenguiNet import PenguiNet
 from DataProcessor import DataProcessor
 from ModelTrainer import ModelTrainer
 from Dataset import Dataset
@@ -56,7 +59,7 @@ def VizWorldTopView(frames, labels, camPoses, outputs, isGray=False, name="World
     ax1.set_ylabel('X')
 
     plot1gt, = plt.plot([], [], color='green', label='GT', linestyle='None', marker='o', markersize=10)
-    plot1pr, = plt.plot([], [], color='blue', label='Prediction', linestyle='None', marker='^', markersize=10)
+    plot1pr, = plt.plot([], [], color='blue', label='Pred', linestyle='None', marker='^', markersize=10)
     plot1cam, = plt.plot([], [], color='k', label='Camera', linestyle='None', marker='s', markersize=10)
     arr1gt = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='green', animated=True)
     arr1pr = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='blue', animated=True)
@@ -166,25 +169,42 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    model = Dronet(PreActBlock, [1, 1, 1], True)
-    ModelManager.Read('../PyTorch/Models/DronetHimax160x90.pt', model)
 
-    DATA_PATH = "/Users/usi/PycharmProjects/data/"
-    picklename = "160x90HimaxDynamic_12_03_20Shift.pickle"
+    DATA_PATH = "/Users/usi/PycharmProjects/data/80x48/"
+    picklename = "80x48PaperTestsetPrune2.pickle"
     [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + picklename, True)
 
+    model = PenguiNet(ConvBlock, [1, 1, 1], True, c=32, fc_nodes=768)
+    ModelManager.Read('../PyTorch/Models/PenguiNet80x48_32c.pt', model)
     test_set = Dataset(x_test, y_test)
     params = {'batch_size': 1,
               'shuffle': False,
               'num_workers': 1}
     test_generator = data.DataLoader(test_set, **params)
     trainer = ModelTrainer(model)
-
     MSE, MAE, r2_score, outputs, gt_labels = trainer.Test(test_generator)
+
 
     h = x_test.shape[2]
     w = x_test.shape[3]
     x_test = np.reshape(x_test, (-1, h, w))
+
+    # df = pd.read_csv('../PyTorch/results.csv')
+    # df.head()
+    # x_c = df['x_pr_c'].values
+    # y_c = df['y_pr_c'].values
+    # z_c = df['z_pr_c'].values
+    # phi_c = df['phi_pr_c'].values
+    # outputs = [x_c, y_c, z_c, phi_c]
+    # outputs = np.reshape(outputs, (-1, 4))
+    #
+    # x_py = df['x_pr_c'].values
+    # y_py = df['y_pr_c'].values
+    # z_py = df['z_pr_c'].values
+    # phi_py = df['phi_pr_c'].values
+    # py_pred = [x_py, y_py, z_py, phi_py]
+    # py_pred = np.reshape(py_pred, (-1, 4))
+
 
     if picklename.find(".pickle"):
         picklename = picklename.replace(".pickle", '')

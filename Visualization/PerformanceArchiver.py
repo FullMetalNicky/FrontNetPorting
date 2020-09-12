@@ -70,16 +70,16 @@ def main():
     logging.getLogger('').addHandler(console)
 
 
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
-    picklename = "160x90HimaxMixedTest_12_03_20Cropped70.pickle"
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
+    picklename = "160x96HimaxTest16_4_2020Cropped64.pickle"
     datset_path = DATA_PATH + picklename
 
     # model_path1 = '../PyTorch/Models/DronetHimax160x90AugCrop.pt'
     # name1 = "DronetHimax160x90AugCropResults.pickle"
     # DumpPerformanceResults(datset_path, model_path1, name1)
 
-    name2 = "DronetHimax160x90AugmentedResults.pickle"
-    model_path2 = '../PyTorch/Models/DronetHimax160x90Augmented.pt'
+    name2 = "160x96DronetNickyTestedWithOthers.pickle"
+    model_path2 = '../PyTorch/Models/DronetHimax160x96Nicky.pt'
     DumpPerformanceResults(datset_path, model_path2, name2)
 
 

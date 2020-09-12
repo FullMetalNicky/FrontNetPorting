@@ -1,41 +1,35 @@
-from __future__ import print_function
 import logging
 import numpy as np
-import matplotlib.animation as animation
 import matplotlib.pyplot as plt
-from torch.utils import data
-import sys
+import pandas as pd
+import matplotlib.animation as animation
 import matplotlib.patches as patches
 
-
-from CoverageHeatMap import SortByAngle
-import pandas as pd
+import sys
 sys.path.append("../PyTorch/")
-
-from PreActBlock import PreActBlock
-from Dronet import Dronet
 from DataProcessor import DataProcessor
-from ModelTrainer import ModelTrainer
-from Dataset import Dataset
-from ModelManager import ModelManager
+
+
+def DrawYaw(y_test):
+    yaw = y_test[:, 3]
+    fig, ax = plt.subplots(figsize=(20, 8))
+    ax.plot(range(len(y_test)), yaw, '.-')
+    ax.set(xlabel='frames', ylabel='yaw',
+           title='yaw vs time')
+    ax.grid()
+    fig.savefig("yawvstime.png")
+    plt.show()
+
+def GetDesiredLocation(head_pose):
+
+    dist = 1.3
+    x, y, yaw = head_pose[0], head_pose[1], head_pose[3]
+
+    return x + dist * np.cos(yaw), y + dist * np.sin(yaw), yaw + np.pi
 
 
 
-
-def MoveToWorldFrame(head, himax):
-    phi = head[3] + himax[3] + np.pi
-
-    rotation = np.array([[np.cos(himax[3]), -np.sin(himax[3])], [np.sin(himax[3]), np.cos(himax[3])] ])
-    xy = np.array([[head[0], head[1]]]).transpose()
-    xy = rotation @ xy
-    xy = xy + np.array([[himax[0], himax[1]]]).transpose()
-    x, = xy[0]
-    y, = xy[1]
-
-    return x, y, phi
-
-
-def VizWorldTopView(frames, labels, camPoses, isGray=False, videoName = "WorldTopView"):
+def VizWorldTopView(frames, drone_poses, head_poses, desired_drone_poses, isGray=False, name="WorldTopViewPatterns"):
 
     fig = plt.figure(888, figsize=(15, 8))
 
@@ -48,7 +42,7 @@ def VizWorldTopView(frames, labels, camPoses, isGray=False, videoName = "WorldTo
     annotation.set_animated(True)
     ax0.axis('off')
 
-    ax1 = plt.subplot2grid((h, w), (2, 0), colspan=8, rowspan=7)
+    ax1 = plt.subplot2grid((h, w), (2, 0), colspan=7, rowspan=7)
     ax1.set_title('World Frame Pose')
     plt.xlim(3.0, -3.0)
     plt.ylim(-3.0, 3.0)
@@ -61,8 +55,10 @@ def VizWorldTopView(frames, labels, camPoses, isGray=False, videoName = "WorldTo
     ax1.set_ylabel('X')
 
     plot1gt, = plt.plot([], [], color='green', label='Head', linestyle='None', marker='o', markersize=10)
-    plot1cam, = plt.plot([], [], color='k', label='Camera', linestyle='None', marker='s', markersize=10)
+    plot1pr, = plt.plot([], [], color='blue', label='Desired drone pose', linestyle='None', marker='^', markersize=10)
+    plot1cam, = plt.plot([], [], color='k', label='Drone pose', linestyle='None', marker='s', markersize=10)
     arr1gt = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='green', animated=True)
+    arr1pr = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='blue', animated=True)
     arr1cam = ax1.arrow([], [], np.cos([]), np.sin([]), head_width=0.1, head_length=0.1, color='k', animated=True)
     plt.plot([2.4, -2.4], [2.4, 2.4], color='gray', linestyle='solid')
     plt.plot([2.4, -2.4], [-2.4, -2.4], color='gray', linestyle='solid')
@@ -98,37 +94,43 @@ def VizWorldTopView(frames, labels, camPoses, isGray=False, videoName = "WorldTo
     plt.subplots_adjust(wspace=1.5)
 
     Writer = animation.writers['ffmpeg']
-    writer = Writer(fps=20, metadata=dict(artist='FullMetalNicky'))
+    writer = Writer(fps=17, metadata=dict(artist='FullMetalNicky'))
 
     def animate(id):
 
-        label = labels[id]
-        camPose = camPoses[id]
-        x_gt, y_gt, phi_gt = MoveToWorldFrame(label, camPose)
-        x_cam, y_cam, z_cam, phi_cam = camPose[0], camPose[1], camPose[2], camPose[3]
+        head_pose = head_poses[id]
+        drone_pose = drone_poses[id]
+        desired_drone_pose = desired_drone_poses[id]
+
+        x_hd, y_hd, z_hd, phi_hd = head_pose[0], head_pose[1], head_pose[2], head_pose[3]
+        x_cam, y_cam, z_cam, phi_cam = drone_pose[0], drone_pose[1], drone_pose[2], drone_pose[3]
+        x_ds, y_ds, z_ds, phi_ds = desired_drone_pose[0], desired_drone_pose[1], desired_drone_pose[2], desired_drone_pose[3]
 
         str1 = "x_cam={:05.3f}, y_cam={:05.3f}, phi_cam={:05.3f} {}".format(x_cam, y_cam, phi_cam, "\n")
-        #str1 = str1 + "x_gt={:05.3f}, y_gt={:05.3f}, phi_gt={:05.3f} {}".format(x_gt, y_gt, phi_gt, "\n")
-        str1 = str1 + "x_hd={:05.3f}, y_hd={:05.3f}, phi_hd={:05.3f} {}".format(x_gt, y_gt, phi_gt, "\n")
-
+        str1 = str1 + "x_hd={:05.3f}, y_hd={:05.3f}, phi_hd={:05.3f} {}".format(x_hd, y_hd, phi_hd, "\n")
+        str1 = str1 + "x_ds={:05.3f}, y_ds={:05.3f},  phi_ds={:05.3f}".format(x_ds, y_ds, phi_ds)
 
         annotation.set_text(str1)
 
-        plot1gt.set_data(np.array([y_gt, x_gt]))
+        plot1gt.set_data(np.array([y_hd, x_hd]))
+        plot1pr.set_data(np.array([y_ds, x_ds]))
         plot1cam.set_data(np.array([y_cam, x_cam]))
 
         if (len(ax1.patches) > 1):
             ax1.patches.pop()
             ax1.patches.pop()
+            ax1.patches.pop()
 
-        patch1 = patches.FancyArrow(y_gt, x_gt, 0.5 * np.sin(phi_gt), 0.5 * np.cos(phi_gt), head_width=0.05,
+        patch1 = patches.FancyArrow(y_hd, x_hd, 0.5 * np.sin(phi_hd), 0.5 * np.cos(phi_hd), head_width=0.05,
                                     head_length=0.05, color='green')
-        patch2 = patches.FancyArrow(y_cam, x_cam, 0.5 * np.sin(phi_cam), 0.5 * np.cos(phi_cam), head_width=0.05,
+        patch2 = patches.FancyArrow(y_ds, x_ds, 0.5 * np.sin(phi_ds), 0.5 * np.cos(phi_ds), head_width=0.05,
+                                    head_length=0.05, color='blue')
+        patch3 = patches.FancyArrow(y_cam, x_cam, 0.5 * np.sin(phi_cam), 0.5 * np.cos(phi_cam), head_width=0.05,
                                     head_length=0.05, color='k')
 
         ax1.add_patch(patch1)
         ax1.add_patch(patch2)
-
+        ax1.add_patch(patch3)
 
         frame = frames[id].astype(np.uint8)
         if isGray == False:
@@ -141,13 +143,13 @@ def VizWorldTopView(frames, labels, camPoses, isGray=False, videoName = "WorldTo
         # return plot1gt, plot1pr, patch1, patch2, scatter2gt, scatter2pr, imgplot, ax1, ax3, annotation, annotation2
         #return plot1gt, plot1pr, patch1, patch2, scatter2gt, scatter2pr, imgplot, annotation, annotation2
 
-        return plot1gt, plot1cam, patch1, patch2, imgplot, annotation, annotation2
+        return plot1gt, plot1pr, plot1cam, patch1, patch2, patch3, imgplot, annotation, annotation2
 
     ani = animation.FuncAnimation(fig, animate, frames=len(frames), interval=1, blit=True)
-    ani.save(videoName +'_world.mp4', writer=writer)
-
+    ani.save(name + '.mp4', writer=writer)
     # ani.save('viz2.gif', dpi=80, writer='imagemagick')
     plt.show()
+
 
 
 
@@ -166,19 +168,26 @@ def main():
 
 
     DATA_PATH = "/Users/usi/PycharmProjects/data/160x160/"
-    name = "nicky2_walk1.pickle"
+    name = "daniele_walk2.pickle"
 
-    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + name, True)
+    [x_test, y_test, drone_poses] = DataProcessor.ProcessTestData(DATA_PATH + name, True)
     h = x_test.shape[2]
     w = x_test.shape[3]
     x_test = np.reshape(x_test, (-1, h, w))
 
+    test_set = pd.read_pickle(DATA_PATH + name)
+    head_poses = test_set['v'].values
+    head_poses = np.vstack(head_poses[:]).astype(np.float32)
+
+    desired_drone_poses =[]
+
+    for i in range(len(y_test)):
+        x, y, yaw = GetDesiredLocation(head_poses[i])
+        desired_drone_poses.append([x, y, 0, yaw])
 
 
-    if name.find(".pickle"):
-        name = name.replace(".pickle", '')
+    VizWorldTopView(x_test, drone_poses, head_poses, desired_drone_poses, isGray=True, name="daniele_walk2withDesiredPose")
 
-    VizWorldTopView(x_test, y_test, z_test, True, name)
 
 if __name__ == '__main__':
     main()

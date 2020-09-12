@@ -55,10 +55,10 @@ def main():
     logging.getLogger('').addHandler(console)
 
 
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
-    name = "160x90HimaxStatic_12_03_20.pickle"
+    DATA_PATH = "/Users/usi/PycharmProjects/data/108x60/old/"
+    name = "bebop_train_grey.pickle"
 
-    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + name, True)
+    [x_test, y_test] = DataProcessor.ProcessTestData(DATA_PATH + name)
 
     VizHistogram(y_test, name)
 

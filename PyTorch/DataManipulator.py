@@ -49,11 +49,11 @@ class DataManipulator:
         z_set = dataset['z'].values
         t_set = dataset['t'].values
         #p_set = dataset['p'].values
-        #r_set =  dataset['r'].values
+       # r_set =  dataset['r'].values
         #o_train = train_set['o'].values
 
         data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set})
-        #data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
+       # data = pd.DataFrame(data={'x': x_cropped, 'y': y_set, 'z': z_set, 't': t_set, 'r': r_set})
         df = pd.concat([data, sizes], axis=1)
         df.to_pickle(file_name)
 
@@ -95,7 +95,7 @@ class DataManipulator:
 
 
     @staticmethod
-    def CreateGreyPickle(trainPath, image_height, image_width, file_name):
+    def CreateGreyPickle(trainPath, image_height, image_width, pickle_name):
         """Converts Dario's RGB dataset to a gray + vignette dataset
 
             Parameters
@@ -106,7 +106,7 @@ class DataManipulator:
                 Please...
             image_width : int
                 Please...
-            file_name : str
+            pickle_name : str
                 name of the new .pickle
 
             """
@@ -117,6 +117,8 @@ class DataManipulator:
         x_train = train_set['x'].values
         x_train = np.vstack(x_train[:])
         x_train = np.reshape(x_train, (-1, image_height, image_width, 3))
+
+        sizes = DataManipulator.CreateSizeDataFrame(image_height, image_width, 1)
 
         it = ImageTransformer()
 
@@ -131,13 +133,15 @@ class DataManipulator:
             x_train_grey.append(gray_image)
 
         y_train = train_set['y'].values
-        z_train = train_set['z'].values
-        t_train = train_set['t'].values
-        o_train = train_set['o'].values
+        # z_train = train_set['z'].values
+        # t_train = train_set['t'].values
+        # o_train = train_set['o'].values
 
-        # df = pd.DataFrame(data={'x': x_train_grey, 'y': y_train})
-        df = pd.DataFrame(data={'x': x_train_grey, 'y': y_train, 'z': z_train, 'o': o_train, 't': t_train})
-        df.to_pickle(file_name)
+        data = pd.DataFrame(data={'x': x_train_grey, 'y': y_train})
+        #df = pd.DataFrame(data={'x': x_train_grey, 'y': y_train, 'z': z_train, 'o': o_train, 't': t_train})
+        df = pd.concat([data, sizes], axis=1)
+        df.to_pickle(pickle_name)
+
 
 
 
@@ -286,6 +290,51 @@ class DataManipulator:
         #     # cv2.waitKey()
 
         data = pd.DataFrame(data={'x': x_augset, 'y': y_augset, 'z': z_augset, 't': t_augset})
+        df2 = pd.concat([data, sizes], axis=1)
+        df2.to_pickle(pickle_name)
+
+    @staticmethod
+    def ConvertToInt(path, pickle_name):
+
+        dataset = pd.read_pickle(path)
+        logging.info('[DataManipulator] dataset shape: ' + str(dataset.shape))
+
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset)
+        sizes = DataManipulator.CreateSizeDataFrame(h, w, c)
+
+        x_set = dataset['x'].values
+        y_set = dataset['y'].values
+        z_set = dataset['z'].values
+        t_set = dataset['t'].values
+        p_set = dataset['p'].values
+
+
+        x_set = np.vstack(x_set[:])
+        x_set = np.reshape(x_set, (-1, h, w, c))
+
+
+        x_augset = []
+        y_augset = []
+        z_augset = []
+        t_augset = []
+        p_augset = []
+
+        for i in range(len(x_set)):
+
+            y = y_set[i]
+            z = z_set[i]
+            t = t_set[i]
+            x = x_set[i]
+            p = p_set[i]
+            x = np.reshape(x, (h, w)).astype("uint8")
+
+            p_augset.append(p)
+            x_augset.append(x)
+            y_augset.append(y)
+            z_augset.append(z)
+            t_augset.append(t)
+
+        data = pd.DataFrame(data={'x': x_augset, 'y': y_augset, 'z': z_augset, 't': t_augset, 'p': p_augset})
         df2 = pd.concat([data, sizes], axis=1)
         df2.to_pickle(pickle_name)
 
@@ -721,7 +770,7 @@ class DataManipulator:
         y_set = dataset1['y'].values
         z_set = dataset1['z'].values
         t_set = dataset1['t'].values
-        p_set = dataset1['p'].values
+        #p_set = dataset1['p'].values
 
 
         for i in range(1,len(pathlist)):
@@ -733,9 +782,10 @@ class DataManipulator:
             y_set = np.concatenate((y_set, dataset['y'].values), axis=0)
             z_set = np.concatenate((z_set, dataset['z'].values), axis=0)
             t_set = np.concatenate((t_set, dataset['t'].values), axis=0)
-            p_set = np.concatenate((p_set, dataset['p'].values), axis=0)
+            #p_set = np.concatenate((p_set, dataset['p'].values), axis=0)
 
-        data = pd.DataFrame(data={'x': x_set, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
+        #data = pd.DataFrame(data={'x': x_set, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
+        data = pd.DataFrame(data={'x': x_set, 'y': y_set, 'z': z_set, 't': t_set})
         df2 = pd.concat([data, sizes], axis=1)
         df2.to_pickle(new_path)
 
@@ -766,7 +816,7 @@ class DataManipulator:
         y_set = dataset['y'].values
         z_set = dataset['z'].values
         t_set = dataset['t'].values
-        p_set = dataset['p'].values
+        #p_set = dataset['p'].values
 
         x_set = np.vstack(x_set[:])
         x_set = np.reshape(x_set, (-1, h, w, c))
@@ -780,8 +830,8 @@ class DataManipulator:
             x_ds.append(img)
 
 
-        data = pd.DataFrame(data={'x': x_ds, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
-        #data = pd.DataFrame(data={'x': x_ds, 'y': y_set, 'z': z_set, 't': t_set})
+        #data = pd.DataFrame(data={'x': x_ds, 'y': y_set, 'z': z_set, 't': t_set, 'p': p_set})
+        data = pd.DataFrame(data={'x': x_ds, 'y': y_set, 'z': z_set, 't': t_set})
         df = pd.concat([data, sizes], axis=1)
         df.to_pickle(new_path)
 
@@ -956,3 +1006,97 @@ class DataManipulator:
         data = pd.DataFrame(data={'x': x_ds, 'y': y_set, 'z': z_set, 't': t_set})
         df = pd.concat([data, sizes], axis=1)
         df.to_pickle(new_path)
+
+    @staticmethod
+    def PruneBadFrames(pickle_path, pickle_name):
+        """Prune Dataset
+
+                      Parameters
+                    ----------
+                    pickle_path : str
+                        The file location of the first .pickle
+                    pickle_name : str
+                        The name/path of the newly created dataset
+
+                   """
+
+        dataset = pd.read_pickle(pickle_path)
+        logging.info('[DataManipulator] dataset shape: ' + str(dataset.shape))
+
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset)
+        sizes = DataManipulator.CreateSizeDataFrame(h, w, c)
+
+        x_set = dataset['x'].values
+        y_set = dataset['y'].values
+        z_set = dataset['z'].values
+        t_set = dataset['t'].values
+
+        x_augset = []
+        y_augset = []
+        z_augset = []
+        t_augset = []
+
+
+        for i in range(len(x_set)):
+            rel_pose = y_set[i]
+            if ((rel_pose[0] > 1.0) and (rel_pose[0] < 3.5)):
+                if ((rel_pose[3] > -np.pi/2.5) and (rel_pose[3] < np.pi/2.5)):
+                    if ((rel_pose[2] > -0.5) and (rel_pose[2] < 0.5)):
+                        if ((rel_pose[1] > -2) and (rel_pose[1] < 2)):
+                            x_augset.append(x_set[i])
+                            y_augset.append(y_set[i])
+                            z_augset.append(z_set[i])
+                            t_augset.append(t_set[i])
+
+
+        data = pd.DataFrame(data={'x': x_augset, 'y': y_augset, 'z': z_augset, 't': t_augset})
+        df = pd.concat([data, sizes], axis=1)
+        df.to_pickle(pickle_name)
+
+    @staticmethod
+    def TrimDataset(pickle_path, pickle_name, start=None, end=None):
+        """Prune Dataset
+
+                      Parameters
+                    ----------
+                    pickle_path : str
+                        The file location of the first .pickle
+                    pickle_name : str
+                        The name/path of the newly created dataset
+
+                   """
+
+        dataset = pd.read_pickle(pickle_path)
+        logging.info('[DataManipulator] dataset shape: ' + str(dataset.shape))
+
+        h, w, c = DataManipulator.GetSizeDataFromDataFrame(dataset)
+        sizes = DataManipulator.CreateSizeDataFrame(h, w, c)
+
+        x_set = dataset['x'].values
+        y_set = dataset['y'].values
+        z_set = dataset['z'].values
+        t_set = dataset['t'].values
+
+        x_augset = []
+        y_augset = []
+        z_augset = []
+        t_augset = []
+        if start is None:
+            start = -1
+        if end is None:
+            end = len(x_set)
+
+
+        for i in range(len(x_set)):
+            # if(i > 2680 and i < 2720) or (i > 2900 and i < 2920):
+            #     continue
+            if (i > start) and (i < end):
+            #if (i > 9 and i < 75) or (i > 80 and i < 395) or (i > 570 and i < 1390):
+                x_augset.append(x_set[i])
+                y_augset.append(y_set[i])
+                z_augset.append(z_set[i])
+                t_augset.append(t_set[i])
+
+        data = pd.DataFrame(data={'x': x_augset, 'y': y_augset, 'z': z_augset, 't': t_augset})
+        df = pd.concat([data, sizes], axis=1)
+        df.to_pickle(pickle_name)

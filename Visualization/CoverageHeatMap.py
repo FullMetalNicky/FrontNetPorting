@@ -118,8 +118,8 @@ def main():
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
 
-    DATA_PATH = "/Users/usi/PycharmProjects/data/160x90/"
-    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "160x90HimaxMixedTest_12_03_20.pickle", True)
+    DATA_PATH = "/Users/usi/PycharmProjects/data/160x96/"
+    [x_test, y_test, z_test] = DataProcessor.ProcessTestData(DATA_PATH + "160x96HimaxTest16_4_2020.pickle", True)
 
     #VizGeneralHeatMap(z_test)
     VizHeatMapsByAngle(z_test)

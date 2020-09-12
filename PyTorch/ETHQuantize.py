@@ -12,6 +12,7 @@ import torch
 from ConvBlock import ConvBlock
 from PenguiNet import PenguiNet
 import nemo
+import cv2
 import os
 
 import argparse
