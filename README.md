@@ -75,6 +75,19 @@ To ease the deployment and reduce possible bugs, the first NN I converted from P
 <img src="/resources/dronetarch.png" alt="drawing" width="1000"/>
 <p/>
 
+# Second Generation Pipeline
+In the current deploymnt pipelin, a new version, 0.0.7, of [nemo](https://github.com/pulp-platform/nemo) is used. 
+PyToch version should be 1.3 or more. 
+To quantize and fine-tune the NN, Run
+```bash
+#CUDA_VISIBLE_DEVICES= python ETHQuantize.py --regime regime.json --epochs 5 --gray 1 --load-trainset "path-to-trainset.pickle" --load-model "your-pytorch-mmodel.pt" --quantiz --trainq
+```
+Make sure it runs on CPU, because weird things happened in GPU. The result of this step is a intermediate .pth model file, in the checkpoint folder, with the name "your-model-final.pth". To export the model as onnx file run
+```bash
+#CUDA_VISIBLE_DEVICES= python ETHQuantize.py --regime regime.json --epochs 10 --gray 1 --load-trainset "path-to-trainset.pickle" --load-model "checkpoint/your-model-final.pth --quantiz 
+```
+Once you have the .onnx file, simply follow th DORY documentation to get the auto-generatd c code, as explained [here](https://iis-git.ee.ethz.ch/alessio.burrello/dory_example). 
+
 ### Project Structure
 The project has the following directory structure. Change it at your own risk.
 ```bash
