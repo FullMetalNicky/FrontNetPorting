@@ -372,75 +372,7 @@ class ModelTrainer:
         DataVisualization.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
         DataVisualization.DisplayPlots()
 
-    def PerdictSingleSample(self, test_generator):
 
-        iterator = iter(test_generator)
-        batch_samples, batch_targets = iterator.next()
-        index = np.random.choice(np.arange(0, batch_samples.shape[0]), 1)
-        x_test = batch_samples[index]
-        y_test = batch_targets[index]
-        self.model.eval()
-
-        logging.info('[ModelTrainer] GT Values: {}'.format(y_test.cpu().numpy()))
-        with torch.no_grad():
-            x_test = x_test.to(self.device)
-            outputs = self.model(x_test)
-
-        outputs = torch.stack(outputs, 0)
-        outputs = torch.squeeze(outputs)
-        outputs = torch.t(outputs)
-        outputs = outputs.cpu().numpy()
-        logging.info('[ModelTrainer] Prediction Values: {}'.format(outputs))
-        return x_test[0].cpu().numpy(), y_test[0], outputs
-
-
-    def InferSingleSample(self, frame):
-
-        shape = frame.shape
-        if len(frame.shape) == 3:
-            frame = np.reshape(frame, (1, shape[0], shape[1], shape[2]))
-
-        frame = np.swapaxes(frame, 1, 3)
-        frame = np.swapaxes(frame, 2, 3)
-        frame = frame.astype(np.float32)
-        frame = torch.from_numpy(frame)
-        self.model.eval()
-
-        with torch.no_grad():
-            frame = frame.to(self.device)
-            outputs = self.model(frame)
-
-        outputs = torch.stack(outputs, 0)
-        outputs = torch.squeeze(outputs)
-        #outputs = torch.t(outputs)
-        #outputs = outputs.cpu().numpy()
-        return outputs
-
-    def Predict(self, test_generator):
-
-        metrics = Metrics()
-
-        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-            test_generator)
-
-        gt_labels = torch.tensor(gt_labels, dtype=torch.float32)
-        y_pred = torch.tensor(y_pred, dtype=torch.float32)
-        MSE, MAE, r2_score = metrics.Update(y_pred, gt_labels,
-                                           [0, 0, 0, 0],
-                                           [valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi])
-
-        y_pred_viz = metrics.GetPred()
-        gt_labels_viz = metrics.GetLabels()
-
-        DataVisualization.desc = "Test_"
-        DataVisualization.PlotGTandEstimationVsTime(gt_labels_viz, y_pred_viz)
-        DataVisualization.PlotGTVsEstimation(gt_labels_viz, y_pred_viz)
-        DataVisualization.DisplayPlots()
-
-        logging.info('[ModelTrainer] Test MSE: [{0:.4f}, {1:.4f}, {2:.4f}, {3:.4f}]'.format(MSE[0], MSE[1], MSE[2], MSE[3]))
-        logging.info('[ModelTrainer] Test MAE: [{0:.4f}, {1:.4f}, {2:.4f}, {3:.4f}]'.format(MAE[0], MAE[1], MAE[2], MAE[3]))
-        logging.info('[ModelTrainer] Test r2_score: [{0:.4f}, {1:.4f}, {2:.4f}, {3:.4f}]'.format(r2_score[0], r2_score[1], r2_score[2],
-                                                                                  r2_score[3]))
 
     def Test(self, test_generator):
 
@@ -467,10 +399,4 @@ class ModelTrainer:
         return MSE, MAE, r2_score, outputs, labels
 
 
-    def Infer(self, live_generator):
-
-        valid_loss_x, valid_loss_y, valid_loss_z, valid_loss_phi, y_pred, gt_labels = self.ValidateSingleEpoch(
-            live_generator)
-
-        return y_pred
 
