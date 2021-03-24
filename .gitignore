@@ -141,7 +141,6 @@ Results/
 frontnet_weights/
 frontnet_golden/
 *.ods
-data/
 Visualization/*.mp4
 PyTorch/*.jpg
 PyTorch/*.pgm
