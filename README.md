@@ -89,7 +89,9 @@ This pipeline was used for the quantitative evaluation and user experiments, usi
 <img src="/resources/pulpdrone.jpg" alt="drawing" width="500"/>
 <p/>
 
-### Project Structure
+# Documentation
+
+## Project Structure
 The project has the following directory structure. Change it at your own risk.
 ```bash
 .
@@ -106,7 +108,7 @@ The project has the following directory structure. Change it at your own risk.
 │   └── Visualization scripts
 ├── Models  
 ```
-### Installation
+## Installation
 This code run on Ubuntou 16.04. If it happens to run on any other OS, consider it a miracle.
 The following dependencies are needed:
 * ROS kinetic - http://wiki.ros.org/kinetic/Installation
@@ -117,25 +119,25 @@ The following dependencies are needed:
 
 Following the installation instruction on the [PULP-dronet](https://github.com/pulp-platform/pulp-dronet) would be the easiest, as they cover all the PULP-related dependencies.
 
-### How-To Guide
+## How-To Guide
 * Recording is handled in this dedicated repo - [PULP-Streamer](https://github.com/FullMetalNicky/PULP-Streamer)
 * Creating Dataset from Rosbags - Once you have rosbags recorded, you can converted it to a .pickle, with the proper format for training, using DataProcessing/Main.py. 
 * Visualization - To visualize a standard dataset, tou can use the DatasetVisualizer class. For displaying the prediction along with the GT, you can use another script, the purpose of the script will be indicated by its name. Don't use scripts that include "Hand" in their names, they are specifically for a side quest called Scarlet Witch, where I also recorded the poses of the hand. 
-#### Training 
+### Training 
 For training full precision models use the FPTraining.py. For quantizing and fine-tuning an already trained PyTorch model, use QTraining.py
-#### Deployment 
+### Deployment 
 To deploy the quantized PyTorch model into an .onnx file that is compatible with DORY, run QDeploy.py
-#### Testing
+### Testing
 Testing full precision model can be done using FPTesting.py, and for quantized models - QTesting.py
-#### Configuration
+### Configuration
 For all Q scripts, cmd arguments are required for the configuration of the quantization, deployment and testing. See examples in ExampleScript.sh
 
 
-### Datasets
+## Datasets
 Beware that there are two different types of rosbags, Dario's rosbags, which can be found [here](https://drive.switch.ch/index.php/s/1Q0zN0XDzyRxug4), and my rosbags that I shall upload once the lame-ass OneDrive will stop malfunctioning. Each rosbag type needs to be handled differently, so choose the right method from the DatasetCreator class.
 An example for a test.pickle after processing can be downloaded from [here](https://usi365-my.sharepoint.com/:u:/g/personal/zimmen_usi_ch/Ea4eoe34Y_JKot_Mzbh8ZCgBLA_9lWrycZwdCeGwKfpE0A?e=w4rNSr).
 
-### Development
+## Development
 
 Want to contribute? Great!
 Send me six-packs of diet coke.
