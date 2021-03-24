@@ -75,6 +75,7 @@ To ease the deployment and reduce possible bugs, the first NN I converted from P
 <p align="center">
 <img src="/resources/dronetarch.png" alt="drawing" width="1000"/>
 <p/>
+
 ## Auto-Generation Pipeline
 
 The second, and more friendly deployment pipeline is based on two libraries:
