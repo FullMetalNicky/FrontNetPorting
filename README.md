@@ -62,8 +62,8 @@ Once I had the frames synced, I transformed the images to be more alike - gamma 
 <img src="/resources/sync.gif" alt="drawing"/>
 </p>
 
-# The Birth of PinguiNet
-As a risk minimization step towards deployment, I also ported the Dronet architecture from TensorFlow to PyTorch. I explored several architectures, trying to find one that is accurate enough to perform the task, but also small and ULP-friendly. This search brought to life PinguiNet - the skinny nephew of Dronet. With PinguiNet I removed the residual connections from the Dronet architecture, while maintaining the same accuracy. Due to its efficiency, PinguiNet was chosen for the final task evaluation on the nano-drone.
+# The Birth of PenguiNet
+As a risk minimization step towards deployment, I also ported the Dronet architecture from TensorFlow to PyTorch. I explored several architectures, trying to find one that is accurate enough to perform the task, but also small and ULP-friendly. This search brought to life PenguiNet - the skinny nephew of Dronet. With PenguiNet I removed the residual connections from the Dronet architecture, while maintaining the same accuracy. Due to its efficiency, PenguiNet was chosen for the final task evaluation on the nano-drone.
 
 <img src="/resources/Pingu.png" alt="drawing" width="1000"/>
 
