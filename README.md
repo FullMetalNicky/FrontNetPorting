@@ -68,22 +68,25 @@ As a risk minimization step towards deployment, I also ported the Dronet archite
 <img src="/resources/Pingu.png" alt="drawing" width="1000"/>
 
 # Real-time, Real-life 
-In order to quantize the NN you will need the secret nemo folder, which is not public yet. Once the weights were quantized, I created a folder structure identical to that of pulp-dronet. Note that if you clone my repo, you will have to download and compile the autotiler yourself, as explained beautifully in pulp-dronet [documentation](https://github.com/pulp-platform/pulp-dronet#23-install-the-autotiler). When you retrain a model, keeping the same architecture, you can simply replace the weights and biases, and manually update the checksums in the config.h. If you make changes to the architecture, it gets a little messy. To run the project I use the same commands as in the pulp-dronet.
-If you wish to simply capture images from the pulp-shield, you can run the MasterScript.py, just use the bottom part. 
-<p align="center">
-<img src="/resources/pulpdrone.jpg" alt="drawing" width="500"/>
-<p/>
-To ease the deployment and reduce possible bugs, the first NN I converted from PyTorch to its c equivalent was very similar to the original pulp-dronet. This allowed me to reuse the majority of the layer definitions from the pulp-dronet project. The performance of the netwrok was tested, and it gave satisfying results, performing at the level of FrontNet. 
+## Manual Pipeline
+The first attempt at deployment was based on the method used for PULP-Dronet. Note that if you clone my repo, you will have to download and compile the autotiler yourself, as explained beautifully in PULP-Dronet [documentation](https://github.com/pulp-platform/pulp-dronet#23-install-the-autotiler). When you retrain a model, keeping the same architecture, you can simply replace the weights and biases, and manually update the checksums in the config.h. If you make changes to the architecture, it gets a little messy. To run the project I use the same commands as in the pulp-dronet.
+
+To ease the deployment and reduce possible bugs, the first NN I converted from PyTorch to its c equivalent was very similar to the original PULP-Dronet. This allowed me to reuse the majority of the layer definitions from the PULP-Dronet project. The performance of the netwrok was tested, and it gave satisfying results, performing at the level of FrontNet. 
 <p align="center">
 <img src="/resources/dronetarch.png" alt="drawing" width="1000"/>
 <p/>
+## Auto-Generation Pipeline
 
-# Real-time, Real-life V2
 The second, and more friendly deployment pipeline is based on two libraries:
 * [NEMO (NEural Minimizer for pytOrch)](https://github.com/pulp-platform/nemo)
 * [DORY: Deployment ORiented to memorY](https://github.com/pulp-platform/dory)
  
 Trained, full precision PyTorch models are quantized and fine-tuned using NEMO. The result is an .onnx file which is a graph representation of the model. The steps for producing this are detailed in the How-To guide below. The .onnx is then fed to DORY, which generated PULP-optimized c code desscribing the network's functionality. This code can be used for inference on PULP chips, and specifically on the AI Deck. This code will be made public soon.  
+This pipeline was used for the quantitative evaluation and user experiments, using the PenguiNet architecture.
+
+<p align="center">
+<img src="/resources/pulpdrone.jpg" alt="drawing" width="500"/>
+<p/>
 
 ### Project Structure
 The project has the following directory structure. Change it at your own risk.
