@@ -43,7 +43,7 @@ Two visualization tools are implemented:
 * Pose variables - Prediction vs. GT
 ![viz1](/resources/viz1.gif)
 * Bird's-eye-view presentation with actual values
-![viz2](/resources/viz2.gif)
+![viz2](/resources/viz2.gif) 
 
 # DNN: Desktop vs. PULP Platrform 
 Working on the GAPuino introduced many challenges. The Himax camera accompanying the board is a grey-scale, low-resolution device, chosen for its ability to maintain a reasonable fps while consuming very little power. We were hoping to re-use the lovely dataset collected by Dario, for which he used the Parrot 2. But the images from the Himax camera differed greatly from the ones captured by the high-resolution, RGB camera of the Parrot 2. 
@@ -62,7 +62,8 @@ Once I had the frames synced, I transformed the images to be more alike - gamma 
 <img src="/resources/sync.gif" alt="drawing"/>
 </p>
 
-
+# The Birth of PinguiNet
+As a risk minimization step towards deployment, I also ported the Dronet architecture from TensorFlow to PyTorch. I explored several architectures, trying to find one that is accurate enough to perform the task, but also small and ULP-friendly. This search brought to life PinguiNet - the skinny nephew of Dronet. With PinguiNet I removed the residual connections from the Dronet architecture, while maintaining the same accuracy. Due to its efficiency, PinguiNet was chosen for the final task evaluation on the nano-drone.
 
 # Real-time, Real-life 
 In order to quantize the NN you will need the secret nemo folder, which is not public yet. Once the weights were quantized, I created a folder structure identical to that of pulp-dronet. Note that if you clone my repo, you will have to download and compile the autotiler yourself, as explained beautifully in pulp-dronet [documentation](https://github.com/pulp-platform/pulp-dronet#23-install-the-autotiler). When you retrain a model, keeping the same architecture, you can simply replace the weights and biases, and manually update the checksums in the config.h. If you make changes to the architecture, it gets a little messy. To run the project I use the same commands as in the pulp-dronet.
