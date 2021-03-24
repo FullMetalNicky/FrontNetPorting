@@ -12,10 +12,10 @@ def conv1x1(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
 class Dronet(nn.Module):
-    def __init__(self, block, layers, isGray=False):
+    def __init__(self, block, layers, gray=False):
         super(Dronet, self).__init__()
 
-        if isGray ==True:
+        if gray ==True:
             self.name = "DronetGray"
         else:
             self.name = "DronetRGB"
@@ -25,7 +25,7 @@ class Dronet(nn.Module):
 
         self.groups = 1
         self.base_width = 64
-        if isGray == True:
+        if gray == True:
             self.conv = nn.Conv2d(1, self.inplanes, kernel_size=5, stride=2, padding=2, bias=False)
         else:
             self.conv = nn.Conv2d(3, self.inplanes, kernel_size=5, stride=2, padding=2, bias=False)

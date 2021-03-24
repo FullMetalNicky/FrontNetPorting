@@ -6,9 +6,10 @@ from ValidationUtils import MovingAverage
 from DataVisualization import DataVisualization
 from EarlyStopping import EarlyStopping
 from ValidationUtils import Metrics
-import nemo
+
 import logging
-import CSVUtils as utils
+import Utils as utils
+import nemo
 
 class ModelTrainer:
     def __init__(self, model, args=None, regime=None):

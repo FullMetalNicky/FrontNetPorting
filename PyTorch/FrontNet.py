@@ -13,10 +13,10 @@ def conv1x1(in_planes, out_planes, stride=1):
 
 # FrontNet
 class FrontNet(nn.Module):
-    def __init__(self, block, layers, isGray=False):
+    def __init__(self, block, layers, gray=False):
         super(FrontNet, self).__init__()
 
-        if isGray ==True:
+        if gray ==True:
             self.name = "FrontNetGray"
         else:
             self.name = "FrontNetRGB"
@@ -28,7 +28,7 @@ class FrontNet(nn.Module):
 
         self.groups = 1
         self.base_width = 64
-        if isGray == True:
+        if gray == True:
             self.conv = nn.Conv2d(1, self.inplanes, kernel_size=5, stride=2, padding=2, bias=False)
         else:
             self.conv = nn.Conv2d(3, self.inplanes, kernel_size=5, stride=2, padding=2, bias=False)

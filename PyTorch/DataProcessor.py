@@ -3,12 +3,17 @@ import numpy as np
 import random
 import logging
 import cv2
-import sys
-from DataManipulator import DataManipulator
-sys.path.append("../DataProcessing/")
-from ImageTransformer import ImageTransformer
 
 class DataProcessor:
+
+    @staticmethod
+    def GetSizeDataFromDataFrame(dataset):
+
+        h = int(dataset['h'].values[0])
+        w = int(dataset['w'].values[0])
+        c = int(dataset['c'].values[0])
+
+        return h, w, c
 
     @staticmethod
     def ProcessTrainData(trainPath, isExtended=False):
@@ -32,9 +37,8 @@ class DataProcessor:
         logging.info('[DataProcessor] train shape: ' + str(train_set.shape))
         size = train_set.shape[0]
         n_val = int(float(size) * 0.2)
-        #n_val = 13000
 
-        h, w, c = DataManipulator.GetSizeDataFromDataFrame(train_set)
+        h, w, c = DataProcessor.GetSizeDataFromDataFrame(train_set)
 
         np.random.seed(1749)
         random.seed(1749)
@@ -58,8 +62,6 @@ class DataProcessor:
         shape_ = len(x_train)
 
         sel_idx = random.sample(range(0, shape_), k=(size-n_val))
-
-        #sel_idx = random.sample(range(0, shape_), k=50000)
         x_train = x_train[sel_idx, :]
         y_train = y_train[sel_idx, :]
 
@@ -95,7 +97,7 @@ class DataProcessor:
 
         test_set = pd.read_pickle(testPath)
         logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
-        h, w, c = DataManipulator.GetSizeDataFromDataFrame(test_set)
+        h, w, c = DataProcessor.GetSizeDataFromDataFrame(test_set)
 
         x_test = test_set['x'].values
         x_test = np.vstack(x_test[:]).astype(np.float32)
@@ -135,7 +137,7 @@ class DataProcessor:
 
         test_set = pd.read_pickle(testPath)
         logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
-        h, w, c = DataManipulator.GetSizeDataFromDataFrame(test_set)
+        h, w, c = DataProcessor.GetSizeDataFromDataFrame(test_set)
 
         x_test = test_set['x'].values
         x_test = np.vstack(x_test[:]).astype(np.float32)
@@ -255,82 +257,6 @@ class DataProcessor:
             r_test = test_set['r'].values
 
         return r_test
-
-    @staticmethod
-    def ExtractValidationLabels(testPath):
-        """Reads the .pickle file and converts it into a format suitable for testing on pulp
-            You need to create a folder called test though
-
-            Parameters
-            ----------
-            testPath : str
-                The file location of the .pickle
-
-           """
-
-        test_set = pd.read_pickle(testPath)
-        logging.info('[DataProcessor] test shape: ' + str(test_set.shape))
-
-        x_test = test_set['x'].values
-        x_test = np.vstack(x_test[:]).astype(np.float32)
-        h, w, c = DataManipulator.GetSizeDataFromDataFrame(test_set)
-        x_test = np.reshape(x_test, (-1, h, w, c))
-
-        x_test = np.swapaxes(x_test, 1, 3)
-        x_test = np.swapaxes(x_test, 2, 3)
-        y_test = test_set['y'].values
-        y_test = np.vstack(y_test[:]).astype(np.float32)
-
-        f = open("test/labels.txt", "w")
-
-        for i in range(0, len(x_test)):
-            data = x_test[i]
-            data = np.swapaxes(data, 0, 2)
-            data = np.swapaxes(data, 0, 1)
-            data = np.reshape(data, (h, w))
-            img = np.zeros((244, 324), np.uint8)
-            img[74:170, 82:242] = data
-            cv2.imwrite("test/{}.pgm".format(i), img)
-            label = y_test[i]
-            #f.write("{},{},{},{}\n".format(label[0], label[1],label[2],label[3]))
-        f.close()
-
-
-
-    @staticmethod
-    def ProcessInferenceData(images, image_height, image_width, isGray=False):
-        """Converts a list of images into a format suitable fot inference
-
-            Parameters
-            ----------
-            images : list
-                list of images
-            image_height : int
-                Please...
-            image_width : int
-                Please...
-            isGray : bool, optional
-                True is the dataset is of 1-channel (gray) images, False if RGB
-
-            Returns
-            -------
-            list
-                list of video frames and list of labels (poses, which are garbage)
-            """
-
-        x_test = np.stack(images, axis=0).astype(np.float32)
-        if isGray == True:
-            x_test = np.reshape(x_test, (-1, image_height, image_width, 1))
-        else:
-            x_test = np.reshape(x_test, (-1, image_height, image_width, 3))
-        x_test = np.swapaxes(x_test, 1, 3)
-        x_test = np.swapaxes(x_test, 2, 3)
-        y_test = [0, 0, 0, 0] * len(x_test)
-        y_test = np.vstack(y_test[:]).astype(np.float32)
-        y_test = np.reshape(y_test, (-1, 4))
-
-
-        return [x_test, y_test]
 
     @staticmethod
     def GetDatasetStatisics(testPath):
