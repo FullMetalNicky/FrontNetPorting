@@ -107,11 +107,10 @@ The project has the following directory structure. Change it at your own risk.
 │   ├── HimaxPublisher.py                       #publishing to rosnode images transferred from the device
 │   └── Visualizer.py                           #broadcasts bebop and himax images concatenated
 ├── PyTorch                                     #everything related to the NN
-|   ├── nemo 
-|   |   └── secrets!
-│   ├── Loading scripts
+│   ├── Testing scripts
 │   ├── Training scripts
 │   └── Visualization scripts
+├── Models  
 ```
 ### Installation
 This code run on Ubuntou 16.04. If it happens to run on any other OS, consider it a miracle.
