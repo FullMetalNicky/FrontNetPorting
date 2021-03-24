@@ -75,6 +75,13 @@ To ease the deployment and reduce possible bugs, the first NN I converted from P
 <img src="/resources/dronetarch.png" alt="drawing" width="1000"/>
 <p/>
 
+# Real-time, Real-life V2
+The second, and more friendly deployment pipeline is based on two libraries:
+* [NEMO (NEural Minimizer for pytOrch)](https://github.com/pulp-platform/nemo)
+* [DORY: Deployment ORiented to memorY](https://github.com/pulp-platform/dory)
+ 
+Trained, full precision PyTorch models are quantized and fine-tuned using NEMO. The result is an .onnx file which is a graph representation of the model. The steps for producing this are detailed in the How-To guide below. The .onnx is then fed to DORY, which generated PULP-optimized c code desscribing the network's functionality. This code can be used for inference on PULP chips, and specifically on the AI Deck. This code will be made public soon.  
+
 ### Project Structure
 The project has the following directory structure. Change it at your own risk.
 ```bash
@@ -118,11 +125,18 @@ The following dependencies are needed:
 Following the installation instruction on the [PULP-dronet](https://github.com/pulp-platform/pulp-dronet) would be the easiest, as they cover all the PULP-related dependencies.
 
 ### How-To Guide
-* Recording - In order to redcord, you may use the MasterScript.py. This will run the c code needed to transfer images from the device to the pipe, the ROS node that reads from the pipe and broadcasts the topic and viewers that allow you to see the streams. 
-* A better option for recording is using this dedicated repo - [PULP-Streamer](https://github.com/FullMetalNicky/PULP-Streamer)
+* Recording is handled in this dedicated repo - [PULP-Streamer](https://github.com/FullMetalNicky/PULP-Streamer)
 * Creating Dataset from Rosbags - Once you have rosbags recorded, you can converted it to a .pickle, with the proper format for training, using DataProcessing/Main.py. 
-* Training, Testing, Infering - Examples for how to execute tasks related to PyTorch can be found in PyTorch/Main.py
 * Visualization - To visualize a standard dataset, tou can use the DatasetVisualizer class. For displaying the prediction along with the GT, you can use another script, the purpose of the script will be indicated by its name. Don't use scripts that include "Hand" in their names, they are specifically for a side quest called Scarlet Witch, where I also recorded the poses of the hand. 
+#### Training 
+For training full precision models use the FPTraining.py. For quantizing and fine-tuning an already trained PyTorch model, use QTraining.py
+#### Deployment 
+To deploy the quantized PyTorch model into an .onnx file that is compatible with DORY, run QDeploy.py
+#### Testing
+Testing full precision model can be done using FPTesting.py, and for quantized models - QTesting.py
+#### Configuration
+For all Q scripts, cmd arguments are required for the configuration of the quantization, deployment and testing. See examples in ExampleScript.sh
+
 
 ### Datasets
 Beware that there are two different types of rosbags, Dario's rosbags, which can be found [here](https://drive.switch.ch/index.php/s/1Q0zN0XDzyRxug4), and my rosbags that I shall upload once the lame-ass OneDrive will stop malfunctioning. Each rosbag type needs to be handled differently, so choose the right method from the DatasetCreator class.
