@@ -1,3 +1,0 @@
-[submodule "PyTorch/nemo"]
-	path = PyTorch/nemo
-	url = git@iis-git.ee.ethz.ch:approximate_model_learning/nemo
